@@ -15,7 +15,7 @@ import requests
 GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyAdTAbkqlNGdTiI-123gAObgRzZfkoqJbs")
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-3.1-flash-tts-preview"
-VOICE           = "Aoede"
+VOICE           = "Orus"
 CHUNK_WORDS     = 150
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
