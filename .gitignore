@@ -3,3 +3,4 @@ service_account.json
 !.claude/**/*.json
 *.wav
 *.mp3
+*.mp4
