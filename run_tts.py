@@ -1,60 +1,99 @@
 #!/usr/bin/env python3
 """
-Gemini TTS pipeline (REST API only — no google-auth SDK dependency)
-1. Decodes narration text
+Gemini TTS pipeline
+1. Downloads narration text from Google Drive
 2. Chunks into ~150 words
 3. Calls gemini-3.1-flash-tts-preview for each chunk
-4. Merges PCM audio into a single WAV
-5. Uploads WAV to Google Drive via service account JWT
+4. Merges PCM audio into a single WAV + MP3
+5. Uploads to Google Drive via OAuth2 (user credentials)
 """
 
-import base64, json, re, struct, time, wave, io, os, sys
-import urllib.request, urllib.parse
+import base64, json, re, time, wave, io, os, sys
 import requests
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
 
 # ── Config ────────────────────────────────────────────────────────────────────
-GEMINI_API_KEY   = "AIzaSyAdTAbkqlNGdTiI-123gAObgRzZfkoqJbs"
-CREDS_FILE       = "/home/user/ClaudeCode/service_account.json"
-TTS_MODEL        = "gemini-3.1-flash-tts-preview"
-VOICE            = "Aoede"
-CHUNK_WORDS      = 150
-SAMPLE_RATE      = 24000
-OUTPUT_WAV       = "/home/user/ClaudeCode/narration.wav"
-DRIVE_FOLDER_ID  = "1Fi6ozVLcf3yW0tCxMEOdn5wOiSVPZhT6"   # AI Bubble folder
-OUTPUT_FILENAME  = "narration.wav"
+GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyAdTAbkqlNGdTiI-123gAObgRzZfkoqJbs")
+TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
+TTS_MODEL       = "gemini-3.1-flash-tts-preview"
+VOICE           = "Aoede"
+CHUNK_WORDS     = 150
+SAMPLE_RATE     = 24000
+OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
+OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
 
-# ── Service account JWT auth ──────────────────────────────────────────────────
-def get_access_token(creds_file):
-    with open(creds_file) as f:
-        creds = json.load(f)
+# ── OAuth2 token management ───────────────────────────────────────────────────
+def load_tokens():
+    if not os.path.exists(TOKEN_FILE):
+        print("ERROR: token.json not found. Run setup_auth.py first.")
+        sys.exit(1)
+    with open(TOKEN_FILE) as f:
+        return json.load(f)
 
-    now = int(time.time())
-    claim = {
-        "iss": creds["client_email"],
-        "scope": "https://www.googleapis.com/auth/drive",
-        "aud": "https://oauth2.googleapis.com/token",
-        "iat": now,
-        "exp": now + 3600,
-    }
+def save_tokens(tokens):
+    with open(TOKEN_FILE, "w") as f:
+        json.dump(tokens, f, indent=2)
 
-    header = base64.urlsafe_b64encode(json.dumps({"alg":"RS256","typ":"JWT"}).encode()).rstrip(b"=")
-    payload = base64.urlsafe_b64encode(json.dumps(claim).encode()).rstrip(b"=")
-    signing_input = header + b"." + payload
+def get_access_token():
+    tokens = load_tokens()
+    if "access_token" in tokens:
+        # Quick check if token is still valid
+        r = requests.get(
+            "https://www.googleapis.com/oauth2/v1/tokeninfo",
+            params={"access_token": tokens["access_token"]}
+        )
+        if r.ok and r.json().get("expires_in", 0) > 60:
+            return tokens["access_token"]
 
-    key = RSA.import_key(creds["private_key"].encode())
-    h = SHA256.new(signing_input)
-    sig = pkcs1_15.new(key).sign(h)
-    jwt_token = signing_input + b"." + base64.urlsafe_b64encode(sig).rstrip(b"=")
-
-    resp = requests.post("https://oauth2.googleapis.com/token", data={
-        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        "assertion": jwt_token.decode(),
+    # Refresh the token
+    r = requests.post("https://oauth2.googleapis.com/token", data={
+        "client_id":     tokens["client_id"],
+        "client_secret": tokens["client_secret"],
+        "refresh_token": tokens["refresh_token"],
+        "grant_type":    "refresh_token",
     })
-    resp.raise_for_status()
-    return resp.json()["access_token"]
+    if not r.ok:
+        print(f"ERROR refreshing token: {r.text}")
+        sys.exit(1)
+    new_tokens = r.json()
+    tokens["access_token"] = new_tokens["access_token"]
+    save_tokens(tokens)
+    return tokens["access_token"]
+
+# ── Google Drive helpers ──────────────────────────────────────────────────────
+def drive_download_text(token, file_id):
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    r.raise_for_status()
+    return r.text
+
+def drive_upload(token, local_path, filename, folder_id, mime="audio/wav"):
+    with open(local_path, "rb") as f:
+        data = f.read()
+    metadata = json.dumps({"name": filename, "parents": [folder_id]}).encode()
+    boundary = b"tts_boundary_xyz"
+    body = (
+        b"--" + boundary + b"\r\n"
+        b"Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        metadata + b"\r\n"
+        b"--" + boundary + b"\r\n" +
+        f"Content-Type: {mime}\r\n\r\n".encode() +
+        data + b"\r\n"
+        b"--" + boundary + b"--"
+    )
+    r = requests.post(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": f"multipart/related; boundary={boundary.decode()}",
+        },
+        data=body,
+    )
+    if not r.ok:
+        print(f"  Drive upload error {r.status_code}: {r.text}")
+    r.raise_for_status()
+    return r.json()
 
 # ── Text chunking ─────────────────────────────────────────────────────────────
 def chunk_text(text, max_words=CHUNK_WORDS):
@@ -84,15 +123,14 @@ def tts_chunk(text):
             }
         }
     }
-    resp = requests.post(url, json=body)
-    resp.raise_for_status()
-    data = resp.json()
-    part = data["candidates"][0]["content"]["parts"][0]
+    r = requests.post(url, json=body)
+    r.raise_for_status()
+    part = r.json()["candidates"][0]["content"]["parts"][0]
     audio_b64 = part["inlineData"]["data"]
-    mime     = part["inlineData"]["mimeType"]          # e.g. audio/pcm;rate=24000
+    mime      = part["inlineData"]["mimeType"]
     return base64.b64decode(audio_b64), mime
 
-# ── PCM → WAV ────────────────────────────────────────────────────────────────
+# ── Audio helpers ─────────────────────────────────────────────────────────────
 def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
@@ -103,62 +141,48 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
     return buf.getvalue()
 
 def merge_wavs(wav_list, output_path):
-    all_frames = b""
-    params = None
+    frames, params = b"", None
     for w in wav_list:
-        buf = io.BytesIO(w)
-        with wave.open(buf, "rb") as wf:
+        with wave.open(io.BytesIO(w), "rb") as wf:
             if params is None:
                 params = wf.getparams()
-            all_frames += wf.readframes(wf.getnframes())
+            frames += wf.readframes(wf.getnframes())
     with wave.open(output_path, "wb") as out:
         out.setparams(params)
-        out.writeframes(all_frames)
+        out.writeframes(frames)
 
-# ── Drive upload ──────────────────────────────────────────────────────────────
-def upload_to_drive(token, local_path, filename, folder_id):
-    metadata = json.dumps({"name": filename, "parents": [folder_id]}).encode()
-    with open(local_path, "rb") as f:
-        audio_data = f.read()
-
-    boundary = b"boundary_xyz_123"
-    body = (
-        b"--" + boundary + b"\r\n"
-        b"Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-        metadata + b"\r\n"
-        b"--" + boundary + b"\r\n"
-        b"Content-Type: audio/wav\r\n\r\n" +
-        audio_data + b"\r\n"
-        b"--" + boundary + b"--"
+def wav_to_mp3(wav_path, mp3_path, bitrate="128k"):
+    import subprocess
+    subprocess.run(
+        ["ffmpeg", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", bitrate, mp3_path, "-y"],
+        check=True, capture_output=True
     )
-
-    resp = requests.post(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": f"multipart/related; boundary={boundary.decode()}",
-        },
-        data=body,
-    )
-    if not resp.ok:
-        print(f"  Drive error {resp.status_code}: {resp.text}")
-    resp.raise_for_status()
-    return resp.json()
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    # Decode narration from base64 (as downloaded from Drive)
-    narration_b64 = "VGhlIEFJIGJ1YmJsZSBpcyBkZWZsYXRpbmcuIFRlY2ggc3RvY2tzIHBsdW1tZXRpbmcuIEluc2lkZXJzIGR1bXBpbmcgc2hhcmVzLiBFdmVyeW9uZSBwYW5pY2tlZC4gQnV0IGhlcmUncyB0aGUgdHJ1dGg6IHdoZW4gYmxvb2QgaGl0cyB0aGUgc3RyZWV0cywgdGhhdCdzIHdoZW4gc21hcnQgaW52ZXN0b3JzIGJ1eS4KCkNvbXBhbmllcyBzcGVudCBiaWxsaW9ucyBvbiBBSSBpbmZyYXN0cnVjdHVyZSBleHBlY3RpbmcgbWFzc2l2ZSByZXR1cm5zLiBBZG9wdGlvbiBzbG93ZXIgdGhhbiBleHBlY3RlZC4gQ3VzdG9tZXIgYWNxdWlzaXRpb24gY29zdHMgc2t5cm9ja2V0aW5nLiBQcm9maXQgbWFyZ2lucyBldmFwb3JhdGluZy4gVGhlIHBhcnR5J3Mgb3Zlci4gUmVhbGl0eSBpcyBoaXR0aW5nIGhhcmQuCgpRdWFsaXR5IGNvbXBhbmllcyB3aXRoIHdpZGUgbW9hdHMgYXJlIGdldHRpbmcgY3J1c2hlZCBhbG9uZ3NpZGUgZ2FyYmFnZS4gTWljcm9zb2Z0LCBHb29nbGUsIE5WSURJQeKAlHJlYWwgYnVzaW5lc3NlcyB3aXRoIHJlYWwgZWFybmluZ3MuIFByaWNlcyBhcmUgaXJyYXRpb25hbC4gVGhpcyBpcyB3aGVyZSBmb3J0dW5lcyBhcmUgbWFkZSwgbm90IGxvc3QuCgpEb24ndCBwYW5pYyBidXkgZXZlcnl0aGluZy4gRm9jdXMgb24gY29tcGFuaWVzIHdpdGg6IHN1c3RhaW5hYmxlIGNvbXBldGl0aXZlIGFkdmFudGFnZXMsIHN0cm9uZyBiYWxhbmNlIHNoZWV0cywgYWN0dWFsIHByb2ZpdHMuIExvbmctdGVybSBjb21wb3VuZGluZyBwb3dlci4gRGl2aWRlbmQgZ3Jvd3RoIHBvdGVudGlhbC4gQm9yaW5nLCBzdGFibGUsIHByb2ZpdGFibGUgYnVzaW5lc3Nlcy4KCllvdSBjYW4ndCB0aW1lIHRoZSBib3R0b20gcGVyZmVjdGx5LiBCdXQgeW91IGNhbiBidWlsZCBwb3NpdGlvbnMgc2xvd2x5LiBEb2xsYXItY29zdCBhdmVyYWdpbmcgd29ya3MuIEJ1eSBub3csIGJ1eSBuZXh0IG1vbnRoLCBidXkgaW4gc2l4IG1vbnRocy4gVGltZSBpbiBtYXJrZXQgYmVhdHMgdGltaW5nIHRoZSBtYXJrZXQuCgpJbiAyMDA5LCBpbnZlc3RvcnMgd2hvIGJvdWdodCBkdXJpbmcgcGFuaWMgYmVjYW1lIG1pbGxpb25haXJlcyBieSAyMDIwLiBQYXRpZW5jZSBwYXlzLiBGZWFyIGlzIGEgZmVhdHVyZSwgbm90IGEgYnVnLiBXaGVuIG90aGVycyBmZWFyLCB0aGUgZ3JlZWR5IHByb3NwZXIuIFRoaXMgaXMgeW91ciBtb21lbnQu"
-    text = base64.b64decode(narration_b64).decode("utf-8")
+    if len(sys.argv) < 3:
+        print("Usage: python3 run_tts.py <narration_file_id> <output_drive_folder_id> [output_filename]")
+        print("Example: python3 run_tts.py 10cIdhUGtCbRqNzPkrMJiardXuOjeKIPI 1Fi6ozVLcf3yW0tCxMEOdn5wOiSVPZhT6 narration.mp3")
+        sys.exit(1)
+
+    file_id   = sys.argv[1]
+    folder_id = sys.argv[2]
+    out_name  = sys.argv[3] if len(sys.argv) > 3 else "narration.mp3"
+
+    print("Authenticating with Google Drive...")
+    token = get_access_token()
+    print("  ✓ Authenticated")
+
+    print(f"Downloading narration from Drive (file: {file_id})...")
+    text = drive_download_text(token, file_id)
+    print(f"  ✓ {len(text.split())} words downloaded")
 
     chunks = chunk_text(text)
-    print(f"Text split into {len(chunks)} chunk(s):")
-    for i, c in enumerate(chunks, 1):
-        print(f"  Chunk {i}: {len(c.split())} words")
+    print(f"  ✓ Split into {len(chunks)} chunk(s) of ~{CHUNK_WORDS} words")
 
     wav_chunks = []
     for i, chunk in enumerate(chunks, 1):
-        print(f"\nGenerating audio for chunk {i}/{len(chunks)}...")
+        print(f"\nGenerating audio chunk {i}/{len(chunks)} ({len(chunk.split())} words)...")
         for attempt in range(3):
             try:
                 pcm, mime = tts_chunk(chunk)
@@ -167,7 +191,7 @@ def main():
                 if m:
                     rate = int(m.group(1))
                 wav_chunks.append(pcm_to_wav(pcm, sample_rate=rate))
-                print(f"  ✓ Got {len(pcm):,} bytes PCM at {rate}Hz")
+                print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz")
                 break
             except Exception as e:
                 if attempt < 2:
@@ -175,20 +199,26 @@ def main():
                     print(f"  Retry in {wait}s... ({e})")
                     time.sleep(wait)
                 else:
-                    print(f"  Failed: {e}")
+                    print(f"  Failed after 3 attempts: {e}")
                     sys.exit(1)
 
-    print(f"\nMerging {len(wav_chunks)} chunk(s) into {OUTPUT_WAV}...")
+    print(f"\nMerging audio into WAV...")
     merge_wavs(wav_chunks, OUTPUT_WAV)
-    print(f"  ✓ WAV written ({os.path.getsize(OUTPUT_WAV):,} bytes)")
+    print(f"  ✓ WAV: {os.path.getsize(OUTPUT_WAV):,} bytes")
 
-    print("\nAuthenticating with Google Drive...")
-    token = get_access_token(CREDS_FILE)
-    print("  ✓ Access token obtained")
+    print("Converting to MP3...")
+    wav_to_mp3(OUTPUT_WAV, OUTPUT_MP3)
+    print(f"  ✓ MP3: {os.path.getsize(OUTPUT_MP3):,} bytes")
 
-    print(f"Uploading {OUTPUT_FILENAME} to Drive folder {DRIVE_FOLDER_ID}...")
-    result = upload_to_drive(token, OUTPUT_WAV, OUTPUT_FILENAME, DRIVE_FOLDER_ID)
-    print(f"  ✓ Uploaded! File ID: {result['id']} — Name: {result['name']}")
+    # Upload MP3 (or WAV if name ends in .wav)
+    upload_path = OUTPUT_WAV if out_name.endswith(".wav") else OUTPUT_MP3
+    upload_mime = "audio/wav" if out_name.endswith(".wav") else "audio/mpeg"
+
+    print(f"\nUploading {out_name} to Google Drive...")
+    token = get_access_token()  # refresh if needed
+    result = drive_upload(token, upload_path, out_name, folder_id, mime=upload_mime)
+    print(f"  ✓ Uploaded: {result['name']}")
+    print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
 if __name__ == "__main__":
     main()
