@@ -1,4 +1,5 @@
-#!/usr/bin/env python3"""
+#!/usr/bin/env python3
+"""
 One-time OAuth2 setup for Google Drive access.
 Run this once: python3 setup_auth.py
 It will save a token.json with a refresh token for fully automated future runs.
@@ -25,7 +26,7 @@ def main():
 
     params = {
         "client_id": client_id,
-        "redirect_uri": "urn:ietf:params:oauth:grant-type:installed_app",
+        "redirect_uri": "http://localhost",
         "response_type": "code",
         "scope": SCOPES,
         "access_type": "offline",
@@ -37,15 +38,24 @@ def main():
     print("1. Open this URL in your browser:\n")
     print(f"   {auth_url}\n")
     print("2. Log in with your Google account and click Allow.")
-    print("3. You'll see a code on screen — paste it below.\n")
+    print("3. Your browser will try to redirect to localhost and show an error.")
+    print("   That's expected! Just copy the full URL from your browser address bar.")
+    print("   It will look like: http://localhost/?code=4/XXXX...&scope=...")
+    print("4. Paste that full URL (or just the code= value) below.\n")
 
-    code = input("Paste the code here: ").strip()
+    raw = input("Paste the redirect URL or code here: ").strip()
+    # Extract code from full URL if pasted
+    if "code=" in raw:
+        import urllib.parse as up
+        code = up.parse_qs(up.urlparse(raw).query).get("code", [raw])[0]
+    else:
+        code = raw
 
     resp = requests.post("https://oauth2.googleapis.com/token", data={
         "code": code,
         "client_id": client_id,
         "client_secret": client_secret,
-        "redirect_uri": "urn:ietf:params:oauth:grant-type:installed_app",
+        "redirect_uri": "http://localhost",
         "grant_type": "authorization_code",
     })
 
