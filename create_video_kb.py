@@ -13,7 +13,7 @@ TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 OUTPUT_VIDEO    = "/home/user/ClaudeCode/video_kb.mp4"
 RESOLUTION_W    = 1920
 RESOLUTION_H    = 1080
-FPS             = 25
+FPS             = 30
 VIDEO_CRF       = 23
 AUDIO_BITRATE   = "192k"
 OUTPUT_FILENAME = "video_kb.mp4"
@@ -184,12 +184,13 @@ def create_segment(image_path, segment_path, duration, effect_filter, w, h):
 
     cmd = [
         "ffmpeg", "-y",
+        "-r", str(FPS),           # force input frame rate (fixes 1fps stutter)
         "-loop", "1", "-i", image_path,
         "-vf", vf,
         "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
         "-pix_fmt", "yuv420p",
         "-t", f"{duration:.6f}",
-        "-r", str(FPS),
+        "-r", str(FPS),           # force output frame rate
         segment_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
