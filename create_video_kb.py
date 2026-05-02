@@ -103,62 +103,65 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-def get_kb_effect(idx, duration_frames, w, h):
+def get_kb_filter(idx, duration, w, h):
     """
-    Returns a zoompan filter string. Cycles through 6 Ken Burns styles:
-    1. Zoom in to centre
-    2. Pan left → right
-    3. Pan right → left
-    4. Zoom out from centre
-    5. Pan top → bottom
-    6. Zoom in + pan right → left
+    Returns a smooth Ken Burns vf filter string using scale+crop+t.
+    The image is pre-scaled to 1.5× output (LW x LH), then a time-varying
+    crop window slides/zooms into it, then rescaled to w×h.
+    't' is ffmpeg's built-in time variable (seconds, continuous).
+    Cycles through 6 styles.
     """
-    zoom_step = 0.30 / duration_frames          # 1.0 → 1.3 over full duration
-    pan_x     = w * 0.15 / duration_frames      # traverse 15% of width
-    pan_y     = h * 0.15 / duration_frames      # traverse 15% of height
+    D   = duration          # segment duration in seconds
+    LW  = int(w * 1.5)     # 2880 for 1920-wide output
+    LH  = int(h * 1.5)     # 1620 for 1080-high output
+    # padding from large to crop-out (pixels available to shift)
+    px  = LW - w            # 960
+    py  = LH - h            # 540
+    cx  = px // 2           # 480  (centre offset)
+    cy  = py // 2           # 270
+
+    # progress expression clamped to [0,1]
+    P = f"min(t/{D:.6f},1)"
 
     effects = [
-        # 1. Zoom in to centre
-        (f"zoompan="
-         f"z='min(1.0+{zoom_step:.8f}*on,1.3)':"
-         f"x='iw/2-(iw/zoom/2)':"
-         f"y='ih/2-(ih/zoom/2)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        # 1. Zoom in to centre: crop shrinks from full large → output size
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w='{LW}-{px}*{P}':h='{LH}-{py}*{P}'"
+         f":x='{cx}*{P}':y='{cy}*{P}',"
+         f"scale={w}:{h},setsar=1"),
 
-        # 2. Pan left → right (fixed zoom 1.2)
-        (f"zoompan="
-         f"z='1.2':"
-         f"x='min({pan_x:.6f}*on,iw-iw/zoom)':"
-         f"y='ih/2-(ih/zoom/2)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        # 2. Pan left → right at 1.5× zoom
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
+         f"scale={w}:{h},setsar=1"),
 
-        # 3. Pan right → left (fixed zoom 1.2)
-        (f"zoompan="
-         f"z='1.2':"
-         f"x='max(iw/6-{pan_x:.6f}*on,0)':"
-         f"y='ih/2-(ih/zoom/2)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        # 3. Pan right → left at 1.5× zoom
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
+         f"scale={w}:{h},setsar=1"),
 
-        # 4. Zoom out from centre
-        (f"zoompan="
-         f"z='max(1.3-{zoom_step:.8f}*on,1.0)':"
-         f"x='iw/2-(iw/zoom/2)':"
-         f"y='ih/2-(ih/zoom/2)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        # 4. Zoom out from centre: crop grows from output size → full large
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
+         f":x='{cx}*(1-{P})':y='{cy}*(1-{P})',"
+         f"scale={w}:{h},setsar=1"),
 
-        # 5. Pan top → bottom (fixed zoom 1.2)
-        (f"zoompan="
-         f"z='1.2':"
-         f"x='iw/2-(iw/zoom/2)':"
-         f"y='min({pan_y:.6f}*on,ih-ih/zoom)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        # 5. Pan top → bottom at 1.5× zoom
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
+         f"scale={w}:{h},setsar=1"),
 
         # 6. Zoom in + pan right → left
-        (f"zoompan="
-         f"z='min(1.0+{zoom_step:.8f}*on,1.3)':"
-         f"x='max(iw/4-{pan_x:.6f}*on,0)':"
-         f"y='ih/2-(ih/zoom/2)':"
-         f"d={duration_frames}:s={w}x{h}"),
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"crop=w='{LW}-{px}*{P}':h='{LH}-{py}*{P}'"
+         f":x='{px}*(1-{P})*0.5':y='{cy}*{P}',"
+         f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % len(effects)]
 
@@ -172,25 +175,16 @@ def get_audio_duration(audio_path):
     return float(result.stdout.strip())
 
 # ── Video creation ────────────────────────────────────────────────────────────
-def create_segment(image_path, segment_path, duration, effect_filter, w, h):
+def create_segment(image_path, segment_path, duration, vf, w, h):
     """Render one image into a video segment with Ken Burns effect."""
-    # Scale image to output size (letterbox/pillarbox), then apply Ken Burns
-    scale_filter = (
-        f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
-        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,"
-        f"setsar=1"
-    )
-    vf = f"{scale_filter},{effect_filter}"
-
     cmd = [
         "ffmpeg", "-y",
-        "-r", str(FPS),           # force input frame rate (fixes 1fps stutter)
-        "-loop", "1", "-i", image_path,
+        "-loop", "1", "-framerate", str(FPS), "-i", image_path,
         "-vf", vf,
         "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
         "-pix_fmt", "yuv420p",
+        "-r", str(FPS),
         "-t", f"{duration:.6f}",
-        "-r", str(FPS),           # force output frame rate
         segment_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -203,24 +197,24 @@ def create_video_kb(image_paths, audio_path, output_path):
     duration = get_audio_duration(audio_path)
     n        = len(image_paths)
     per_img  = duration / n
-    frames   = int(per_img * FPS)
 
     print(f"  Audio duration  : {duration:.2f}s")
     print(f"  Images          : {n}")
-    print(f"  Per image       : {per_img:.2f}s ({frames} frames at {FPS}fps)")
+    print(f"  Per image       : {per_img:.2f}s ({int(per_img * FPS)} frames at {FPS}fps)")
 
     tmpdir = os.path.dirname(output_path)
     segments = []
 
+    effect_names = [
+        "zoom in → centre", "pan left → right", "pan right → left",
+        "zoom out ← centre", "pan top → bottom", "zoom in + pan right → left"
+    ]
+
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
-        effect = get_kb_effect(i, frames, w, h)
-        effect_names = [
-            "zoom in → centre", "pan left → right", "pan right → left",
-            "zoom out ← centre", "pan top → bottom", "zoom in + pan right → left"
-        ]
+        vf = get_kb_filter(i, per_img, w, h)
         print(f"  Scene {i+1}/{n}: {effect_names[i % 6]}")
-        create_segment(img, seg, per_img, effect, w, h)
+        create_segment(img, seg, per_img, vf, w, h)
         segments.append(seg)
 
     # Concatenate segments (copy, no re-encode)
