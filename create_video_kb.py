@@ -133,20 +133,21 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
+KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+
 def get_kb_filter(idx, duration, w, h):
     """
     Returns a smooth Ken Burns vf filter string using scale+crop+t.
-    The image is pre-scaled to 1.5× output (LW x LH), then a time-varying
-    crop window slides/zooms into it, then rescaled to w×h.
+    Image is pre-scaled to KB_SCALE× output, then a time-varying crop
+    window slides/zooms across it, then rescaled to w×h.
     't' is ffmpeg's built-in time variable (seconds, continuous).
-    Cycles through 6 styles.
+    Cycles through 4 styles.
     """
-    D   = duration          # segment duration in seconds
-    LW  = int(w * 1.5)     # 2880 for 1920-wide output
-    LH  = int(h * 1.5)     # 1620 for 1080-high output
-    # padding from large to crop-out (pixels available to shift)
-    px  = LW - w            # 960
-    py  = LH - h            # 540
+    D   = duration
+    LW  = int(w * KB_SCALE)
+    LH  = int(h * KB_SCALE)
+    px  = LW - w
+    py  = LH - h
     cx  = px // 2           # 480  (centre offset)
     cy  = py // 2           # 270
 
@@ -210,7 +211,7 @@ def create_segment(image_path, segment_path, duration, vf, w, h):
         print(f"  ffmpeg error on {os.path.basename(image_path)}:\n{result.stderr[-1000:]}")
         sys.exit(1)
 
-def create_video_kb(image_paths, audio_path, output_path, durations=None):
+def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb=True):
     w, h          = RESOLUTION_W, RESOLUTION_H
     total_duration = get_audio_duration(audio_path)
     n             = len(image_paths)
@@ -220,6 +221,7 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None):
         print(f"  Timing          : equal split (no auto_timings.csv found)")
     else:
         print(f"  Timing          : from auto_timings.csv")
+    print(f"  Ken Burns       : {'yes (every 4th scene, {:.0f}× zoom)'.format(KB_SCALE) if use_kb else 'no (all static)'}")
 
     print(f"  Audio duration  : {total_duration:.2f}s")
     print(f"  Images          : {n}")
@@ -241,7 +243,7 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None):
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if i % 4 == 0:
+        if use_kb and i % 4 == 0:
             vf = get_kb_filter(kb_idx, dur, w, h)
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  {effect_names[kb_idx % 4]} [Ken Burns]")
             kb_idx += 1
@@ -277,20 +279,24 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename]")
-        print("Example: python3 create_video_kb.py 1Fi6ozVLcf3yW0tCxMEOdn5wOiSVPZhT6 video_kb.mp4")
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    flags = [a for a in sys.argv[1:] if a.startswith("--")]
+
+    if not args:
+        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename] [--no-kb]")
+        print("  --no-kb   Render all scenes as static (no Ken Burns effects)")
         sys.exit(1)
 
-    folder_id = sys.argv[1]
+    folder_id  = args[0]
+    use_kb     = "--no-kb" not in flags
 
     print("Authenticating with Google Drive...")
     token = get_access_token()
     print("  ✓ Authenticated")
 
     # Use folder name as video filename (or override from argv)
-    if len(sys.argv) > 2:
-        out_name = sys.argv[2]
+    if len(args) > 1:
+        out_name = args[1]
     else:
         folder_name = drive_get_name(token, folder_id)
         out_name = f"{folder_name}.mp4"
@@ -356,8 +362,9 @@ def main():
             else:
                 print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
 
-        print(f"\nRendering Ken Burns video ({RESOLUTION_W}x{RESOLUTION_H} @ {FPS}fps)...")
-        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations)
+        mode = "Ken Burns" if use_kb else "static (no Ken Burns)"
+        print(f"\nRendering video ({RESOLUTION_W}x{RESOLUTION_H} @ {FPS}fps) — {mode}...")
+        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations, use_kb)
         size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
         print(f"  ✓ Video created ({size_mb:.1f} MB)")
 

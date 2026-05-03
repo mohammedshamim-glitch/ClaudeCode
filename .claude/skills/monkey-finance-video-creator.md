@@ -28,14 +28,14 @@ This produces `auto_timings.csv` and uploads it to the episode folder. It:
 
 ### 3. Create the video
 
-**Ken Burns edition (recommended):**
+**With Ken Burns effects (every 4th scene, subtle 1.2× zoom):**
 ```bash
 python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
 ```
 
-**Standard (no effects):**
+**Without Ken Burns (all static):**
 ```bash
-python3 /home/user/ClaudeCode/create_video.py <episode_folder_id>
+python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --no-kb
 ```
 
 Both scripts:
@@ -71,7 +71,8 @@ Episode Folder/
 | Aspect ratio | Preserved with black padding |
 | Auth | OAuth2 refresh token (shared with TTS skill) |
 | Min scene duration | 4.0 seconds (shorter scenes merged with neighbour) |
-| Ken Burns frequency | Every 4th scene; rest are static |
+| Ken Burns frequency | Every 4th scene; rest are static (use `--no-kb` to disable all) |
+| Ken Burns zoom | 1.2× (reduced to avoid cropping text) |
 | Ken Burns styles | Zoom in, pan L→R, pan R→L, zoom out (cycles) |
 
 ## Notes
