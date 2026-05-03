@@ -8,7 +8,7 @@ Generate auto_timings.csv for a Monkey Finance episode.
 - Uploads auto_timings.csv back to the episode folder
 """
 
-import csv, io, json, os, sys, subprocess, tempfile, shutil, requests
+import csv, io, json, os, re, sys, subprocess, tempfile, shutil, requests
 
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
 
@@ -119,27 +119,60 @@ def get_audio_duration(path):
     return float(result.stdout.strip())
 
 # ── Timing logic ──────────────────────────────────────────────────────────────
+def split_into_sentences(text):
+    """Split text into sentences without breaking mid-sentence."""
+    # Split after . ! ? followed by whitespace (keep punctuation attached)
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return [s.strip() for s in sentences if s.strip()]
+
 def split_narration(text, n_images):
     """
-    Split narration text into exactly n_images chunks.
-    First split by blank lines (paragraphs). If paragraph count != n_images,
-    redistribute words evenly across n_images slots.
+    Split narration into exactly n_images chunks, always at sentence boundaries.
+    Sentences are assigned greedily to fill each image slot to a word-count
+    target (total_words / n_images). Chunks will naturally vary in length.
     """
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    sentences = split_into_sentences(text)
+    total_words = sum(len(s.split()) for s in sentences)
+    target = total_words / n_images
 
-    if len(paragraphs) == n_images:
-        return paragraphs
+    chunks = []
+    current, current_words = [], 0
 
-    # Flatten all words and redistribute into n_images equal-ish word groups
-    all_words = text.split()
-    total_words = len(all_words)
-    base = total_words // n_images
-    remainder = total_words % n_images
-    chunks, idx = [], 0
-    for i in range(n_images):
-        size = base + (1 if i < remainder else 0)
-        chunks.append(" ".join(all_words[idx:idx + size]))
-        idx += size
+    for i, sentence in enumerate(sentences):
+        words = len(sentence.split())
+        current.append(sentence)
+        current_words += words
+
+        slots_filled = len(chunks)
+        slots_left   = n_images - slots_filled
+        sentences_left = len(sentences) - i - 1
+
+        # Commit this chunk if we've hit the target and there are enough
+        # sentences left to fill the remaining slots (at least 1 each)
+        if current_words >= target and slots_filled < n_images - 1 and sentences_left >= slots_left - 1:
+            chunks.append(" ".join(current))
+            current, current_words = [], 0
+
+    # Flush whatever remains into the last chunk
+    if current:
+        chunks.append(" ".join(current))
+
+    # Safety: merge excess chunks into the last slot
+    while len(chunks) > n_images:
+        chunks[-2] = chunks[-2] + " " + chunks[-1]
+        chunks.pop()
+
+    # Safety: if too few chunks, split the longest one at its sentence midpoint
+    while len(chunks) < n_images:
+        longest = max(range(len(chunks)), key=lambda i: len(chunks[i].split()))
+        sents = split_into_sentences(chunks[longest])
+        if len(sents) < 2:
+            chunks.insert(longest + 1, chunks[longest])  # duplicate as last resort
+        else:
+            mid = len(sents) // 2
+            chunks[longest] = " ".join(sents[:mid])
+            chunks.insert(longest + 1, " ".join(sents[mid:]))
+
     return chunks
 
 def fmt_time(seconds):
