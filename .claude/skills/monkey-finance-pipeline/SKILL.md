@@ -47,12 +47,22 @@ Jump directly to that stage. Confirm what Drive assets already exist before proc
 
 ## Drive Folder Setup
 
-Before Stage 1 begins, establish the episode Drive folder:
+The episode folder is created **automatically after the topic is approved** at the end of Stage 1 (or immediately if Sham provides a topic directly and skips Stage 1).
 
-1. **If the folder already exists** — get its ID from Sham or search Drive
-2. **If it's a new episode** — create a new folder inside the Monkey Finance root (ID: `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS`) named `YYYY-MM-DD - <Episode Title>`
+### Auto-create the folder
+Use the Drive `create_file` tool with:
+- `title`: `YYYY-MM-DD - <Episode Title>` (use today's date, format the title cleanly)
+- `mimeType` (set as the file's mime type): `application/vnd.google-apps.folder`
+- `parentId`: `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` (Monkey Finance root)
 
-All stages save their outputs into this single folder. The folder ID is passed through all 6 stages.
+Example folder name: `2026-05-03 - S&P 500 vs Buying a House`
+
+Confirm creation with: *"Drive folder created: `YYYY-MM-DD - <Episode Title>` — [folder link]. All pipeline files will be saved here."*
+
+Store the returned folder ID — every subsequent stage saves its output files into this folder.
+
+### If folder already exists
+Search Drive first. If Sham says the folder is already there, get its ID before proceeding rather than creating a duplicate.
 
 ---
 
@@ -66,7 +76,7 @@ Run the full trend sweep: 6 phases, scored opportunities, full content brief for
 **Approval gate:**
 > *"Stage 1 complete. Here are the top 3 opportunities with scores. My recommendation is [X] — confidence [Y/10]. Shall I run the pipeline with this topic, or do you want to pick a different one?"*
 
-Wait for Sham's go-ahead before Stage 2.
+Wait for Sham's go-ahead. Once topic is confirmed → **create the Drive folder automatically** before moving to Stage 2.
 
 ---
 
