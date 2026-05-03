@@ -17,9 +17,9 @@ One skill. Six stages. One finished video.
 
 Every Monkey Finance video flows through these stages in order:
 
-| Stage | Skill | Input | Output |
+| Stage | Skill | Input | Drive Output |
 |---|---|---|---|
-| **1** | `monkey-finance-trends` | Topic idea or blank | Content brief + winning topic |
+| **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.txt` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-video-prompts.txt` |
 | **4** | `monkey-finance-seo-thumbnail` | Script + brief | `06-seo-metadata.txt` |
@@ -76,7 +76,10 @@ Run the full trend sweep: 6 phases, scored opportunities, full content brief for
 **Approval gate:**
 > *"Stage 1 complete. Here are the top 3 opportunities with scores. My recommendation is [X] — confidence [Y/10]. Shall I run the pipeline with this topic, or do you want to pick a different one?"*
 
-Wait for Sham's go-ahead. Once topic is confirmed → **create the Drive folder automatically** before moving to Stage 2.
+Wait for Sham's go-ahead. Once topic is confirmed:
+1. **Create the Drive folder** (see Drive Folder Setup above)
+2. **Save the full trend report** to the folder as `01-trend-report.txt` — includes market snapshot, all scored opportunities, evergreen picks, and the winning content brief
+3. Confirm: *"Drive folder created and trend report saved — [folder link]. Moving to Stage 2."*
 
 ---
 
