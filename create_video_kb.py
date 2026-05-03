@@ -159,18 +159,6 @@ def get_kb_filter(idx, duration, w, h):
          f":x='{cx}*(1-{P})':y='{cy}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
 
-        # 5. Pan top → bottom at 1.5× zoom
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
-         f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
-         f"scale={w}:{h},setsar=1"),
-
-        # 6. Zoom in + pan right → left
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
-         f"crop=w='{LW}-{px}*{P}':h='{LH}-{py}*{P}'"
-         f":x='{px}*(1-{P})*0.5':y='{cy}*{P}',"
-         f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % len(effects)]
 
@@ -216,7 +204,7 @@ def create_video_kb(image_paths, audio_path, output_path):
 
     effect_names = [
         "zoom in → centre", "pan left → right", "pan right → left",
-        "zoom out ← centre", "pan top → bottom", "zoom in + pan right → left"
+        "zoom out ← centre",
     ]
     static_vf = (
         f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
