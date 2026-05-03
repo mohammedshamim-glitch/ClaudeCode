@@ -5,7 +5,7 @@ Same as create_video.py but applies slow zoom/pan (Ken Burns) to each image.
 Each scene gets a different effect, cycling through 6 styles.
 """
 
-import json, os, sys, time, subprocess, tempfile, shutil, requests
+import csv, io, json, os, sys, subprocess, tempfile, shutil, requests
 from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -63,16 +63,37 @@ def drive_get_name(token, file_id):
     return r.json()["name"]
 
 def drive_list_files(token, folder_id, mime_filter=None):
-    query = f"'{folder_id}' in parents"
-    if mime_filter:
-        query += f" and mimeType contains '{mime_filter}'"
+    files, page_token = [], None
+    while True:
+        params = {
+            "q": f"'{folder_id}' in parents" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
+            "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
+            "pageSize": 100,
+        }
+        if page_token:
+            params["pageToken"] = page_token
+        r = requests.get(
+            "https://www.googleapis.com/drive/v3/files",
+            headers={"Authorization": f"Bearer {token}"},
+            params=params,
+        )
+        r.raise_for_status()
+        data = r.json()
+        files.extend(data.get("files", []))
+        page_token = data.get("nextPageToken")
+        if not page_token:
+            break
+    return files
+
+def drive_load_csv(token, file_id):
+    """Download a CSV file and return rows as list of dicts."""
     r = requests.get(
-        "https://www.googleapis.com/drive/v3/files",
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
         headers={"Authorization": f"Bearer {token}"},
-        params={"q": query, "fields": "files(id,name,mimeType,modifiedTime)", "pageSize": 100}
     )
     r.raise_for_status()
-    return r.json().get("files", [])
+    reader = csv.DictReader(io.StringIO(r.text))
+    return list(reader)
 
 def drive_download_file(token, file_id, local_path):
     r = requests.get(
@@ -189,15 +210,20 @@ def create_segment(image_path, segment_path, duration, vf, w, h):
         print(f"  ffmpeg error on {os.path.basename(image_path)}:\n{result.stderr[-1000:]}")
         sys.exit(1)
 
-def create_video_kb(image_paths, audio_path, output_path):
-    w, h     = RESOLUTION_W, RESOLUTION_H
-    duration = get_audio_duration(audio_path)
-    n        = len(image_paths)
-    per_img  = duration / n
+def create_video_kb(image_paths, audio_path, output_path, durations=None):
+    w, h          = RESOLUTION_W, RESOLUTION_H
+    total_duration = get_audio_duration(audio_path)
+    n             = len(image_paths)
 
-    print(f"  Audio duration  : {duration:.2f}s")
+    if durations is None:
+        durations = [total_duration / n] * n
+        print(f"  Timing          : equal split (no auto_timings.csv found)")
+    else:
+        print(f"  Timing          : from auto_timings.csv")
+
+    print(f"  Audio duration  : {total_duration:.2f}s")
     print(f"  Images          : {n}")
-    print(f"  Per image       : {per_img:.2f}s ({int(per_img * FPS)} frames at {FPS}fps)")
+    print(f"  Duration range  : {min(durations):.2f}s – {max(durations):.2f}s per scene")
 
     tmpdir = os.path.dirname(output_path)
     segments = []
@@ -210,18 +236,19 @@ def create_video_kb(image_paths, audio_path, output_path):
         f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
     )
-    kb_idx = 0  # counter for cycling KB effect styles
+    kb_idx = 0
 
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
+        dur = durations[i]
         if i % 4 == 0:
-            vf = get_kb_filter(kb_idx, per_img, w, h)
-            print(f"  Scene {i+1}/{n}: {effect_names[kb_idx % 6]} [Ken Burns]")
+            vf = get_kb_filter(kb_idx, dur, w, h)
+            print(f"  Scene {i+1}/{n}: {dur:.2f}s  {effect_names[kb_idx % 4]} [Ken Burns]")
             kb_idx += 1
         else:
             vf = static_vf
-            print(f"  Scene {i+1}/{n}: static")
-        create_segment(img, seg, per_img, vf, w, h)
+            print(f"  Scene {i+1}/{n}: {dur:.2f}s  static")
+        create_segment(img, seg, dur, vf, w, h)
         segments.append(seg)
 
     # Concatenate segments (copy, no re-encode)
@@ -288,14 +315,20 @@ def main():
         sys.exit(1)
     print(f"  ✓ {len(image_files)} images (sorted by modification time)")
 
-    # Find narration.mp3
+    # Find narration.mp3 and optional auto_timings.csv
     print("Finding narration.mp3...")
     all_files = drive_list_files(token, folder_id)
-    audio_file = next((f for f in all_files if f["name"] == "narration.mp3"), None)
+    audio_file   = next((f for f in all_files if f["name"] == "narration.mp3"), None)
+    timings_file = next((f for f in all_files if f["name"] == "auto_timings.csv"), None)
     if not audio_file:
         print("ERROR: narration.mp3 not found.")
         sys.exit(1)
     print(f"  ✓ Found narration.mp3")
+    if timings_file:
+        print(f"  ✓ Found auto_timings.csv — will use per-scene durations")
+    else:
+        print(f"  ⚠ auto_timings.csv not found — falling back to equal splits")
+        print(f"    Run generate_timings.py first for smarter scene durations")
 
     # Download to temp dir
     tmpdir = tempfile.mkdtemp(prefix="mf_kb_")
@@ -313,8 +346,18 @@ def main():
             image_paths.append(local)
             print(f"  ✓ scene_{i+1:03d}{ext}")
 
+        # Load per-scene durations from CSV if available
+        durations = None
+        if timings_file:
+            rows = drive_load_csv(token, timings_file["id"])
+            rows.sort(key=lambda r: int(r["scene"]))
+            if len(rows) == len(image_paths):
+                durations = [float(r["duration_seconds"]) for r in rows]
+            else:
+                print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
+
         print(f"\nRendering Ken Burns video ({RESOLUTION_W}x{RESOLUTION_H} @ {FPS}fps)...")
-        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO)
+        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations)
         size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
         print(f"  ✓ Video created ({size_mb:.1f} MB)")
 

@@ -41,9 +41,8 @@ python3 /home/user/ClaudeCode/create_video.py <episode_folder_id>
 Both scripts:
 - Auto-name the output after the Drive folder (e.g. `2026-04-25 - 10 Bad Money Habits That Actually Make You Richer.mp4`)
 - Upload the finished video back into the episode folder
+- Automatically use `auto_timings.csv` if present — otherwise fall back to equal splits
 - Pass a second argument to override the filename
-
-> **Note:** The video scripts currently use equal-duration splitting. To use the `auto_timings.csv` durations, this will be wired up in a future update.
 
 ## Drive structure expected
 
