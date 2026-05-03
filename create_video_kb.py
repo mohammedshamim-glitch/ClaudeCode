@@ -53,6 +53,15 @@ def get_access_token():
     return tokens["access_token"]
 
 # ── Google Drive helpers ──────────────────────────────────────────────────────
+def drive_get_name(token, file_id):
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"fields": "name"}
+    )
+    r.raise_for_status()
+    return r.json()["name"]
+
 def drive_list_files(token, folder_id, mime_filter=None):
     query = f"'{folder_id}' in parents"
     if mime_filter:
@@ -249,11 +258,18 @@ def main():
         sys.exit(1)
 
     folder_id = sys.argv[1]
-    out_name  = sys.argv[2] if len(sys.argv) > 2 else OUTPUT_FILENAME
 
     print("Authenticating with Google Drive...")
     token = get_access_token()
     print("  ✓ Authenticated")
+
+    # Use folder name as video filename (or override from argv)
+    if len(sys.argv) > 2:
+        out_name = sys.argv[2]
+    else:
+        folder_name = drive_get_name(token, folder_id)
+        out_name = f"{folder_name}.mp4"
+    print(f"  Output filename : {out_name}")
 
     # Find images subfolder
     print("Finding images subfolder...")
