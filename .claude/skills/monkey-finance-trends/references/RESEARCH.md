@@ -44,6 +44,54 @@ Topic | Source | Signal strength (High/Med/Low) | Evergreen or Timely
 
 ---
 
+## Phase 1E: Evergreen Popular Topics Sweep
+
+**Goal:** Identify 8–10 permanently popular UK finance topics with sustained year-round search demand. These run alongside the trending sweep — not instead of it.
+
+**Why this matters:** Trending topics spike and fade. Evergreen topics generate steady views for 2–3 years. A channel needs both: trending for algorithm boosts, evergreen for long-term watch time.
+
+### 1E-a — Search for Sustained Performers
+Run these searches to find topics with consistent long-term demand:
+- `most searched personal finance topics UK`
+- `top finance youtube videos all time UK`
+- `"personal finance" youtube most viewed evergreen`
+- `investing basics youtube most views UK`
+- `best performing finance videos past 2 years youtube`
+
+For each result note: views, upload date, channel size, topic category.
+
+### 1E-b — Check the Core Evergreen Categories
+Always scan these categories for fresh angles we haven't covered yet:
+
+| Category | Check for angles on... |
+|---|---|
+| **Investing vs Property** | S&P 500 vs buying a house, index funds vs buy-to-let, is property still the best investment? |
+| **ISA strategy** | Stocks & Shares ISA explained, ISA vs pension, maxing your ISA |
+| **Pension** | How much to retire, SIPP vs workplace pension, pension drawdown, state pension age |
+| **Compound interest** | Starting early, the 8th wonder, compound interest with real numbers |
+| **Index funds** | Beginner guide, why they beat most fund managers, how to pick one |
+| **Emergency fund** | How much, where to keep it, savings rates UK |
+| **Debt vs investing** | Should I pay off debt or invest? Good debt vs bad debt |
+| **Tax efficiency** | Capital gains tax, income tax bands, salary sacrifice, dividend allowance |
+| **First-time investing** | Starting with £100/£500, best UK platforms for beginners |
+| **Budgeting** | 50/30/20, zero-based budgeting, envelope method |
+
+### 1E-c — Find the Fresh Angle
+For any evergreen topic we cover, search: `"[topic]" youtube 2023 OR 2024 OR 2025`
+- Are the top videos 2+ years old? → **Refresh opportunity**
+- Are they US-focused? → **UK angle opportunity**
+- Are they long and dense? → **Accessible plain-English opportunity**
+
+Flag each evergreen pick with one of: `Refresh` / `UK angle` / `Accessible take` / `New data`
+
+### 1E-d — Compile Evergreen List
+Format:
+```
+Topic | Angle | Why winnable | Shelf life estimate
+```
+
+---
+
 ## Phase 2: SEO Deep Dive
 
 **Goal:** For each shortlisted topic, gather keyword and format data.
