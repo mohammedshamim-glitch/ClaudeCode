@@ -133,7 +133,7 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+KB_SCALE = 1.3   # zoom factor — keep low (1.15–1.25) to avoid cropping text
 
 def get_kb_filter(idx, duration, w, h):
     """
