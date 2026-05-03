@@ -11,21 +11,25 @@ Search Google Drive inside the **Monkey Finance** root (ID: `1Z-aB7dKK9T9EpndozU
 - Use `search_files` with: `parentId = '1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS' and title contains '<episode keyword>'`
 
 ### 2. Run the video creator
+
+**Standard (no effects):**
 ```bash
-python3 /home/user/ClaudeCode/create_video.py <episode_folder_id> [output_filename]
+python3 /home/user/ClaudeCode/create_video.py <episode_folder_id>
 ```
 
-**Example:**
+**Ken Burns edition (recommended — smooth zoom/pan on every 4th scene):**
 ```bash
-python3 /home/user/ClaudeCode/create_video.py 1Fi6ozVLcf3yW0tCxMEOdn5wOiSVPZhT6 video.mp4
+python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
 ```
+
+Both scripts auto-name the output file after the Drive folder (e.g. `2026-05-02 - The AI Bubble Just Popped.mp4`). Pass a second argument to override.
 
 This will:
 - Find the `images/` subfolder and list all images sorted by modification time (= scene order)
 - Download all images and `narration.mp3`
 - Calculate equal duration per image: `audio_length ÷ number_of_images`
 - Render a 1920×1080 MP4 (H.264 + AAC) with black letterbox/pillarbox if needed
-- Upload `video.mp4` back into the episode folder
+- Upload the video back into the episode folder, named after the folder
 
 ## Drive structure expected
 
@@ -43,15 +47,19 @@ Episode Folder/
 
 | Setting | Value |
 |---|---|
-| Script | `/home/user/ClaudeCode/create_video.py` |
+| Standard script | `/home/user/ClaudeCode/create_video.py` |
+| Ken Burns script | `/home/user/ClaudeCode/create_video_kb.py` |
 | Resolution | 1920×1080 |
 | Video codec | H.264 (libx264), CRF 23 |
 | Audio codec | AAC 192kbps |
 | Image ordering | By Drive `modifiedTime` ascending |
 | Aspect ratio | Preserved with black padding |
 | Auth | OAuth2 refresh token (shared with TTS skill) |
+| Ken Burns frequency | Every 4th scene (scenes 1, 5, 9, …); rest are static |
+| Ken Burns styles | Zoom in, pan L→R, pan R→L, zoom out, pan T→B, zoom in+pan R→L (cycles) |
 
 ## Notes
 - Images are ordered by **modification time** (oldest = scene 1). If order is wrong, rename files on Drive so alphabetical order matches scene order.
 - If `narration.mp3` is missing, run the TTS skill first.
 - Output is optimised for web streaming (`-movflags +faststart`).
+- Output filename is automatically taken from the Drive episode folder name.

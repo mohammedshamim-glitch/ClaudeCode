@@ -218,11 +218,21 @@ def create_video_kb(image_paths, audio_path, output_path):
         "zoom in → centre", "pan left → right", "pan right → left",
         "zoom out ← centre", "pan top → bottom", "zoom in + pan right → left"
     ]
+    static_vf = (
+        f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
+    )
+    kb_idx = 0  # counter for cycling KB effect styles
 
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
-        vf = get_kb_filter(i, per_img, w, h)
-        print(f"  Scene {i+1}/{n}: {effect_names[i % 6]}")
+        if i % 4 == 0:
+            vf = get_kb_filter(kb_idx, per_img, w, h)
+            print(f"  Scene {i+1}/{n}: {effect_names[kb_idx % 6]} [Ken Burns]")
+            kb_idx += 1
+        else:
+            vf = static_vf
+            print(f"  Scene {i+1}/{n}: static")
         create_segment(img, seg, per_img, vf, w, h)
         segments.append(seg)
 
