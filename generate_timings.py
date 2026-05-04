@@ -3,7 +3,7 @@
 Generate auto_timings.csv for a Monkey Finance episode.
 - Lists images in the /Images subfolder (sorted by modifiedTime)
 - Downloads narration_script.txt and narration.mp3
-- Splits narration into paragraphs; distributes proportionally by word count
+- Splits audio duration equally across all scenes
 - Outputs: scene, image, words, duration_seconds, start_time, end_time
 - Uploads auto_timings.csv back to the episode folder
 """
@@ -137,18 +137,12 @@ def get_audio_duration(path):
     return float(result.stdout.strip())
 
 # ── Timing logic ──────────────────────────────────────────────────────────────
-MIN_SCENE_DURATION = 4.0  # seconds — any scene shorter than this gets merged
-
 def split_into_sentences(text):
-    """Split text into sentences without breaking mid-sentence."""
     sentences = re.split(r'(?<=[.!?])\s+', text.strip())
     return [s.strip() for s in sentences if s.strip()]
 
 def split_narration(text, n_images):
-    """
-    Split narration into exactly n_images chunks at sentence boundaries.
-    Greedy fill to word-count target per image.
-    """
+    """Split narration into exactly n_images chunks for excerpt display only."""
     sentences = split_into_sentences(text)
     total_words = sum(len(s.split()) for s in sentences)
     target = total_words / n_images
@@ -161,8 +155,8 @@ def split_narration(text, n_images):
         current.append(sentence)
         current_words += words
 
-        slots_filled  = len(chunks)
-        slots_left    = n_images - slots_filled
+        slots_filled   = len(chunks)
+        slots_left     = n_images - slots_filled
         sentences_left = len(sentences) - i - 1
 
         if current_words >= target and slots_filled < n_images - 1 and sentences_left >= slots_left - 1:
@@ -187,74 +181,6 @@ def split_narration(text, n_images):
             chunks.insert(longest + 1, " ".join(sents[mid:]))
 
     return chunks
-
-def merge_short_scenes(chunks, total_duration, min_dur=MIN_SCENE_DURATION):
-    """
-    After sentence-aware splitting, merge any chunk whose proportional duration
-    would fall below min_dur into its shorter neighbour.
-    Returns groups: each group = list of original chunk indices that share a
-    combined narration block. All original image slots are preserved.
-    Within each merged group, duration is split: every image gets at least
-    min_dur if possible, with leftover distributed proportionally by word count.
-    """
-    words = [len(c.split()) for c in chunks]
-    total_words = sum(words)
-    durations = [(w / total_words) * total_duration for w in words]
-
-    # Each group starts as a single-element list of chunk indices
-    groups = [[i] for i in range(len(chunks))]
-
-    changed = True
-    while changed:
-        changed = False
-        group_durs = [sum(durations[i] for i in g) for g in groups]
-        shortest = min(range(len(groups)), key=lambda i: group_durs[i])
-
-        if group_durs[shortest] >= min_dur:
-            break  # all groups meet minimum
-
-        # Merge with the shorter of the two neighbours
-        if shortest == 0:
-            neighbor = 1
-        elif shortest == len(groups) - 1:
-            neighbor = len(groups) - 2
-        else:
-            left  = group_durs[shortest - 1]
-            right = group_durs[shortest + 1]
-            neighbor = shortest - 1 if left <= right else shortest + 1
-
-        lo, hi = sorted([shortest, neighbor])
-        merged = groups[lo] + groups[hi]
-        groups = groups[:lo] + [merged] + groups[hi + 1:]
-        changed = True
-
-    # For each group, calculate per-image durations
-    result = []  # list of (chunk_indices, [per_image_durations])
-    for group in groups:
-        group_total = sum(durations[i] for i in group)
-        n = len(group)
-        group_words = [words[i] for i in group]
-        total_gw = sum(group_words)
-
-        if n == 1:
-            result.append((group, [group_total]))
-            continue
-
-        # Give each image a minimum floor, distribute remainder by word count
-        guaranteed = min_dur * n
-        if guaranteed >= group_total:
-            # Edge case: not enough time for all minimums — split equally
-            per_img = [group_total / n] * n
-        else:
-            remaining = group_total - guaranteed
-            per_img = [
-                min_dur + remaining * (gw / total_gw)
-                for gw in group_words
-            ]
-
-        result.append((group, per_img))
-
-    return result
 
 def fmt_time(seconds):
     m = int(seconds) // 60
@@ -316,38 +242,32 @@ def main():
         total_duration = get_audio_duration(audio_path)
         print(f"  ✓ Audio duration: {total_duration:.2f}s")
 
-        # Split narration into n chunks at sentence boundaries
+        # Split narration into n chunks for excerpt display
         chunks = split_narration(script_text, n)
         total_words = sum(len(c.split()) for c in chunks)
         print(f"  ✓ Narration split into {len(chunks)} chunks ({total_words} words total)")
 
-        # Merge any chunk whose duration would be < MIN_SCENE_DURATION
-        groups = merge_short_scenes(chunks, total_duration)
-        merged_count = sum(1 for g, _ in groups if len(g) > 1)
-        if merged_count:
-            print(f"  ✓ Merged {merged_count} short scene(s) into neighbours (min {MIN_SCENE_DURATION}s)")
+        # Equal duration per scene
+        equal_dur = total_duration / n
+        print(f"  ✓ Equal duration: {equal_dur:.2f}s per scene ({n} scenes)")
 
-        # Build timings — each image gets its own row
+        # Build timings — every image gets the same duration
         rows = []
         cursor = 0.0
-        for group_indices, per_img_durs in groups:
-            for rank, (img_idx, dur) in enumerate(zip(group_indices, per_img_durs)):
-                img   = image_files[img_idx]
-                chunk = chunks[img_idx]
-                start = cursor
-                end   = cursor + dur
-                rows.append({
-                    "scene":             img_idx + 1,
-                    "image":             img["name"],
-                    "narration_excerpt": chunk[:80].replace("\n", " ") + ("…" if len(chunk) > 80 else ""),
-                    "words":             len(chunk.split()),
-                    "duration_seconds":  round(dur, 2),
-                    "start_time":        fmt_time(start),
-                    "end_time":          fmt_time(end),
-                })
-                cursor = end
-
-        rows.sort(key=lambda r: r["scene"])
+        for img_idx, img in enumerate(image_files):
+            chunk = chunks[img_idx]
+            start = cursor
+            end   = cursor + equal_dur
+            rows.append({
+                "scene":             img_idx + 1,
+                "image":             img["name"],
+                "narration_excerpt": chunk[:80].replace("\n", " ") + ("…" if len(chunk) > 80 else ""),
+                "words":             len(chunk.split()),
+                "duration_seconds":  round(equal_dur, 2),
+                "start_time":        fmt_time(start),
+                "end_time":          fmt_time(end),
+            })
+            cursor = end
 
         # Write CSV
         csv_path = os.path.join(tmpdir, "auto_timings.csv")
