@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Generate auto_timings.csv for a Monkey Finance episode.
-- Lists images in the /Images subfolder (sorted by modifiedTime)
+- Lists images in the /Images subfolder (sorted by filename)
 - Downloads narration_script.txt and narration.mp3
-- Splits audio duration equally across all scenes
+- Distributes duration proportionally by word count, with a 6s minimum per scene
 - Outputs: scene, image, words, duration_seconds, start_time, end_time
 - Uploads auto_timings.csv back to the episode folder
 """
@@ -141,8 +141,39 @@ def split_into_sentences(text):
     sentences = re.split(r'(?<=[.!?])\s+', text.strip())
     return [s.strip() for s in sentences if s.strip()]
 
+MIN_SCENE_DURATION = 6.0  # seconds — scenes shorter than this get a boosted floor
+
+def merge_short_scenes(chunks, total_duration, min_dur=MIN_SCENE_DURATION):
+    """
+    Distribute total_duration proportionally by word count, then bump any scene
+    below min_dur up to min_dur and redistribute the deficit proportionally
+    across the remaining scenes.
+    """
+    words = [len(c.split()) for c in chunks]
+    total_words = sum(words)
+    durations = [(w / total_words) * total_duration for w in words]
+
+    changed = True
+    while changed:
+        changed = False
+        floored = [i for i, d in enumerate(durations) if d < min_dur]
+        if not floored:
+            break
+        deficit = sum(min_dur - durations[i] for i in floored)
+        free    = [i for i in range(len(durations)) if i not in floored]
+        if not free:
+            break
+        free_total = sum(durations[i] for i in free)
+        for i in floored:
+            durations[i] = min_dur
+        for i in free:
+            durations[i] -= deficit * (durations[i] / free_total)
+        changed = True
+
+    return durations
+
 def split_narration(text, n_images):
-    """Split narration into exactly n_images chunks for excerpt display only."""
+    """Split narration into exactly n_images chunks at sentence boundaries."""
     sentences = split_into_sentences(text)
     total_words = sum(len(s.split()) for s in sentences)
     target = total_words / n_images
@@ -244,28 +275,30 @@ def main():
         total_duration = get_audio_duration(audio_path)
         print(f"  ✓ Audio duration: {total_duration:.2f}s")
 
-        # Split narration into n chunks for excerpt display
+        # Split narration into n chunks at sentence boundaries
         chunks = split_narration(script_text, n)
         total_words = sum(len(c.split()) for c in chunks)
         print(f"  ✓ Narration split into {len(chunks)} chunks ({total_words} words total)")
 
-        # Equal duration per scene
-        equal_dur = total_duration / n
-        print(f"  ✓ Equal duration: {equal_dur:.2f}s per scene ({n} scenes)")
+        # Proportional durations with 6s minimum floor
+        durations = merge_short_scenes(chunks, total_duration)
+        floored = sum(1 for d in durations if abs(d - MIN_SCENE_DURATION) < 0.01)
+        print(f"  ✓ Proportional timing with {MIN_SCENE_DURATION}s floor ({floored} scene(s) boosted)")
+        print(f"  ✓ Duration range: {min(durations):.2f}s – {max(durations):.2f}s")
 
-        # Build timings — every image gets the same duration
+        # Build timings
         rows = []
         cursor = 0.0
-        for img_idx, img in enumerate(image_files):
+        for img_idx, (img, dur) in enumerate(zip(image_files, durations)):
             chunk = chunks[img_idx]
             start = cursor
-            end   = cursor + equal_dur
+            end   = cursor + dur
             rows.append({
                 "scene":             img_idx + 1,
                 "image":             img["name"],
                 "narration_excerpt": chunk[:80].replace("\n", " ") + ("…" if len(chunk) > 80 else ""),
                 "words":             len(chunk.split()),
-                "duration_seconds":  round(equal_dur, 2),
+                "duration_seconds":  round(dur, 2),
                 "start_time":        fmt_time(start),
                 "end_time":          fmt_time(end),
             })
