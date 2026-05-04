@@ -135,54 +135,95 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
 KB_SCALE = 1.3   # zoom factor — keep low (1.15–1.25) to avoid cropping text
 
+EFFECT_NAMES = [
+    "zoom in → centre",
+    "pan left → right",
+    "pan right → left",
+    "zoom out ← centre",
+]
+
 def get_kb_filter(idx, duration, w, h):
     """
     Returns a smooth Ken Burns vf filter string using scale+crop+t.
     Image is pre-scaled to KB_SCALE× output, then a time-varying crop
     window slides/zooms across it, then rescaled to w×h.
     't' is ffmpeg's built-in time variable (seconds, continuous).
-    Cycles through 4 styles.
+    idx selects one of 4 effects.
     """
     D   = duration
     LW  = int(w * KB_SCALE)
     LH  = int(h * KB_SCALE)
     px  = LW - w
     py  = LH - h
-    cx  = px // 2           # 480  (centre offset)
-    cy  = py // 2           # 270
+    cx  = px // 2
+    cy  = py // 2
 
-    # progress expression clamped to [0,1]
     P = f"min(t/{D:.6f},1)"
 
     effects = [
-        # 1. Zoom in to centre: crop shrinks from full large → output size
+        # 0. Zoom in to centre
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
          f"crop=w='{LW}-{px}*{P}':h='{LH}-{py}*{P}'"
          f":x='{cx}*{P}':y='{cy}*{P}',"
          f"scale={w}:{h},setsar=1"),
 
-        # 2. Pan left → right at 1.5× zoom
+        # 1. Pan left → right
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 3. Pan right → left at 1.5× zoom
+        # 2. Pan right → left
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
          f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 4. Zoom out from centre: crop grows from output size → full large
+        # 3. Zoom out from centre
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
          f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
          f":x='{cx}*(1-{P})':y='{cy}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
-
     ]
     return effects[idx % len(effects)]
+
+
+def movement_to_effect_idx(text):
+    """
+    Maps a KB movement description from 05-kb-movements.txt to one of the
+    4 ffmpeg effect indices:
+      0 = zoom in   1 = pan L→R   2 = pan R→L   3 = zoom out
+    """
+    t = text.lower()
+    if any(k in t for k in ["zoom out", "pull back", "slow zoom out", "pull away"]):
+        return 3
+    if any(k in t for k in ["pan right to left", "right to left", "pan right →", "pan from right"]):
+        return 2
+    if any(k in t for k in ["left to right", "pan left", "pan slowly left", "pan from", "pan from the", "track left", "track the line"]):
+        return 1
+    # Default: zoom in (covers push in, tilt up, hold/breathe, track forward, etc.)
+    return 0
+
+
+def load_kb_movements(local_path):
+    """
+    Parses 05-kb-movements.txt into an ordered list of (scene_id, movement_text).
+    Format: blank-line separated blocks, each starting with a scene number.
+    """
+    with open(local_path, encoding="utf-8") as f:
+        content = f.read()
+    movements = []
+    for block in content.strip().split("\n\n"):
+        block = block.strip()
+        if not block:
+            continue
+        parts = block.split(" ", 1)
+        scene_id = parts[0]
+        text = parts[1].strip() if len(parts) > 1 else ""
+        movements.append((scene_id, text))
+    return movements
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 def get_audio_duration(audio_path):
@@ -211,18 +252,21 @@ def create_segment(image_path, segment_path, duration, vf, w, h):
         print(f"  ffmpeg error on {os.path.basename(image_path)}:\n{result.stderr[-1000:]}")
         sys.exit(1)
 
-def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb=True):
-    w, h          = RESOLUTION_W, RESOLUTION_H
+def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb=True, kb_movements=None):
+    w, h           = RESOLUTION_W, RESOLUTION_H
     total_duration = get_audio_duration(audio_path)
-    n             = len(image_paths)
+    n              = len(image_paths)
 
     if durations is None:
         durations = [total_duration / n] * n
         print(f"  Timing          : equal split (no auto_timings.csv found)")
     else:
         print(f"  Timing          : from auto_timings.csv")
-    print(f"  Ken Burns       : {'yes (every 4th scene, {:.0f}× zoom)'.format(KB_SCALE) if use_kb else 'no (all static)'}")
 
+    kb_source = "off"
+    if use_kb:
+        kb_source = f"05-kb-movements.txt ({len(kb_movements)} entries)" if kb_movements else "cycling (no kb file found)"
+    print(f"  Ken Burns       : {kb_source}")
     print(f"  Audio duration  : {total_duration:.2f}s")
     print(f"  Images          : {n}")
     print(f"  Duration range  : {min(durations):.2f}s – {max(durations):.2f}s per scene")
@@ -230,23 +274,26 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     tmpdir = os.path.dirname(output_path)
     segments = []
 
-    effect_names = [
-        "zoom in → centre", "pan left → right", "pan right → left",
-        "zoom out ← centre",
-    ]
     static_vf = (
         f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
     )
-    kb_idx = 0
+    kb_cycle_idx = 0  # fallback counter used only when no movements file
 
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
         if use_kb and i % 4 == 0:
-            vf = get_kb_filter(kb_idx, dur, w, h)
-            print(f"  Scene {i+1}/{n}: {dur:.2f}s  {effect_names[kb_idx % 4]} [Ken Burns]")
-            kb_idx += 1
+            if kb_movements and i < len(kb_movements):
+                scene_id, movement_text = kb_movements[i]
+                effect_idx = movement_to_effect_idx(movement_text)
+                label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}: {movement_text[:50]}]"
+            else:
+                effect_idx = kb_cycle_idx % 4
+                label = f"{EFFECT_NAMES[effect_idx]} [cycle fallback]"
+                kb_cycle_idx += 1
+            vf = get_kb_filter(effect_idx, dur, w, h)
+            print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label} [Ken Burns]")
         else:
             vf = static_vf
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  static")
@@ -321,11 +368,12 @@ def main():
         sys.exit(1)
     print(f"  ✓ {len(image_files)} images (sorted by modification time)")
 
-    # Find narration.mp3 and optional auto_timings.csv
+    # Find narration.mp3, optional auto_timings.csv, optional 05-kb-movements.txt
     print("Finding narration.mp3...")
     all_files = drive_list_files(token, folder_id)
     audio_file   = next((f for f in all_files if f["name"] == "narration.mp3"), None)
     timings_file = next((f for f in all_files if f["name"] == "auto_timings.csv"), None)
+    kb_file      = next((f for f in all_files if f["name"] == "05-kb-movements.txt"), None)
     if not audio_file:
         print("ERROR: narration.mp3 not found.")
         sys.exit(1)
@@ -335,6 +383,10 @@ def main():
     else:
         print(f"  ⚠ auto_timings.csv not found — falling back to equal splits")
         print(f"    Run generate_timings.py first for smarter scene durations")
+    if kb_file:
+        print(f"  ✓ Found 05-kb-movements.txt — KB effects will follow the file")
+    else:
+        print(f"  ⚠ 05-kb-movements.txt not found — KB effects will cycle automatically")
 
     # Download to temp dir
     tmpdir = tempfile.mkdtemp(prefix="mf_kb_")
@@ -362,9 +414,19 @@ def main():
             else:
                 print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
 
+        # Load KB movements from file if available
+        kb_movements = None
+        if kb_file:
+            local_kb = os.path.join(tmpdir, "05-kb-movements.txt")
+            drive_download_file(token, kb_file["id"], local_kb)
+            kb_movements = load_kb_movements(local_kb)
+            print(f"  ✓ Loaded {len(kb_movements)} KB movement entries")
+            if len(kb_movements) != len(image_paths):
+                print(f"  ⚠ KB file has {len(kb_movements)} entries but {len(image_paths)} images — index mismatch possible")
+
         mode = "Ken Burns" if use_kb else "static (no Ken Burns)"
         print(f"\nRendering video ({RESOLUTION_W}x{RESOLUTION_H} @ {FPS}fps) — {mode}...")
-        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations, use_kb)
+        create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations, use_kb, kb_movements)
         size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
         print(f"  ✓ Video created ({size_mb:.1f} MB)")
 
