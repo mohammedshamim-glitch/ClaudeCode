@@ -4,6 +4,32 @@ Follow these phases in order. Use web_search for every step — never rely on tr
 
 ---
 
+## Seasonal Finance Calendar — Check This First
+
+Before running any phase, check today's date and identify which seasonal window applies. These are the highest-traffic periods in UK personal finance YouTube — being early is worth 10× the views of being late.
+
+| Month(s) | Event | Top content angles |
+|---|---|---|
+| **Jan–Mar** | ISA season build-up | "Max your ISA before April", "ISA vs pension 2026", "best Stocks & Shares ISA UK", "ISA deadline explained" |
+| **Mar** | Spring Statement / Budget | "Budget explained in plain English", "what the budget means for your money", "winners and losers" |
+| **Apr** | Tax year end → new year | "New tax year changes", "what changes in April", "capital gains tax year end", "use it or lose it" |
+| **Apr–May** | Post-ISA / new allowances reset | "New ISA allowance 2026", "pension contribution limits", "dividend allowance changes" |
+| **Jun–Aug** | Summer — lower news cycle | Evergreen wins here: compound interest, index funds, emergency fund, debt payoff |
+| **Sep–Oct** | Back to basics season | "Start investing", "first ISA", "pension review", beginner content performs well |
+| **Nov** | Autumn Statement | Same as Spring Budget — "what the statement means for your wallet" |
+| **Dec** | Year-end tax planning | "Use your allowances before April", "salary sacrifice before year end", "pension top-up" |
+| **Ongoing** | Bank of England MPC meetings | Rate decisions → mortgage content spikes every 6 weeks |
+| **Ongoing** | Inflation data releases | CPI/RPI releases → savings rate content, real returns content |
+
+**Action:** Before Phase 1, check:
+1. What seasonal window are we in right now?
+2. Is there a Budget, MPC meeting, or major announcement in the next 30 days?
+3. Are we within 6 weeks of April 5th (ISA/tax year deadline)?
+
+If yes to any — **prioritise time-sensitive seasonal content above all else.** A video published 3 weeks before ISA deadline will outperform the same video published after by a factor of 5–10×.
+
+---
+
 ## Phase 1: Trend Sweep
 
 **Goal:** Build a raw list of 15–20 candidate finance topics trending right now.
