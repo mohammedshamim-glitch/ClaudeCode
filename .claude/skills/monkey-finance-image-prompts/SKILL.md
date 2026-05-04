@@ -102,7 +102,7 @@ This must be the exact first line of every single prompt. No exceptions. No vari
 | **Select emotional scenes** | Plain monkey (no suit) — shock, confusion, relief, realisation |
 | **Most scenes** | No monkey — pure visual storytelling |
 
-**Plain monkey threshold:** Use a plain monkey in roughly 15–20% of scenes (8–12 scenes in a typical 55-scene video). Choose moments of strongest emotional reaction: the "aha" moment, the horror reveal, the satisfied conclusion.
+**Monkey threshold:** Use a monkey in roughly 15–20% of scenes (8–12 scenes in a typical 55-scene video). Choose moments of strongest emotional reaction: the "aha" moment, the horror reveal, the satisfied conclusion.
 
 **Never use:**
 - ❌ Green suit monkey in any scene except Scene 01 and the final scene
@@ -181,7 +181,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Green suit monkey** appears only in Scene 01 and the final scene
-- [ ] **Plain monkey** used in 15–20% of scenes at emotional peak moments
+- [ ] **Monkey** used in 15–20% of scenes at emotional peak moments
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical

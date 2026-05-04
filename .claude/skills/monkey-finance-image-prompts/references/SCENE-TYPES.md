@@ -14,11 +14,11 @@ Read the narration text for the scene and assign it one of the 7 types below. Mo
 |---|---|---|
 | **A — Hook / Brand** | Opening and closing scenes | Green suit monkey |
 | **B — Stat Reveal** | A specific number, percentage, or data point lands | No monkey (let the number breathe) |
-| **C — Concept Explain** | An abstract concept is defined or explained | No monkey or plain monkey |
-| **D — Emotional Reaction** | The viewer is meant to feel something — shock, relief, realisation | Plain monkey |
+| **C — Concept Explain** | An abstract concept is defined or explained | No monkey, or monkey as guide |
+| **D — Emotional Reaction** | The viewer is meant to feel something — shock, relief, realisation | Monkey |
 | **E — Comparison / Choice** | Two options, strategies, or outcomes are contrasted | No monkey |
 | **F — Action Steps** | Practical things the viewer should do | No monkey |
-| **G — Narrative / Story** | A scenario or story is being told (e.g. "Picture this...") | Plain monkey or no monkey |
+| **G — Narrative / Story** | A scenario or story is being told (e.g. "Picture this...") | Monkey or no monkey |
 
 ---
 
@@ -66,7 +66,7 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 
 ### Type C — Concept Explain
 **Used for:** Defining a term, explaining a mechanism, introducing a framework
-**Monkey:** Optional plain monkey if the concept needs a "guide" — otherwise no monkey
+**Monkey:** Optional monkey if the concept needs a "guide" — otherwise no monkey
 
 **Formula:**
 ```
@@ -74,7 +74,7 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 A hand-drawn [diagram type — e.g. simple diagram / flow chart / two-box layout / equation] 
 illustrating [the concept]. [Describe the visual elements — boxes, labels, arrows, icons] 
 drawn in [colour] marker. [Key term or label] written in bold [colour] marker at [position]. 
-[If a monkey is present:] A plain monkey on the [right/left], [expression], [action — e.g. 
+[If a monkey is present:] A monkey on the [right/left], [expression], [action — e.g. 
 pointing at the diagram / holding a marker as if explaining]. 
 [Dominant colours and their roles in this scene]. 
 Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
@@ -84,12 +84,12 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 
 ### Type D — Emotional Reaction
 **Used for:** Peak emotional moments — the horror reveal, the "aha" moment, the realisation
-**Monkey:** Plain monkey — the emotion must be unmistakable
+**Monkey:** Monkey — the emotion must be unmistakable
 
 **Formula:**
 ```
 2D colourful whiteboard animation style. Clean white background. 
-A plain monkey [position in frame — e.g. centre-left / right side], 
+A monkey [position in frame — e.g. centre-left / right side], 
 [specific expression description — e.g. hands flying to head in shock, mouth wide open / 
 arms crossed, one eyebrow raised, dismissive / pointing forward, eyes wide, mouth forming an O]. 
 [What the monkey is reacting to — e.g. a thought bubble above their head reading "..." / 
@@ -150,7 +150,7 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 [Key visual narrative element — e.g. a timeline with a figure adding money at each tick / 
 a simple house with a price tag / a pension pot growing then cracking]. 
 [Label text written in marker at key points in the narrative visual]. 
-[If monkey is present:] A plain monkey [position], [expression reflecting the mood of the story — 
+[If monkey is present:] A monkey [position], [expression reflecting the mood of the story — 
 proud / worried / confused], [action — holding a coin / looking at a timeline]. 
 [Colour accents reflecting the emotional direction of the story — green while things are good, 
 red when the problem hits]. 
@@ -164,15 +164,15 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 When reviewing the full prompt set, check that adjacent scenes don't share the same:
 - Composition type (e.g. two consecutive split-screens)
 - Dominant colour (e.g. two consecutive all-red stat scenes)
-- Monkey usage (e.g. three consecutive scenes with a plain monkey)
+- Monkey usage (e.g. three consecutive scenes with a monkey)
 
 If two adjacent scenes share any of the above, vary one of them. Visual rhythm matters.
 
 **Ideal scene rhythm pattern (example across 10 scenes):**
 ```
 Type A (green suit)  →  Type B (stat)  →  Type G (story, no monkey)  →  
-Type D (plain monkey, reaction)  →  Type C (diagram)  →  Type B (stat)  →  
-Type G (story)  →  Type D (plain monkey)  →  Type F (action steps)  →  Type A (green suit)
+Type D (monkey, reaction)  →  Type C (diagram)  →  Type B (stat)  →  
+Type G (story)  →  Type D (monkey)  →  Type F (action steps)  →  Type A (green suit)
 ```
 
 This rhythm keeps the viewer visually engaged — alternating between data-heavy and character-led scenes.

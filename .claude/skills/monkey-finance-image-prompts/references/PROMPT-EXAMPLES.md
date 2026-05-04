@@ -61,7 +61,7 @@ illustration, 16:9 widescreen aspect ratio, landscape composition.
 
 ```
 2D colourful whiteboard animation style. Clean white background. A 
-plain monkey centre-left, both hands flying up to the sides of their 
+monkey centre-left, both hands flying up to the sides of their 
 head, mouth wide open in shock, eyes enormous. To the monkey's 
 right, bold red hand-drawn text in large marker: "PENSIONS NOW 
 TAXABLE". Below it in slightly smaller black marker: "For The First 
@@ -73,7 +73,7 @@ illustration, 16:9 widescreen aspect ratio, landscape composition.
 ```
 
 **Why it works:**
-- ✅ Plain monkey — correct, this is peak shock moment
+- ✅ Monkey — correct, this is peak shock moment
 - ✅ Specific expression description (hands on head, mouth open, eyes enormous)
 - ✅ Monkey reacts TO the text — facing right toward content
 - ✅ Two colours only — red for danger, black for text
@@ -190,7 +190,7 @@ widescreen aspect ratio, landscape composition.
 
 ```
 2D colourful whiteboard animation style. Clean white background. A 
-plain monkey on the left, arms crossed, chin slightly raised, 
+monkey on the left, arms crossed, chin slightly raised, 
 expression relaxed and dismissive. A thought bubble above their head 
 contains handwritten black marker text: "My pension isn't that big. 
 Won't affect me." To the right of the monkey, a simple addition 
@@ -205,7 +205,7 @@ landscape composition.
 ```
 
 **Why it works:**
-- ✅ Plain monkey — emotional reaction scene
+- ✅ Monkey — emotional reaction scene
 - ✅ Thought bubble shows the misconception
 - ✅ All numbers written on canvas: £400k, £100k, £50k, £150k, £700,000, £325,000
 - ✅ Expression (dismissive) contrasts the maths — tension is the visual storytelling
@@ -327,7 +327,7 @@ landscape composition.
 
 ```
 2D colourful whiteboard animation style. Clean white background. A 
-plain monkey on the right side, posture upright and confident, one 
+monkey on the right side, posture upright and confident, one 
 arm raised with a thumbs up, slight smile. To the left, a simple 
 two-column comparison in black marker. Left column header in grey: 
 "Most UK Savers" — below it, a hand-drawn sleeping figure icon with 

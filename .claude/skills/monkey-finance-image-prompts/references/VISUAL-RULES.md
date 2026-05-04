@@ -63,9 +63,9 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 - Expressive face — confident, welcoming, or energetic depending on scene context
 - May hold props: a marker, a sign, a megaphone
 - Always positioned on the right side of the frame, facing left (toward the content)
-- Slightly larger than the plain monkey — this is the brand moment
+- Slightly larger than the monkey — this is the brand moment
 
-### Plain Monkey (Emotional scenes only — ~15–20% of scenes)
+### Monkey (Emotional scenes only — ~15–20% of scenes)
 - Same monkey character, no suit — casual, unguarded, human
 - Used only at moments of peak emotional reaction
 - Expressive face is everything — the emotion must be readable at a glance:
