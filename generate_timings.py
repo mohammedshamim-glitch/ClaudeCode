@@ -213,7 +213,7 @@ def main():
     # List and sort images
     print("Listing images...")
     image_files = [f for f in drive_list_all(token, images_folder["id"]) if f["mimeType"].startswith("image/")]
-    image_files.sort(key=lambda x: x["modifiedTime"])
+    image_files.sort(key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x["name"])])
     n = len(image_files)
     print(f"  ✓ {n} images found")
 
