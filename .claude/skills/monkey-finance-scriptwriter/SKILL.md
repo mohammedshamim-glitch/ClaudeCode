@@ -111,7 +111,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 Break the script into exactly 25-word scenes, maintaining the section structure. Then automatically:
 
-1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with section labels ([HOOK], [THE PROBLEM], etc.), scene numbers (1.1, 1.2, etc.), and exactly 25 words per scene clearly marked.
+1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), scene numbers (1.1, 1.2, etc.), and exactly 25 words per scene clearly marked.
 
 2. **Generate the TTS narration file** — a clean version with only the spoken words, no scene numbers, no headers, no section labels. Each 25-word block on its own line with blank line between. Save this to the same Google Drive folder as `03-narration-script-clean.txt`. This file is ready to paste directly into any TTS tool.
 

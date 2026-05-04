@@ -121,44 +121,69 @@ Wherever the narration mentions a statistic, percentage, or number, the image pr
 
 ---
 
+## Ken Burns Composition Rules
+
+Videos are assembled using Ken Burns effects — slow zoom in, zoom out, or pan across each static image. Compose every prompt with KB in mind:
+
+**Rule 1 — Focal element off-centre, not at edges.**
+The KB zoom travels *toward* the main element. If it's dead-centre, the zoom just enlarges. If it's slightly right-of-centre, the pan+zoom has somewhere to go. Specify position explicitly (e.g. "key stat positioned right of centre").
+
+**Rule 2 — 15–20% white margin on all edges.**
+KB crops edges during zoom. Critical content — stats, faces, labels — must sit inside the central 80% of the canvas. Say so in the prompt.
+
+**Rule 3 — Left-to-right layouts for pan scenes.**
+Before/after comparisons, timelines, and two-column splits should place the "setup" left and the "payoff" right. The KB pan travels left to right and lands on the payoff.
+
+**Rule 4 — Sparse compositions travel better.**
+Overcrowded scenes don't give KB anything to move through. One dominant element with clear negative space is always better than multiple competing elements.
+
+**Apply in prompts:** Add a brief composition note to each prompt (e.g. "Left-to-right layout; '£78,000' right of centre as the KB pan destination" or "Central focal element with 20% white margin all sides for KB zoom room").
+
+---
+
 ## Output Format
 
-Generate TWO files:
+Generate TWO files — **no headers, no section labels, no title block**. Just scene number and prompt text, blank line between each scene.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.1 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.2 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 ```
 
 ### Video Prompts (`05-video-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Slow push in toward the headline text — urgency builds as the words get closer.
+1.1 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Slow push in toward the headline text — urgency builds as the words get closer.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Hold steady, then slow zoom out to reveal the full checklist.
+1.2 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Hold steady, then slow zoom out to reveal the full checklist.
 ```
 
 **Critical formatting:**
-- Scene number at start of line (e.g. `1.1`, `2.3`)
+- Scene number at start of line (e.g. `1.1`, `2.3`) — nothing else before it
 - Everything in one paragraph per scene
 - Blank line between scenes
+- KB composition note woven into the scene description (not tacked on at the end)
 - Camera movement appended to end for video version only
+- **No file title, no section headers, no dividers** — prompts only
 
 Save both files to Drive in run's project folder.
-Total sub-scene count: typically 35-45 sub-scenes for a 10-15 minute script.
+Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 
 ---
 
-## Final Quality Check — Clear All 7 Before Delivering
+## Final Quality Check — Clear All 9 Before Delivering
 
-- [ ] **Sub-scene count matches narration** — ~25 words each, total 35-45 sub-scenes
+- [ ] **Sub-scene count matches narration** — ~25 words each, total 45–55 sub-scenes
+- [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Green suit monkey** appears only in Scene 01 and the final scene
 - [ ] **Plain monkey** used in 15–20% of scenes at emotional peak moments
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical
+- [ ] **KB composition note** in every prompt — focal element position, margin, and pan direction specified
+- [ ] **No headers or section labels** in either output file — scene number and prompt text only
 
 ---
 
