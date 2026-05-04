@@ -25,6 +25,7 @@ Every Monkey Finance video flows through these stages in order:
 | **4** | `monkey-finance-seo-thumbnail` | Script + brief | `06-seo-metadata.txt` |
 | **5** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
 | **6** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` |
+| **7** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
 
 ---
 
@@ -154,6 +155,85 @@ python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --no-kb
 
 **Pipeline complete:**
 > *"Pipeline complete. `<episode-title>.mp4` uploaded to Drive — [link]. All 6 stages done. Ready to upload to YouTube using the SEO package from Stage 4."*
+
+---
+
+### ▶ STAGE 7 — Analytics Review (7–14 days after publish)
+
+**When to run:** 7 days after the video goes live on YouTube. Run again at 14 days for a fuller picture.
+
+**Trigger:** Sham says "review the video performance", "check the analytics", "how did the video do", or 7+ days have passed since publish and he asks about the video.
+
+**Goal:** Extract performance data, identify what worked and what didn't, and feed the learnings directly into the next trend report and script.
+
+#### Metrics to Review
+
+Ask Sham to share or check the following from YouTube Studio Analytics:
+
+| Metric | Where to find | Target benchmark |
+|---|---|---|
+| **Impressions CTR** | Analytics → Reach | 4–6% solid, 6%+ excellent |
+| **Average view duration** | Analytics → Engagement | 50%+ of video length |
+| **Average % viewed** | Analytics → Engagement | 50%+ |
+| **Top traffic source** | Analytics → Reach → Traffic source | Search, Suggested, or Browse |
+| **A/B title winner** | Test & Compare results | Which variant won and by how much? |
+| **Subscribers gained** | Analytics → Audience | Net new from this video |
+| **Top drop-off point** | Analytics → Engagement → Key moments | Which timestamp lost viewers? |
+
+#### Four Questions to Answer
+
+1. **Did the packaging work?** (CTR above or below benchmark?)
+   - Above 6% → packaging is strong, topic was right
+   - 4–6% → acceptable, minor tweaks to thumbnail or title
+   - Below 4% → packaging failed — the hook, thumbnail, or topic didn't land
+
+2. **Did the content work?** (Average view duration above or below 50%?)
+   - Above 50% → script held attention well
+   - 40–50% → retention dipped — check the drop-off timestamp and identify which section lost viewers
+   - Below 40% → script or pacing issue — flag for scriptwriter review
+
+3. **Where did the traffic come from?**
+   - High Search traffic → SEO is working, topic had real search demand
+   - High Suggested traffic → algorithm liked it, thumbnail/title earned the push
+   - High Browse traffic → existing subscribers watched, but the video didn't grow the channel
+
+4. **What did the A/B title test reveal?**
+   - Which emotional hook won? Record this — it tells you how your audience responds
+   - Fear/warning, curiosity, or aspiration? Build this into the next video's packaging
+
+#### Analytics Review Output
+
+Save a brief `07-analytics-review.md` to the episode Drive folder with:
+
+```markdown
+# Analytics Review — [Episode Title]
+
+**Review date:** [date] ([X] days after publish)
+
+## Key Numbers
+- CTR: [X]% ([above/below] benchmark)
+- Avg view duration: [X]% ([above/below] 50% target)
+- Top traffic source: [Search / Suggested / Browse]
+- Subscribers gained: [X]
+- A/B winner: [Primary / Alt A / Alt B] by [X]% CTR
+
+## What Worked
+- [1–2 sentences on what drove performance]
+
+## What Didn't Work
+- [1–2 sentences on what underperformed and why]
+
+## Key Drop-Off Point
+- [Timestamp] — [Which section of the script this corresponds to]
+
+## Learnings for Next Video
+- Packaging: [What to do differently or keep the same]
+- Script: [Any structural changes based on drop-off data]
+- Topic/SEO: [Did the traffic source match what we expected?]
+- Emotional hook: [Which title hook won — apply to next packaging]
+```
+
+**After saving:** Feed the learnings summary into the next trend report as context. The channel that learns fastest from its own data wins.
 
 ---
 
