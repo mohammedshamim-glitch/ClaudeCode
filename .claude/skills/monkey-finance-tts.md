@@ -50,7 +50,26 @@ Monkey Finance/                          (ID: 1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS)
     └── video_prompts.txt
 ```
 
+## Step 4 — Generate SRT subtitle file
+
+After generating audio, always run the SRT generator:
+
+```bash
+python3 /home/user/ClaudeCode/generate_srt.py <episode_folder_id>
+```
+
+This produces `narration.srt` in the episode folder — a timestamped transcript ready to upload to YouTube Studio → Subtitles within 24 hours of the video going live. Makes every spoken word indexable by Google Search.
+
+| Setting | Value |
+|---|---|
+| Script | `/home/user/ClaudeCode/generate_srt.py` |
+| Input | `03-narration-script-clean.txt` + `narration.mp3` (both from Drive) |
+| Output | `narration.srt` (uploaded to Drive) |
+| Timing method | Proportional by word count vs total audio duration |
+| Max line length | 42 characters per subtitle line |
+
 ## Notes
 - Auth is fully automated via saved refresh token — no browser login needed after initial setup
 - If token expires or is revoked, re-run `python3 /home/user/ClaudeCode/setup_auth.py`
 - To use a different voice, update `VOICE` in `run_tts.py` (available: Aoede, Charon, Fenrir, Kore, Puck, Orus)
+- SRT timestamps are word-count proportional — accurate enough for indexing; fine-tune in YouTube Studio if needed

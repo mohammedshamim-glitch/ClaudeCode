@@ -23,7 +23,7 @@ Every Monkey Finance video flows through these stages in order:
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-video-prompts.txt` |
 | **4** | `monkey-finance-seo-thumbnail` | Script + brief | `06-seo-metadata.txt` |
-| **5** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
+| **5** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` + `narration.srt` |
 | **6** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` |
 | **7** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
 
@@ -120,17 +120,25 @@ Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5 — Audio Generation (TTS)
+### ▶ STAGE 5 — Audio Generation (TTS) + Subtitles
 **Skill:** `monkey-finance-tts`
 
-Run TTS on `03-narration-script-clean.txt`. Upload `narration.mp3` to the episode Drive folder.
-
+**Step 5a — Generate audio:**
 ```bash
 python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id> narration.mp3
 ```
 
+**Step 5b — Generate SRT subtitle file:**
+```bash
+python3 /home/user/ClaudeCode/generate_srt.py <episode_folder_id>
+```
+
+This downloads the script and audio from Drive, calculates timestamps proportionally by word count, and uploads `narration.srt` to the episode folder.
+
+Both files are uploaded to Drive. The `.srt` is uploaded to YouTube Studio → Subtitles within 24 hours of the video going live — this makes every spoken word indexable by Google Search.
+
 **Approval gate:**
-> *"Stage 5 complete. `narration.mp3` uploaded to Drive. Audio is [X] minutes [Y] seconds. Ready to build the video — with or without Ken Burns effects?"*
+> *"Stage 5 complete. `narration.mp3` ([X]m [Y]s) and `narration.srt` ([Z] subtitle cards) uploaded to Drive. Ready to build the video — with or without Ken Burns effects?"*
 
 Wait for Sham's Ken Burns preference before Stage 6.
 
