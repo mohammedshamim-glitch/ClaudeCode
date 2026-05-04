@@ -34,6 +34,8 @@ Every run outputs a complete **Click Package** containing:
 | **Tags** | 10–12 researched tags, broad to specific |
 | **Hashtags** | 3–5 targeted hashtags for the description |
 | **Chapters** | Timestamped sections for watch time and search visibility |
+| **Upload timing** | Best day and time to publish for maximum launch-window impact |
+| **Pinned comment** | Ready-to-post comment — paste within 60 minutes of going live |
 | **Thumbnail Brief** | Visual concept, emotional trigger, layout direction |
 | **AI Image Prompt** | Ready-to-paste Grok/Midjourney prompt for the thumbnail |
 

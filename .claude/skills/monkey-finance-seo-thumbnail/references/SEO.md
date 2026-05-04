@@ -231,6 +231,56 @@ YouTube displays the top 3 hashtags above the video title — choose the first 3
 
 ---
 
+## Upload Timing
+
+When you publish matters almost as much as what you publish. YouTube's algorithm gives every video a "launch window" — the first 24–48 hours determine whether it gets pushed to Browse and Suggested feeds.
+
+**Best times to publish for a UK finance audience (25–45):**
+
+| Day | Time | Why |
+|---|---|---|
+| **Tuesday** | 6:00–7:00pm | Post-work browsing peak, mid-week attention high |
+| **Wednesday** | 6:00–7:00pm | Highest mid-week engagement for finance content |
+| **Thursday** | 6:00–7:00pm | Strong day before the Friday wind-down |
+| **Saturday** | 9:00–11:00am | Weekend morning browsing, relaxed mindset, longer watch sessions |
+
+**Avoid:** Monday (week start, low browsing), Friday evening/Sunday evening (social plans), and midnight/early morning uploads (no launch-window audience to kickstart the algorithm).
+
+**Publish 2–3 hours before peak time** — not during it. This gives YouTube time to start indexing and distributing before your audience's peak hits. A video published at 4pm on Wednesday will have momentum built by 6pm when traffic spikes.
+
+**For time-sensitive seasonal content** (ISA deadline, Budget day): publish as early in the day as possible — morning of is fine. Being indexed first matters more than timing on breaking content.
+
+---
+
+## Pinned Comment Strategy
+
+A pinned comment posted within the first hour of publishing is one of the most underused engagement signals on YouTube. It drives early comments, which the algorithm reads as audience investment.
+
+**Post a pinned comment immediately after publishing. Every video. No exceptions.**
+
+### What makes a great pinned comment
+
+**Option A — The engagement question** (best for growing a new channel)
+Ask a direct question tied to the video topic. Make it easy to answer in one sentence.
+> *"Quick question for you — do you currently have a pension, or are you still figuring out where to start? Drop it below 👇"*
+> *"Are you in the tax zone? House + savings + pension added up — what's your rough total? Curious to hear from you."*
+
+**Option B — The value add** (builds authority)
+Share one extra insight or tip that didn't make the video. Makes subscribers feel like they get more by commenting.
+> *"One thing I didn't have time to cover in the video — if you're a higher-rate taxpayer, the relief you get on pension contributions makes this even more urgent. Worth a separate video?"*
+
+**Option C — The next video tease** (drives session watch time)
+Point to the logical next video to watch. Keeps viewers on the channel.
+> *"If this video surprised you, you'll want to watch this one next 👉 [link to related video]. It covers exactly how to fix the problem we just uncovered."*
+
+### Timing rule
+Post the pinned comment **within 60 minutes of going live** — ideally within 15 minutes. Early engagement velocity signals to the algorithm that the video is generating conversation. Late pinned comments miss the launch window entirely.
+
+### Include in the SEO package
+The SEO skill should always output a **suggested pinned comment** as part of the Click Package — one per video, ready to paste immediately after upload.
+
+---
+
 ## Chapter Timestamps
 
 Chapters massively improve watch time, SEO (chapters appear in Google search), and user experience. Always include them.
