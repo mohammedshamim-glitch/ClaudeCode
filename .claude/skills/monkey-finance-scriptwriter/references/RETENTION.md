@@ -108,6 +108,75 @@ Position the viewer as about to receive information most people don't have acces
 
 ---
 
+## Timestamp Retention Checkpoints
+
+YouTube Analytics shows viewer drop-off at predictable points in every video. These are the four danger zones — and every script must have a specific retention trigger built in at each one.
+
+**Design rule:** Before finishing the script, map each checkpoint to a specific line or moment. If any checkpoint is missing a trigger, the script is not ready.
+
+---
+
+### ⚠️ Checkpoint 1 — The 0:30 Mark
+**What happens:** The "is this worth my time?" verdict. Viewers who aren't convinced by 30 seconds leave without hesitation. This is the single highest drop-off point in every video.
+
+**The hook must still be running at this point.** The viewer should not yet have received the core value — they should be leaning forward waiting for it.
+
+**Trigger required:** A pattern interrupt or stakes escalation that confirms they're in the right place.
+> *"And if you're thinking this doesn't apply to you — stay with me for thirty more seconds, because the number I'm about to show you might change your mind."*
+> *"Before I show you the three steps — let me show you what most people get completely wrong first."*
+
+**Script check:** Read the first 30 seconds aloud. Is the viewer still waiting for something? Good. Have you already given away the payoff? Bad — restructure.
+
+---
+
+### ⚠️ Checkpoint 2 — The 2:00 Mark
+**What happens:** End of the problem section. If the viewer doesn't feel personally invested in the answer by 2 minutes, they leave. This is the "relevance test" — does this topic actually affect me?
+
+**Trigger required:** An empathy moment or a direct call-out that makes the viewer feel seen.
+> *"If you've got more than £325,000 across your house, savings and pension — and most people in their 40s and 50s do — this affects you directly."*
+> *"I know what you might be thinking: 'I'm not rich enough for this to matter.' That's exactly what the 38,500 people in HMRC's data thought too."*
+
+**Script check:** By line 2:00, has the viewer been made to feel this is about them personally? If not, rewrite the problem section with more direct address.
+
+---
+
+### ⚠️ Checkpoint 3 — The 50% Mark
+**What happens:** The mid-video slump. Viewers who've received enough value to feel satisfied start leaving. This is the "I've got what I came for" exit — before the best material.
+
+**Trigger required:** A reveal, reversal, or escalation that resets anticipation. The viewer must feel the best is still ahead.
+> *"Now — here's the part I haven't told you yet. And this is the bit that changes everything."*
+> *"Everything I've covered so far is important. But what I'm about to show you is the reason most people get this completely wrong — even when they think they've got it figured out."*
+
+**Script check:** What happens at the exact midpoint of your script? If it's mid-explanation or mid-list, insert a deliberate gear-change — a new angle, a surprising stat, or a callback to the hook.
+
+---
+
+### ⚠️ Checkpoint 4 — The 70% Mark
+**What happens:** The "I've definitely got what I came for" exit. Viewers who came for one specific answer have it by now and see no reason to stay for the takeaways and CTA.
+
+**Trigger required:** A forward hook into the takeaways that makes staying feel worth it — a practical payoff, a tool, or a specific action they haven't received yet.
+> *"We've covered what's happening and why it matters. In the next two minutes I'm going to give you the exact three steps to take — and the order matters. Get it wrong and you could make things worse."*
+> *"Stay with me for the takeaways — because the most important action isn't the obvious one. Most people do step one and skip the one that actually protects the money."*
+
+**Script check:** What is the last 30% of your script delivering that the first 70% hasn't? If the answer is "just a summary", rewrite the takeaways to include something new — a specific tool, a contrarian insight, or the single most actionable step.
+
+---
+
+### Checkpoint Map — Complete Before Final Delivery
+
+Before submitting a script, fill this in:
+
+```
+0:30 checkpoint trigger: [exact line or moment]
+2:00 checkpoint trigger: [exact line or moment]
+50% checkpoint trigger: [exact line or moment]
+70% checkpoint trigger: [exact line or moment]
+```
+
+If any row is blank, the script has a retention gap. Fix it before delivery.
+
+---
+
 ## In-Video Retention Techniques
 
 ### The Loop Open (use 2–3 per video)
