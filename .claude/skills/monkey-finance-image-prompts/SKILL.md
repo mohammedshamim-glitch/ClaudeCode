@@ -62,10 +62,12 @@ Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 
 
 ### Pass 2 — Write Two Files (The Artist)
 Generate both output files simultaneously:
-1. **Image prompts** — static scenes for Grok text-to-image
-2. **Video prompts** — identical scenes + camera movement appended
+1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 70% rule in every prompt
+2. **KB movements** (`05-kb-movements.txt`) — one line per scene: scene number + camera movement only
 
-Format: `1.1 2D colourful whiteboard animation style...composition. [Camera movement for video version only]`
+Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+
+Format KB file: `1.1 Slow push in toward X — [why it works emotionally].`
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
@@ -75,6 +77,8 @@ Read all prompts as a sequence. Check:
 - [ ] Every stat has the number explicitly written on canvas
 - [ ] Green suit monkey ONLY in first and final scenes
 - [ ] Scene numbers at start of each line, all content in one paragraph
+- [ ] Central 70% instruction present in every image prompt
+- [ ] KB movements in separate file only — never embedded in image prompts
 - [ ] Camera movements logical and varied
 
 ---
@@ -123,49 +127,48 @@ Wherever the narration mentions a statistic, percentage, or number, the image pr
 
 ## Ken Burns Composition Rules
 
-Videos are assembled using Ken Burns effects — slow zoom in, zoom out, or pan across each static image. Compose every prompt with KB in mind:
+Videos use Ken Burns effects — slow zoom in, zoom out, or pan across each static image. Two rules are non-negotiable:
 
-**Rule 1 — Focal element off-centre, not at edges.**
-The KB zoom travels *toward* the main element. If it's dead-centre, the zoom just enlarges. If it's slightly right-of-centre, the pan+zoom has somewhere to go. Specify position explicitly (e.g. "key stat positioned right of centre").
+**Rule 1 — Central 70% only. Always.**
+All critical elements (stats, characters, key text, diagrams) must be positioned within the central 70% of the frame. Leave a minimum 15% clear margin on all four edges. KB will crop the edges during zoom — anything outside the 70% zone risks being cut entirely.
 
-**Rule 2 — 15–20% white margin on all edges.**
-KB crops edges during zoom. Critical content — stats, faces, labels — must sit inside the central 80% of the canvas. Say so in the prompt.
+Add this exact instruction to every single prompt, just before the closing style line:
+> `All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges.`
 
-**Rule 3 — Left-to-right layouts for pan scenes.**
-Before/after comparisons, timelines, and two-column splits should place the "setup" left and the "payoff" right. The KB pan travels left to right and lands on the payoff.
+**Rule 2 — Give KB somewhere to travel.**
+Place the focal point slightly off-centre. For left-to-right layouts (before/after, timelines, two-column), the payoff element sits right of centre — KB pans toward it. For zoom-in scenes, the key stat or character is slightly right or up from dead-centre.
 
-**Rule 4 — Sparse compositions travel better.**
-Overcrowded scenes don't give KB anything to move through. One dominant element with clear negative space is always better than multiple competing elements.
-
-**Apply in prompts:** Add a brief composition note to each prompt (e.g. "Left-to-right layout; '£78,000' right of centre as the KB pan destination" or "Central focal element with 20% white margin all sides for KB zoom room").
+**Rule 3 — Sparse beats crowded.**
+One dominant element with generous white space gives KB room to travel. Overcrowded compositions look static under KB.
 
 ---
 
 ## Output Format
 
-Generate TWO files — **no headers, no section labels, no title block**. Just scene number and prompt text, blank line between each scene.
+Generate TWO files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 ```
 
-### Video Prompts (`05-video-prompts.txt`)
+### KB Movements (`05-kb-movements.txt`)
+Camera movements in a dedicated separate file. Scene number + movement description only. No prompt text.
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Slow push in toward the headline text — urgency builds as the words get closer.
+1.1 Slow push in toward the thought bubble — the dream feels vivid and close.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description + KB composition note] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition. Hold steady, then slow zoom out to reveal the full checklist.
+1.2 Hold on the monkey's shocked face, then slow pan right to '92%' — the number arrives like a gut punch.
 ```
 
 **Critical formatting:**
-- Scene number at start of line (e.g. `1.1`, `2.3`) — nothing else before it
-- Everything in one paragraph per scene
-- Blank line between scenes
-- KB composition note woven into the scene description (not tacked on at the end)
-- Camera movement appended to end for video version only
-- **No file title, no section headers, no dividers** — prompts only
+- Scene number at start of every line in both files
+- Image prompts: everything in one paragraph, blank line between scenes
+- KB file: scene number + movement description only, blank line between scenes
+- **Central 70% instruction verbatim in every single image prompt** — never omit
+- **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts
+- **No file title, no section headers, no dividers** — scene number and content only
 
 Save both files to Drive in run's project folder.
 Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
