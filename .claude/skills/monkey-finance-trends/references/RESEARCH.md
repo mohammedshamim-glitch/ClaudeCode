@@ -30,6 +30,82 @@ If yes to any — **prioritise time-sensitive seasonal content above all else.**
 
 ---
 
+## Competitor Channel Tracking — Run Before Phase 1
+
+**Goal:** Know exactly what the top UK finance channels have published in the last 30 days, what's performing, and — most importantly — what gaps they've left open.
+
+You cannot be the best finance channel without knowing what you're competing against. Run this every trend report.
+
+### Channels to Track
+
+| Channel | Why they matter | What to watch for |
+|---|---|---|
+| **Damien Talks Money** | Closest competitor — similar relatable style, overlapping audience | Topics he's covered recently, his top-performing videos this month |
+| **James Shack** | High-production investing content, strong SEO | Long-form investing topics, titles that are working |
+| **Toby Newbatt** | UK FIRE/investing, consistent uploader, good search traffic | Evergreen angles he's hitting, keyword patterns in titles |
+| **Be Clever With Your Cash** | Deals/savings, very high search traffic | Savings rate content, ISA comparisons, rate-change videos |
+| **Pensioncraft** | Pension specialist — deep content, engaged audience | Pension topics he covers vs angles he misses |
+| **Martin Lewis / MoneySavingExpert** | The giant — dominates consumer finance | What he's NOT covering in video format (his gaps = your opportunity) |
+| **MoneyMagpie** | Broad personal finance, more female demographic | Topics performing well we can do better |
+
+### How to Track
+
+For each channel, search:
+- `"[channel name]" youtube recent videos 2026`
+- `site:youtube.com "[channel name]"` filtered to last 30 days
+- Directly check their YouTube page for recent uploads
+
+For each recent video note:
+```
+Title | Upload date | Estimated views | View velocity (views ÷ days) | Topic covered
+```
+
+### Three Questions to Answer
+
+**1. What have they published in the last 30 days?**
+List all recent uploads. This tells you what topics are being fed to the algorithm right now.
+
+**2. What's their top-performing video this month?**
+High view velocity = the algorithm is pushing it = the topic is hot. If you can make a better version of that video, do it now.
+
+**3. What have they NOT covered?**
+This is the gold. Scan their last 50 videos. Find:
+- Topics they've ignored entirely
+- Angles they've taken that leave obvious follow-up questions unanswered
+- UK-specific versions of US topics nobody has done
+- Old videos (2+ years) on topics still being searched — the refresh opportunity
+
+### Gap Classification
+
+Label each competitor gap as one of:
+
+| Type | What it means |
+|---|---|
+| 🟥 **Hard gap** | Nobody has covered this topic at all — first mover wins |
+| 🟧 **Angle gap** | Topic is covered but only from one angle — your different take wins |
+| 🟨 **Quality gap** | Topic is covered but badly — your better version wins |
+| 🟩 **Refresh gap** | Topic was covered 2+ years ago — new video wins on recency |
+
+**Only pursue gaps rated 🟥 or 🟧 first.** Quality and refresh gaps are still valuable but require more patience to rank.
+
+### Competitor Intelligence Output
+
+Add a **Competitor Snapshot** section to the trend report:
+
+```
+## Competitor Snapshot
+
+| Channel | Recent top video | View velocity | Gap identified | Gap type |
+|---------|-----------------|---------------|----------------|----------|
+| Damien Talks Money | [title] | [views/day] | [gap] | 🟥/🟧/🟨/🟩 |
+| James Shack | ... | ... | ... | ... |
+...
+
+**Biggest gap this week:** [One sentence — the clearest opportunity the competitors have left open]
+```
+
+---
+
 ## Phase 1: Trend Sweep
 
 **Goal:** Build a raw list of 15–20 candidate finance topics trending right now.
