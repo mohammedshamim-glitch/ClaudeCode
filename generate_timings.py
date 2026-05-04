@@ -84,6 +84,24 @@ def drive_download(token, file_id, local_path):
         for chunk in r.iter_content(8192):
             f.write(chunk)
 
+def drive_delete_existing(token, filename, folder_id):
+    """Delete any existing files with this name in the folder before uploading."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            "q": f"'{folder_id}' in parents and name='{filename}' and trashed=false",
+            "fields": "files(id,name)",
+        },
+    )
+    r.raise_for_status()
+    for f in r.json().get("files", []):
+        requests.delete(
+            f"https://www.googleapis.com/drive/v3/files/{f['id']}",
+            headers={"Authorization": f"Bearer {token}"},
+        ).raise_for_status()
+        print(f"  ✓ Deleted existing {f['name']}")
+
 def drive_upload_csv(token, local_path, filename, folder_id):
     with open(local_path, "rb") as f:
         data = f.read()
@@ -350,6 +368,7 @@ def main():
         # Upload
         print("\nUploading auto_timings.csv to Drive...")
         token = get_access_token()
+        drive_delete_existing(token, "auto_timings.csv", folder_id)
         result = drive_upload_csv(token, csv_path, "auto_timings.csv", folder_id)
         print(f"  ✓ Uploaded: {result['name']}")
         print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
