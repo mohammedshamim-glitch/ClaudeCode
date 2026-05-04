@@ -218,10 +218,12 @@ def main():
     print(f"  ✓ {n} images found")
 
     # Find narration files
-    narration_script = next((f for f in items if f["name"] == "narration_script.txt"), None)
+    narration_script = next(
+        (f for f in items if f["name"] in ("narration_script.txt", "03-narration-script-clean.txt")), None
+    )
     narration_audio  = next((f for f in items if f["name"] == "narration.mp3"), None)
     if not narration_script:
-        print("ERROR: narration_script.txt not found.")
+        print("ERROR: narration_script.txt or 03-narration-script-clean.txt not found.")
         sys.exit(1)
     if not narration_audio:
         print("ERROR: narration.mp3 not found.")
