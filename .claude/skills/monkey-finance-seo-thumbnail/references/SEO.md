@@ -301,3 +301,58 @@ Chapters massively improve watch time, SEO (chapters appear in Google search), a
 - Chapter names should include keywords where natural
 - The core content chapter title should be the most specific/clickable
 - Keep chapter names under 40 characters
+
+---
+
+## Closed Captions & SRT Files
+
+This is one of the most overlooked SEO advantages available to any YouTube channel — and almost nobody in the UK finance space does it properly.
+
+### Why it matters
+
+YouTube auto-generates captions for every video, but they are:
+- Less accurate (finance terminology, UK-specific terms, and proper nouns get mangled)
+- Indexed less reliably by Google Search
+- Not editable without uploading your own file
+
+**When you upload a manually created SRT file:**
+1. Google indexes the full transcript — every keyword, every phrase — as text content associated with your video
+2. Your video can appear in Google Search results for phrases spoken in the narration, not just the title and description
+3. Accessibility improves, which YouTube explicitly rewards in recommendations
+4. Finance-specific terms (SIPP, ISA, IHT, HMRC) are spelled correctly and indexed accurately
+
+For a UK finance channel, this means videos can rank on Google for searches like *"what happens to pension when you die UK"* — not just on YouTube.
+
+### How to create the SRT file
+
+The narration script (`03-narration-script-clean.txt`) is the source. Because the script is written in 25-word scenes with known word counts, approximate timestamps can be calculated at ~130 words per minute (2.17 words per second).
+
+**Generate an SRT file using this method:**
+
+```
+python3 /home/user/ClaudeCode/generate_srt.py <episode_folder_id>
+```
+
+This script:
+- Downloads `03-narration-script-clean.txt` and `narration.mp3` from Drive
+- Uses the audio duration + word count to calculate timestamps per scene
+- Outputs a properly formatted `.srt` file
+- Uploads `narration.srt` to the episode Drive folder
+
+**If the script doesn't exist yet**, create it as a next step — it's a straightforward extension of the existing TTS/timing pipeline.
+
+### How to upload to YouTube
+
+1. Go to **YouTube Studio → Content → click the video**
+2. Click **Subtitles** in the left menu
+3. Click **Add** → **Upload file** → **With timing**
+4. Upload `narration.srt`
+5. Review for any errors (proper nouns, numbers) and correct before saving
+
+**Do this within 24 hours of publishing** — the sooner Google indexes the transcript, the sooner the video can rank on Search.
+
+### SRT quality checklist
+- [ ] Financial terms spelled correctly (ISA, SIPP, HMRC, IHT, NIC, etc.)
+- [ ] Numbers written as digits where spoken as digits (`£34,000` not `thirty four thousand pounds`)
+- [ ] Timestamps align with the audio within ±1 second
+- [ ] No run-on lines — max 2 lines per subtitle card, max 42 characters per line

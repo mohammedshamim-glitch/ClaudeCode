@@ -36,6 +36,7 @@ Every run outputs a complete **Click Package** containing:
 | **Chapters** | Timestamped sections for watch time and search visibility |
 | **Upload timing** | Best day and time to publish for maximum launch-window impact |
 | **Pinned comment** | Ready-to-post comment — paste within 60 minutes of going live |
+| **SRT reminder** | Prompt to generate and upload `narration.srt` within 24hrs of publish |
 | **Thumbnail Brief** | Visual concept, emotional trigger, layout direction |
 | **AI Image Prompt** | Ready-to-paste Grok/Midjourney prompt for the thumbnail |
 
