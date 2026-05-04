@@ -3,7 +3,7 @@
 Gemini TTS pipeline
 1. Downloads narration text from Google Drive
 2. Chunks into ~150 words
-3. Calls gemini-3.1-flash-tts-preview for each chunk
+3. Calls gemini-2.5-flash-preview-tts for each chunk
 4. Merges PCM audio into a single WAV + MP3
 5. Uploads to Google Drive via OAuth2 (user credentials)
 """
@@ -14,7 +14,7 @@ import requests
 # ── Config ────────────────────────────────────────────────────────────────────
 GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyAdTAbkqlNGdTiI-123gAObgRzZfkoqJbs")
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
-TTS_MODEL       = "gemini-3.1-flash-tts-preview"
+TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
 CHUNK_WORDS     = 150
 SAMPLE_RATE     = 24000
