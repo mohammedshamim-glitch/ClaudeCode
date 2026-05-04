@@ -12,7 +12,7 @@ import base64, json, re, time, wave, io, os, sys
 import requests
 
 # ── Config ────────────────────────────────────────────────────────────────────
-GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyAdTAbkqlNGdTiI-123gAObgRzZfkoqJbs")
+GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyBJRb4hEmBngO4G3UwgidRouvKCkL0gzd0")
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
