@@ -376,15 +376,15 @@ def main():
         sys.exit(1)
     print(f"  ✓ Found: {images_folder['id']}")
 
-    # List and sort images by filename (natural sort — scene_001, scene_002, ...)
+    # List and sort images by modification time (original upload order)
     print("Listing images...")
     image_files = drive_list_files(token, images_folder["id"], mime_filter="image/")
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
-    image_files.sort(key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x["name"])])
+    image_files.sort(key=lambda x: x["modifiedTime"])
     if not image_files:
         print("ERROR: No images found.")
         sys.exit(1)
-    print(f"  ✓ {len(image_files)} images (sorted by filename)")
+    print(f"  ✓ {len(image_files)} images (sorted by modification time)")
 
     # Find narration.mp3, optional auto_timings.csv, optional 05-kb-movements.txt
     print("Finding narration.mp3...")
