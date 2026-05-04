@@ -100,7 +100,36 @@ Always produce 3 title variants targeting different emotional hooks:
 - **Alt A** — emotion-forward, fear or curiosity dominant
 - **Alt B** — benefit-forward, aspiration or relief dominant
 
-These feed directly into YouTube's A/B title test (Test & Compare in Studio). Run all three.
+---
+
+### YouTube A/B Title Testing — Mandatory Step
+
+Producing 3 title variants is worthless unless you actually test them. Every video must go through YouTube Studio's **Test & Compare** feature.
+
+**How to run the test (step by step):**
+
+1. Upload the video and publish with the **Primary** title
+2. Go to **YouTube Studio → Content → click the video**
+3. Click **"Test & Compare"** in the left menu (under Details)
+4. Add **Alt A** as Test B, and **Alt B** as Test C
+5. Set test duration: **minimum 7 days** — shorter tests produce unreliable results
+6. Let YouTube split impressions across all three titles automatically
+
+**What to measure:**
+- **Click-through rate (CTR)** — the primary metric. Which title got more clicks per impression?
+- **Watch time per viewer** — a title that attracts the wrong audience drops this
+- **Views** — not the primary metric; CTR matters more at early stage
+
+**Decision rule:**
+- If one variant wins by **0.5%+ CTR** → switch permanently to that title
+- If results are within 0.2% → keep Primary (SEO-first is safer long-term)
+- If all three underperform (CTR under 3%) → the packaging needs a full rethink — revisit thumbnail and title together
+
+**Important:** YouTube's Test & Compare is only available on videos with enough impressions to generate statistically meaningful results. For a newer channel, let the video run 14 days before drawing conclusions.
+
+**Record results in the trend report for the next video cycle** — which emotional hook is outperforming for your audience? Fear/warning, aspiration, or curiosity? This pattern builds over time and tells you exactly how to package future videos.
+
+---
 
 ---
 
