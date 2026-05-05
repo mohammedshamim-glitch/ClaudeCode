@@ -222,11 +222,12 @@ Example format: [{{"word":"hello","time":0.00}},{{"word":"world","time":0.45}}]"
         "generationConfig": {"temperature": 0}
     }
 
-    for attempt in range(4):
-        r = requests.post(url, json=body, timeout=120)
+    # Retry with long backoff for rate limits (429)
+    for attempt in range(6):
+        r = requests.post(url, json=body, timeout=180)
         if r.ok:
             break
-        wait = 2 ** attempt
+        wait = [15, 30, 60, 90, 120, 180][attempt]
         print(f"    Retry in {wait}s... (HTTP {r.status_code})")
         time.sleep(wait)
     r.raise_for_status()
@@ -256,9 +257,10 @@ def get_all_word_timestamps(audio_path, tmpdir, total_duration):
         words = transcribe_chunk(chunk_path, offset)
         all_words.extend(words)
         print(f"    ✓ {len(words)} words (running total: {len(all_words)})")
-        # Small pause between chunks to avoid rate limiting
+        # Pause between chunks to respect rate limits
         if i < len(chunk_list) - 1:
-            time.sleep(1)
+            print(f"    Waiting 20s before next chunk...")
+            time.sleep(20)
 
     # Deduplicate any overlapping words at chunk boundaries (keep by time order)
     all_words.sort(key=lambda w: w["time"])
