@@ -113,39 +113,62 @@ def drive_download(token, file_id, local_path):
     print()
 
 # ── SEO parser ────────────────────────────────────────────────────────────────
-def parse_seo_metadata(text):
-    """
-    Parse 06-seo-metadata.txt and extract title, description, tags, chapters.
-    Returns dict with keys: title, description, tags, chapters_text
-    """
-    result = {"title": "", "description": "", "tags": [], "chapters_text": ""}
+def is_separator(line):
+    stripped = line.strip()
+    return len(stripped) >= 5 and all(c in '━═─' for c in stripped)
 
-    # Extract primary title — line after "PRIMARY" heading
-    m = re.search(r'PRIMARY.*?\n([^\n]+)\n', text, re.IGNORECASE)
+def parse_seo_metadata(text):
+    """Parse 06-seo-metadata.txt — structure is ━━━\nSECTION\n━━━\ncontent."""
+    lines = text.split('\n')
+    sections = {}
+    current_section = None
+    content_lines = []
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+        if is_separator(line):
+            j = i + 1
+            while j < len(lines) and lines[j].strip() == '':
+                j += 1
+            if j < len(lines) and not is_separator(lines[j]):
+                name_line = lines[j].strip().upper()
+                k = j + 1
+                if k < len(lines) and is_separator(lines[k]):
+                    if current_section and content_lines:
+                        sections[current_section] = '\n'.join(content_lines).strip()
+                    current_section = name_line
+                    content_lines = []
+                    i = k + 1
+                    continue
+        if current_section is not None:
+            content_lines.append(line)
+        i += 1
+
+    if current_section and content_lines:
+        sections[current_section] = '\n'.join(content_lines).strip()
+
+    result = {"title": "", "description": "", "tags": []}
+
+    titles_block = sections.get('TITLES', '')
+    m = re.search(r'PRIMARY[^\n]*\n([^\n\[]+)', titles_block, re.IGNORECASE)
     if m:
-        # Strip character count annotations like [46 characters]
         result["title"] = re.sub(r'\s*\[\d+ characters?\]', '', m.group(1)).strip()
 
-    # Extract description block — between DESCRIPTION header and next ═══ block
-    m = re.search(r'DESCRIPTION[^\n]*\n(.*?)(?=\n[═━─]{10})', text, re.DOTALL | re.IGNORECASE)
-    if m:
-        result["description"] = m.group(1).strip()
+    desc_block = sections.get('DESCRIPTION', '')
+    result["description"] = re.split(r'\n---\n|\n#[A-Z]', desc_block)[0].strip()
 
-    # Extract tags — comma or newline separated block after TAGS heading
-    m = re.search(r'TAGS[^\n]*\n(.*?)(?=\n[═━─]{10}|\Z)', text, re.DOTALL | re.IGNORECASE)
-    if m:
-        raw_tags = m.group(1).strip()
-        tags = [t.strip().strip('#') for t in re.split(r'[,\n]+', raw_tags) if t.strip()]
-        result["tags"] = [t for t in tags if t and not re.match(r'^[═━─]+$', t)][:500]
+    for key in sections:
+        if 'TAG' in key and 'HASHTAG' not in key:
+            tags = [t.strip().lstrip('#') for t in re.split(r'[\n,]+', sections[key]) if t.strip()]
+            result["tags"] = [t for t in tags if len(t) > 1]
+            break
 
-    # Extract chapter timestamps block
-    m = re.search(r'CHAPTERS?[^\n]*\n(.*?)(?=\n[═━─]{10}|\Z)', text, re.DOTALL | re.IGNORECASE)
-    if m:
-        result["chapters_text"] = m.group(1).strip()
-
-    # Append chapters to description if present
-    if result["chapters_text"] and result["description"]:
-        result["description"] += "\n\n" + result["chapters_text"]
+    for key in sections:
+        if 'CHAPTER' in key:
+            if result["description"]:
+                result["description"] += "\n\n" + sections[key]
+            break
 
     return result
 
@@ -241,11 +264,17 @@ def main():
     print("Listing episode files...")
     items = drive_list_all(drive_token, folder_id)
 
-    video_file = next((f for f in items if f["name"] in ("video_kb.mp4", "video.mp4") and "video" in f["mimeType"]), None)
-    seo_file   = next((f for f in items if f["name"] == "06-seo-metadata.txt"), None)
+    seo_file    = next((f for f in items if f["name"] == "06-seo-metadata.txt"), None)
+    video_folder = next((f for f in items if f["name"].lower() == "video" and "folder" in f["mimeType"]), None)
+
+    # Look for video in episode root first, then in Video subfolder
+    video_file = next((f for f in items if f["mimeType"] == "video/mp4"), None)
+    if not video_file and video_folder:
+        sub_items  = drive_list_all(drive_token, video_folder["id"])
+        video_file = next((f for f in sub_items if f["mimeType"] == "video/mp4"), None)
 
     if not video_file:
-        print("ERROR: No video file found (video_kb.mp4 or video.mp4)")
+        print("ERROR: No .mp4 video file found in episode folder or Video subfolder")
         sys.exit(1)
     if not seo_file:
         print("ERROR: 06-seo-metadata.txt not found in episode folder")
@@ -265,7 +294,7 @@ def main():
             headers={"Authorization": f"Bearer {drive_token}"}
         )
         r.raise_for_status()
-        seo_text = r.text
+        seo_text = r.content.decode('utf-8')
         print("  ✓ SEO metadata downloaded")
 
         metadata = parse_seo_metadata(seo_text)
