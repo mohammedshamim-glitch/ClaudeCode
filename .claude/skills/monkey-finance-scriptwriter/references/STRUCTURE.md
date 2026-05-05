@@ -134,8 +134,7 @@ The viewer just received real value. Now — and only now — is the moment to a
 **Structure:**
 1. **One-line value acknowledgement** — validate what they just learned (*"If this video just saved your family from a £34,000 tax bill they didn't know was coming..."*)
 2. **The ask** — direct, confident, no desperation (*"Hit subscribe — we put out new videos every week breaking down your money in plain English"*)
-3. **The tease** — plant the next curiosity loop (*"Next up: [next video topic] — and trust me, that one's going to surprise you"*)
-4. **Sign-off** — warm, on-brand, final
+3. **Sign-off** — warm, on-brand, final
 
 **Example sign-off:**
 > *"Until then — this is Monkey Finance. See you in the next one."*
