@@ -171,11 +171,11 @@ In this video:
 • [Point 4 — includes long-tail keyword]
 
 [2–3 sentences of natural body copy using keywords conversationally. 
-Mention the channel name: "Here at Monkey Finance, we break down 
+Mention the channel name: "Here at Monkey See Money, we break down 
 your money in plain English — no suits, no jargon."]
 
 Subscribe for new UK finance videos every week 👇
-[Channel link]
+https://www.youtube.com/@MonkeySeeMoney
 
 📌 Related videos:
 [Related video 1]
@@ -209,7 +209,7 @@ Structure tags from broad → specific → long-tail. 10–12 tags total. Only t
 ### Rules
 - Never use irrelevant tags to chase traffic — YouTube penalises this
 - Include the primary keyword as a standalone tag
-- Include the channel name as one tag: `Monkey Finance`
+- Include the channel name as one tag: `Monkey See Money`
 - Include `UK` or `United Kingdom` in at least one tag
 - Use the current year in at least one tag
 
@@ -221,12 +221,12 @@ Use 3–5 hashtags. Place them at the very end of the description (not in the ti
 
 YouTube displays the top 3 hashtags above the video title — choose the first 3 carefully.
 
-**Format:** `#UKPersonalFinance #PensionTax #MonkeyFinance`
+**Format:** `#UKPersonalFinance #PensionTax #MonkeySeeMoney`
 
 **Rules:**
 - First hashtag: broad niche (`#PersonalFinanceUK` or `#UKFinance`)
 - Second hashtag: specific topic (`#PensionTax` or `#MortgageRates`)
-- Third hashtag: channel brand (`#MonkeyFinance`)
+- Third hashtag: channel brand (`#MonkeySeeMoney`)
 - Fourth/fifth: optional — additional topic or trending term
 
 ---

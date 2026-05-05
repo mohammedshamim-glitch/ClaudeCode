@@ -184,6 +184,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Monkey** used in 15–20% of scenes at emotional peak moments
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
+- [ ] **No channel name, brand name, or text branding** of any kind — no "Monkey Finance", "Monkey See Money", or any channel identifier written in the scene
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical
 - [ ] **KB composition note** in every prompt — focal element position, margin, and pan direction specified
 - [ ] **No headers or section labels** in either output file — scene number and prompt text only
