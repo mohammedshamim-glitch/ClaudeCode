@@ -1,31 +1,28 @@
 #!/usr/bin/env python3
 """
-Generate auto_timings.csv using Gemini audio transcription.
+Generate audio_timings_new.csv using local Whisper word-level timestamps.
 
-1. Downloads narration.mp3 and narration script from Drive
-2. Splits audio into ~60s chunks (stays within Gemini rate limits)
-3. Sends each chunk to Gemini 2.0 Flash for word-level timestamp transcription
-4. Stitches timestamps together, aligns scene text boundaries
-5. Uploads auto_timings.csv to the episode Drive folder
+Method:
+  1. Download narration.mp3 + 03-narration-script-clean.txt from Drive
+  2. Run local Whisper (base model) with word_timestamps=True → full word list
+  3. Split script by blank lines → one paragraph = one scene
+  4. For each scene, find the LAST few words of that scene in the Whisper word list
+  5. The end_time of those last words = the scene boundary
+  6. Build CSV: scene_start = previous scene's end_time, scene_end = this scene's end_time
+  7. Upload audio_timings_new.csv to the episode Drive folder
+
+Usage:
+    python3 generate_timings_whisper.py <episode_folder_id>
 """
 
-import base64, csv, json, os, re, sys, tempfile, shutil, subprocess, requests, time
+import csv, json, os, re, sys, tempfile, shutil, requests, time
 
-TOKEN_FILE    = "/home/user/ClaudeCode/token.json"
-GEMINI_MODEL  = "gemini-2.0-flash"
-CHUNK_SECONDS = 60  # split audio into 60s segments
+TOKEN_FILE = "/home/user/ClaudeCode/token.json"
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
     with open(TOKEN_FILE) as f:
         return json.load(f)
-
-def get_gemini_api_key():
-    key = load_tokens().get("gemini_api_key", "")
-    if not key:
-        print("ERROR: gemini_api_key is not set in token.json")
-        sys.exit(1)
-    return key
 
 def save_tokens(tokens):
     with open(TOKEN_FILE, "w") as f:
@@ -52,11 +49,11 @@ def get_access_token():
     return tokens["access_token"]
 
 # ── Drive helpers ─────────────────────────────────────────────────────────────
-def drive_list_all(token, folder_id, mime_filter=None):
+def drive_list_all(token, folder_id):
     files, page_token = [], None
     while True:
         params = {
-            "q": f"'{folder_id}' in parents" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
+            "q": f"'{folder_id}' in parents and trashed=false",
             "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
             "pageSize": 100,
         }
@@ -91,8 +88,16 @@ def drive_download(token, file_id, local_path):
     )
     r.raise_for_status()
     with open(local_path, "wb") as f:
-        for chunk in r.iter_content(8192):
+        for chunk in r.iter_content(65536):
             f.write(chunk)
+
+def drive_download_text(token, file_id):
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r.raise_for_status()
+    return r.content.decode("utf-8")
 
 def drive_delete_existing(token, filename, folder_id):
     r = requests.get(
@@ -125,7 +130,8 @@ def drive_upload_csv(token, local_path, filename, folder_id):
         b"--" + boundary + b"--"
     )
     r = requests.post(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink",
+        "https://www.googleapis.com/upload/drive/v3/files"
+        "?uploadType=multipart&fields=id,name,webViewLink",
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": f"multipart/related; boundary={boundary.decode()}",
@@ -135,207 +141,116 @@ def drive_upload_csv(token, local_path, filename, folder_id):
     r.raise_for_status()
     return r.json()
 
-# ── Audio helpers ─────────────────────────────────────────────────────────────
-def get_audio_duration(path):
-    result = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=noprint_wrappers=1:nokey=1", path],
-        capture_output=True, text=True, check=True,
-    )
-    return float(result.stdout.strip())
-
-def split_audio_chunks(audio_path, tmpdir, chunk_seconds=CHUNK_SECONDS):
-    """Split audio into fixed-duration segments. Returns list of (path, start_offset)."""
-    pattern = os.path.join(tmpdir, "chunk_%03d.mp3")
-    subprocess.run(
-        ["ffmpeg", "-i", audio_path,
-         "-f", "segment", "-segment_time", str(chunk_seconds),
-         "-c", "copy", "-y", pattern],
-        capture_output=True, check=True,
-    )
-    chunks = []
-    for fname in sorted(os.listdir(tmpdir)):
-        if re.match(r"chunk_\d+\.mp3", fname):
-            idx = int(re.search(r"chunk_(\d+)", fname).group(1))
-            path = os.path.join(tmpdir, fname)
-            offset = idx * chunk_seconds
-            chunks.append((path, offset))
-    return chunks
-
 # ── Scene splitting ───────────────────────────────────────────────────────────
-def split_narration(text, n_images):
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    sentences = [s.strip() for s in sentences if s.strip()]
-    total_words = sum(len(s.split()) for s in sentences)
-    target = total_words / n_images
+def split_scenes(raw_text):
+    """Split narration script by blank lines — each paragraph is one scene."""
+    paragraphs = re.split(r'\n\s*\n', raw_text.strip())
+    return [p.strip().replace('\n', ' ') for p in paragraphs if p.strip()]
 
-    chunks, current, current_words = [], [], 0
-    for i, sentence in enumerate(sentences):
-        words = len(sentence.split())
-        current.append(sentence)
-        current_words += words
-        slots_filled   = len(chunks)
-        slots_left     = n_images - slots_filled
-        sentences_left = len(sentences) - i - 1
-        if current_words >= target and slots_filled < n_images - 1 and sentences_left >= slots_left - 1:
-            chunks.append(" ".join(current))
-            current, current_words = [], 0
-    if current:
-        chunks.append(" ".join(current))
-    while len(chunks) > n_images:
-        chunks[-2] = chunks[-2] + " " + chunks[-1]
-        chunks.pop()
-    while len(chunks) < n_images:
-        longest = max(range(len(chunks)), key=lambda i: len(chunks[i].split()))
-        sents = re.split(r'(?<=[.!?])\s+', chunks[longest])
-        if len(sents) < 2:
-            chunks.insert(longest + 1, chunks[longest])
-        else:
-            mid = len(sents) // 2
-            chunks[longest] = " ".join(sents[:mid])
-            chunks.insert(longest + 1, " ".join(sents[mid:]))
-    return chunks
+# ── Text normalisation for matching ──────────────────────────────────────────
+def normalize(text):
+    """Lowercase, strip punctuation, return list of tokens."""
+    return re.sub(r"[^a-z0-9\s]", "", text.lower()).split()
 
-# ── Gemini word-level transcription ──────────────────────────────────────────
-def transcribe_chunk(audio_path, offset_seconds):
+# ── Whisper transcription ─────────────────────────────────────────────────────
+def transcribe_audio(audio_path):
     """
-    Send one audio chunk to Gemini and get back word-level timestamps.
-    Returns list of {"word": str, "time": float} where time is absolute (offset applied).
+    Run local Whisper (base model) on audio_path with word_timestamps=True.
+    Returns flat list of {"word": str, "start": float, "end": float}.
     """
-    with open(audio_path, "rb") as f:
-        audio_b64 = base64.b64encode(f.read()).decode()
+    import whisper
+    print("  Loading Whisper base model from ~/.cache/whisper/base.pt ...")
+    model = whisper.load_model("base")
+    print("  Transcribing (this takes a couple of minutes)...")
+    result = model.transcribe(audio_path, word_timestamps=True)
 
-    chunk_dur = get_audio_duration(audio_path)
-
-    prompt = f"""Transcribe this audio clip with word-level timestamps.
-
-Rules:
-- Return ONLY a JSON array of objects, each with "word" (string) and "time" (float seconds from start of THIS clip)
-- Include every spoken word in order
-- Times must be strictly increasing from 0.0 to at most {chunk_dur:.1f}
-- No extra text, no markdown, no explanation — raw JSON array only
-
-Example format: [{{"word":"hello","time":0.00}},{{"word":"world","time":0.45}}]"""
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={get_gemini_api_key()}"
-    body = {
-        "contents": [{
-            "parts": [
-                {"inline_data": {"mime_type": "audio/mpeg", "data": audio_b64}},
-                {"text": prompt}
-            ]
-        }],
-        "generationConfig": {"temperature": 0}
-    }
-
-    # Retry with long backoff for rate limits (429)
-    for attempt in range(6):
-        r = requests.post(url, json=body, timeout=180)
-        if r.ok:
-            break
-        wait = [15, 30, 60, 90, 120, 180][attempt]
-        print(f"    Retry in {wait}s... (HTTP {r.status_code})")
-        time.sleep(wait)
-    r.raise_for_status()
-
-    raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-    raw = re.sub(r'^```[a-z]*\n?', '', raw)
-    raw = re.sub(r'\n?```$', '', raw)
-
-    words = json.loads(raw)
-    # Apply offset to convert chunk-relative times to absolute times
-    for w in words:
-        w["time"] = round(w["time"] + offset_seconds, 3)
+    words = []
+    for segment in result["segments"]:
+        for w in segment.get("words", []):
+            word_text = w.get("word", "").strip()
+            if word_text:
+                words.append({
+                    "word":  word_text,
+                    "start": round(float(w["start"]), 3),
+                    "end":   round(float(w["end"]),   3),
+                })
     return words
 
-def get_all_word_timestamps(audio_path, tmpdir, total_duration):
-    """Split audio, transcribe each chunk, merge word timestamps."""
-    print("  Splitting audio into ~60s chunks...")
-    chunk_list = split_audio_chunks(audio_path, tmpdir)
-    print(f"  ✓ {len(chunk_list)} chunks created")
-
-    all_words = []
-    for i, (chunk_path, offset) in enumerate(chunk_list):
-        dur = get_audio_duration(chunk_path)
-        size_kb = os.path.getsize(chunk_path) // 1024
-        print(f"  Transcribing chunk {i+1}/{len(chunk_list)} "
-              f"(offset={offset:.0f}s, dur={dur:.1f}s, size={size_kb}KB)...")
-        words = transcribe_chunk(chunk_path, offset)
-        all_words.extend(words)
-        print(f"    ✓ {len(words)} words (running total: {len(all_words)})")
-        # Pause between chunks to respect rate limits
-        if i < len(chunk_list) - 1:
-            print(f"    Waiting 20s before next chunk...")
-            time.sleep(20)
-
-    # Deduplicate any overlapping words at chunk boundaries (keep by time order)
-    all_words.sort(key=lambda w: w["time"])
-    return all_words
-
-# ── Scene boundary alignment ──────────────────────────────────────────────────
-def normalize(text):
-    """Lowercase, strip punctuation for fuzzy matching."""
-    return re.sub(r'[^a-z0-9\s]', '', text.lower()).split()
-
-def align_scenes_to_words(chunks, all_words, total_duration):
+# ── Scene boundary alignment (end-word method) ───────────────────────────────
+def align_scenes(scenes, words, total_duration):
     """
-    For each scene chunk, find the word in all_words that best matches
-    the first few words of that chunk. Returns list of {"start", "end"}.
+    For each scene, find the LAST few words of that scene's text in the
+    Whisper word list. The end_time of the matched last word = scene boundary.
+
+    Uses proportional word-count estimates as search anchors (±20% window)
+    to prevent cascade alignment failure.
+
+    Returns list of {"start": float, "end": float} aligned to audio.
     """
-    word_times = [w["time"] for w in all_words]
-    word_texts = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in all_words]
+    word_texts = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in words]
+    word_ends  = [w["end"]   for w in words]
+    word_starts= [w["start"] for w in words]
 
-    scene_starts = []
+    # Proportional estimates: where each scene END falls in the audio
+    scene_word_counts  = [len(normalize(s)) for s in scenes]
+    total_script_words = sum(scene_word_counts)
+    cumulative = 0
+    scene_end_estimates = []
+    for wc in scene_word_counts:
+        cumulative += wc
+        scene_end_estimates.append(cumulative / total_script_words * total_duration)
 
-    for i, chunk in enumerate(chunks):
-        chunk_words = normalize(chunk)
-        if not chunk_words:
-            scene_starts.append(word_times[0] if word_times else 0.0)
+    scene_boundaries = []  # list of end-times
+    last_found_idx = 0
+
+    for i, scene in enumerate(scenes):
+        scene_norm = normalize(scene)
+        if not scene_norm:
+            scene_boundaries.append(scene_end_estimates[i])
             continue
 
-        # Search for the best matching position using first 4 words of chunk
-        search_words = chunk_words[:4]
-        n = len(word_texts)
-        m = len(search_words)
+        # Use last 6 words of the scene for matching
+        tail_words = scene_norm[-6:]
+        m = len(tail_words)
 
-        if i == 0:
-            # First scene always starts at 0
-            scene_starts.append(0.0)
-            continue
+        est = scene_end_estimates[i]
+        window_start = max(0.0,           est - total_duration * 0.20)
+        window_end   = min(total_duration, est + total_duration * 0.20)
 
-        # Only search after the previous scene start to enforce monotonicity
-        prev_start_time = scene_starts[-1] if scene_starts else 0.0
-        # Find index in word_times where time >= prev_start_time
-        search_from = 0
-        for k, t in enumerate(word_times):
-            if t >= prev_start_time:
-                search_from = k
-                break
+        # Map time window to word indices
+        idx_start = next((k for k, t in enumerate(word_starts) if t >= window_start), last_found_idx)
+        idx_end   = next((k for k, t in enumerate(word_starts) if t >= window_end),   len(words))
+        idx_start = max(idx_start, last_found_idx)
 
         best_score = -1
-        best_idx = search_from
+        best_idx   = idx_start  # index of first word of the best match
 
-        for j in range(search_from, min(n - m + 1, n)):
+        search_end = max(idx_start + 1, idx_end - m + 1)
+        for j in range(idx_start, search_end):
             score = sum(
-                1 for k, sw in enumerate(search_words)
-                if j + k < n and word_texts[j + k] == sw
+                1 for k in range(m)
+                if j + k < len(word_texts) and word_texts[j + k] == tail_words[k]
             )
             if score > best_score:
                 best_score = score
-                best_idx = j
+                best_idx   = j
 
-        scene_starts.append(word_times[best_idx])
+        # End boundary = end time of the LAST matched word
+        last_word_idx = min(best_idx + m - 1, len(words) - 1)
+        end_time = word_ends[last_word_idx]
+        scene_boundaries.append(end_time)
+        last_found_idx = best_idx
 
-    # Build timings from starts
+    # Build start/end pairs
     timings = []
-    for i in range(len(chunks)):
-        start = scene_starts[i]
-        end = scene_starts[i + 1] if i + 1 < len(scene_starts) else total_duration
+    for i in range(len(scenes)):
+        start = 0.0 if i == 0 else scene_boundaries[i - 1]
+        end   = scene_boundaries[i]
         if end <= start:
-            end = start + (total_duration - start) / max(len(chunks) - i, 1)
-        timings.append({"start": start, "end": end})
+            end = start + max(1.0, (total_duration - start) / max(len(scenes) - i, 1))
+        timings.append({"start": round(start, 3), "end": round(end, 3)})
 
-    timings[-1]["end"] = total_duration
+    timings[-1]["end"] = round(total_duration, 3)
     return timings
 
 def fmt_time(seconds):
@@ -356,87 +271,120 @@ def main():
     folder_name = drive_get_name(token, folder_id)
     print(f"  ✓ Episode: {folder_name}")
 
-    print("Finding images subfolder...")
+    print("Listing episode files...")
     items = drive_list_all(token, folder_id)
-    images_folder = next(
-        (f for f in items if f["name"].lower() == "images" and "folder" in f["mimeType"]), None
+
+    script_file = next(
+        (f for f in items if f["name"] in ("03-narration-script-clean.txt", "narration_script.txt")), None
     )
-    if not images_folder:
-        print("ERROR: No images subfolder found.")
+
+    # Find audio: check root first, then Audio subfolder
+    AUDIO_MIMES = ("audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav")
+    audio_file = next((f for f in items if f.get("mimeType", "") in AUDIO_MIMES), None)
+    if not audio_file:
+        audio_folder = next(
+            (f for f in items if f.get("name", "").lower() == "audio" and "folder" in f["mimeType"]), None
+        )
+        if audio_folder:
+            sub_items  = drive_list_all(token, audio_folder["id"])
+            candidates = [f for f in sub_items if f.get("mimeType", "") in AUDIO_MIMES]
+            if candidates:
+                # Pick the largest file (most likely the full narration)
+                audio_file = max(candidates, key=lambda f: int(f.get("fileSize", 0)))
+
+    if not script_file:
+        print("ERROR: narration_script.txt not found in episode folder")
+        sys.exit(1)
+    if not audio_file:
+        print("ERROR: No audio file (mp3/wav) found in episode folder or Audio subfolder")
         sys.exit(1)
 
-    image_files = [f for f in drive_list_all(token, images_folder["id"]) if f["mimeType"].startswith("image/")]
-    image_files.sort(key=lambda x: x["modifiedTime"])
-    n = len(image_files)
-    print(f"  ✓ {n} images found")
+    print(f"  ✓ Script: {script_file['name']}")
+    print(f"  ✓ Audio:  {audio_file['name']} ({int(audio_file.get('fileSize',0))//1024//1024}MB)")
 
-    narration_script = next(
-        (f for f in items if f["name"] in ("narration_script.txt", "03-narration-script-clean.txt")), None
-    )
-    narration_audio = next((f for f in items if f["name"] == "narration.mp3"), None)
-    if not narration_script:
-        print("ERROR: narration script not found.")
-        sys.exit(1)
-    if not narration_audio:
-        print("ERROR: narration.mp3 not found.")
-        sys.exit(1)
-
-    tmpdir = tempfile.mkdtemp(prefix="mf_whisper_")
+    tmpdir = tempfile.mkdtemp(prefix="mf_timings_")
     try:
-        print("Downloading narration files...")
-        script_path = os.path.join(tmpdir, "script.txt")
-        audio_path  = os.path.join(tmpdir, "narration.mp3")
-        drive_download(token, narration_script["id"], script_path)
-        drive_download(token, narration_audio["id"],  audio_path)
+        print("\nDownloading files...")
+        audio_ext  = os.path.splitext(audio_file.get("name", audio_file.get("title", "narration.mp3")))[1] or ".mp3"
+        audio_path = os.path.join(tmpdir, f"narration{audio_ext}")
+        drive_download(token, audio_file["id"], audio_path)
+        print("  ✓ Audio downloaded")
 
-        with open(script_path, encoding="utf-8") as f:
-            script_text = f.read()
+        script_text = drive_download_text(token, script_file["id"])
+        print("  ✓ Script downloaded")
 
-        total_duration = get_audio_duration(audio_path)
-        print(f"  ✓ Audio duration: {total_duration:.2f}s")
+        # Get audio duration via ffprobe
+        import subprocess
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
+            capture_output=True, text=True, check=True,
+        )
+        total_duration = float(result.stdout.strip())
+        print(f"  ✓ Audio duration: {total_duration:.2f}s ({fmt_time(total_duration)})")
 
-        chunks = split_narration(script_text, n)
-        print(f"  ✓ Script split into {len(chunks)} scene chunks")
+        # Split script into scenes
+        scenes = split_scenes(script_text)
+        print(f"  ✓ {len(scenes)} scenes parsed from narration script")
 
-        print("\nTranscribing audio via Gemini (chunked)...")
-        all_words = get_all_word_timestamps(audio_path, tmpdir, total_duration)
-        print(f"  ✓ Total words transcribed: {len(all_words)}")
+        # Transcribe with Whisper
+        print("\nRunning Whisper transcription...")
+        whisper_words = transcribe_audio(audio_path)
+        print(f"  ✓ {len(whisper_words)} words transcribed with timestamps")
 
-        print("\nAligning scene boundaries to transcribed words...")
-        timings = align_scenes_to_words(chunks, all_words, total_duration)
+        # Align scenes to word boundaries
+        print("\nAligning scene boundaries to word end-times...")
+        timings = align_scenes(scenes, whisper_words, total_duration)
 
-        # Build CSV rows
+        # Build CSV rows — narration_excerpt is the FULL scene text
         rows = []
-        print(f"\n{'#':>5}  {'Duration':>8}  {'Start':>7}  {'End':>7}  Narration excerpt")
-        print("-" * 80)
-        for i, (img, chunk, t) in enumerate(zip(image_files, chunks, timings)):
+        print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+        print("-" * 90)
+        for i, (scene, t) in enumerate(zip(scenes, timings)):
             dur = t["end"] - t["start"]
             rows.append({
                 "scene":             i + 1,
-                "image":             img["name"],
-                "narration_excerpt": chunk[:80].replace("\n", " ") + ("…" if len(chunk) > 80 else ""),
-                "words":             len(chunk.split()),
+                "narration_excerpt": scene,
+                "words":             len(scene.split()),
                 "duration_seconds":  round(dur, 2),
                 "start_time":        fmt_time(t["start"]),
                 "end_time":          fmt_time(t["end"]),
+                "start_seconds":     t["start"],
+                "end_seconds":       t["end"],
             })
-            print(f"  {i+1:>3}  {dur:>8.2f}s  {fmt_time(t['start']):>7}  {fmt_time(t['end']):>7}  {chunk[:40]}")
+            preview = scene[:60] + ("…" if len(scene) > 60 else "")
+            print(f"  {i+1:>3}  {fmt_time(t['start']):>7}  {fmt_time(t['end']):>7}  {dur:>5.1f}s  {preview}")
 
         total = sum(r["duration_seconds"] for r in rows)
-        print(f"\nTotal: {total:.2f}s (audio: {total_duration:.2f}s)")
+        print(f"\nTotal: {total:.2f}s  Audio: {total_duration:.2f}s")
         print(f"Duration range: {min(r['duration_seconds'] for r in rows):.2f}s – {max(r['duration_seconds'] for r in rows):.2f}s")
 
-        csv_path = os.path.join(tmpdir, "auto_timings.csv")
-        fieldnames = ["scene", "image", "narration_excerpt", "words", "duration_seconds", "start_time", "end_time"]
+        # Verify scene text matches narration script exactly
+        mismatches = 0
+        for row, scene in zip(rows, scenes):
+            if row["narration_excerpt"] != scene:
+                mismatches += 1
+                print(f"  MISMATCH scene {row['scene']}: '{row['narration_excerpt'][:40]}' vs '{scene[:40]}'")
+        if mismatches == 0:
+            print(f"✓ All {len(scenes)} scenes match the narration script exactly.")
+        else:
+            print(f"WARNING: {mismatches} scene text mismatches found.")
+
+        # Write CSV
+        csv_path = os.path.join(tmpdir, "audio_timings_new.csv")
+        fieldnames = ["scene", "narration_excerpt", "words", "duration_seconds",
+                      "start_time", "end_time", "start_seconds", "end_seconds"]
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        print(f"\n✓ CSV written: {len(rows)} rows")
 
-        print("\nUploading auto_timings.csv to Drive...")
+        # Upload to Drive
+        print("Uploading audio_timings_new.csv to Drive...")
         token = get_access_token()
-        drive_delete_existing(token, "auto_timings.csv", folder_id)
-        result = drive_upload_csv(token, csv_path, "auto_timings.csv", folder_id)
+        drive_delete_existing(token, "audio_timings_new.csv", folder_id)
+        result = drive_upload_csv(token, csv_path, "audio_timings_new.csv", folder_id)
         print(f"  ✓ Uploaded: {result['name']}")
         print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
