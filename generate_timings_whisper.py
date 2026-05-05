@@ -3,9 +3,10 @@
 Generate auto_timings.csv using Gemini audio transcription.
 
 1. Downloads narration.mp3 and narration script from Drive
-2. Sends audio + scene list to Gemini 2.0 Flash for timestamp alignment
-3. Derives exact start/end time for each scene from the audio
-4. Uploads auto_timings.csv to the episode Drive folder
+2. Splits audio into ~60s chunks (stays within Gemini rate limits)
+3. Sends each chunk to Gemini 2.0 Flash for word-level timestamp transcription
+4. Stitches timestamps together, aligns scene text boundaries
+5. Uploads auto_timings.csv to the episode Drive folder
 """
 
 import base64, csv, json, os, re, sys, tempfile, shutil, subprocess, requests, time
@@ -13,6 +14,7 @@ import base64, csv, json, os, re, sys, tempfile, shutil, subprocess, requests, t
 TOKEN_FILE     = "/home/user/ClaudeCode/token.json"
 GEMINI_API_KEY = "AIzaSyBJRb4hEmBngO4G3UwgidRouvKCkL0gzd0"
 GEMINI_MODEL   = "gemini-2.0-flash"
+CHUNK_SECONDS  = 60  # split audio into 60s segments
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -136,6 +138,24 @@ def get_audio_duration(path):
     )
     return float(result.stdout.strip())
 
+def split_audio_chunks(audio_path, tmpdir, chunk_seconds=CHUNK_SECONDS):
+    """Split audio into fixed-duration segments. Returns list of (path, start_offset)."""
+    pattern = os.path.join(tmpdir, "chunk_%03d.mp3")
+    subprocess.run(
+        ["ffmpeg", "-i", audio_path,
+         "-f", "segment", "-segment_time", str(chunk_seconds),
+         "-c", "copy", "-y", pattern],
+        capture_output=True, check=True,
+    )
+    chunks = []
+    for fname in sorted(os.listdir(tmpdir)):
+        if re.match(r"chunk_\d+\.mp3", fname):
+            idx = int(re.search(r"chunk_(\d+)", fname).group(1))
+            path = os.path.join(tmpdir, fname)
+            offset = idx * chunk_seconds
+            chunks.append((path, offset))
+    return chunks
+
 # ── Scene splitting ───────────────────────────────────────────────────────────
 def split_narration(text, n_images):
     sentences = re.split(r'(?<=[.!?])\s+', text.strip())
@@ -170,34 +190,26 @@ def split_narration(text, n_images):
             chunks.insert(longest + 1, " ".join(sents[mid:]))
     return chunks
 
-# ── Gemini audio alignment ────────────────────────────────────────────────────
-def gemini_get_timestamps(audio_path, chunks, total_duration):
+# ── Gemini word-level transcription ──────────────────────────────────────────
+def transcribe_chunk(audio_path, offset_seconds):
     """
-    Send audio + scene list to Gemini. Ask for the start timestamp of each
-    scene. Process in batches to stay within token limits.
+    Send one audio chunk to Gemini and get back word-level timestamps.
+    Returns list of {"word": str, "time": float} where time is absolute (offset applied).
     """
     with open(audio_path, "rb") as f:
         audio_b64 = base64.b64encode(f.read()).decode()
 
-    # Build numbered scene list
-    scene_list = "\n".join(f"{i+1}. {c[:120]}" for i, c in enumerate(chunks))
+    chunk_dur = get_audio_duration(audio_path)
 
-    prompt = f"""You are a precise audio transcription assistant.
-
-I will give you an audio file containing a narration, and a numbered list of scenes from the narration script.
-
-Your job: for each scene, identify the exact timestamp (in seconds, to 2 decimal places) when that scene's narration STARTS in the audio.
+    prompt = f"""Transcribe this audio clip with word-level timestamps.
 
 Rules:
-- Return ONLY a JSON array of objects with keys "scene" (integer) and "start" (float seconds)
-- No extra text, no markdown, no explanation — only the raw JSON array
-- Scene 1 always starts at 0.00
-- Timestamps must be strictly increasing
+- Return ONLY a JSON array of objects, each with "word" (string) and "time" (float seconds from start of THIS clip)
+- Include every spoken word in order
+- Times must be strictly increasing from 0.0 to at most {chunk_dur:.1f}
+- No extra text, no markdown, no explanation — raw JSON array only
 
-SCENES:
-{scene_list}
-
-Return JSON only."""
+Example format: [{{"word":"hello","time":0.00}},{{"word":"world","time":0.45}}]"""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     body = {
@@ -210,40 +222,111 @@ Return JSON only."""
         "generationConfig": {"temperature": 0}
     }
 
-    print("  Sending audio to Gemini for timestamp alignment...")
-    for attempt in range(3):
+    for attempt in range(4):
         r = requests.post(url, json=body, timeout=120)
         if r.ok:
             break
         wait = 2 ** attempt
-        print(f"  Retry in {wait}s... ({r.status_code})")
+        print(f"    Retry in {wait}s... (HTTP {r.status_code})")
         time.sleep(wait)
     r.raise_for_status()
 
     raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-
-    # Strip markdown code fences if present
     raw = re.sub(r'^```[a-z]*\n?', '', raw)
     raw = re.sub(r'\n?```$', '', raw)
 
-    data = json.loads(raw)
-    print(f"  ✓ Received {len(data)} scene timestamps from Gemini")
+    words = json.loads(raw)
+    # Apply offset to convert chunk-relative times to absolute times
+    for w in words:
+        w["time"] = round(w["time"] + offset_seconds, 3)
+    return words
 
-    # Build start times list (indexed by scene number)
-    start_map = {item["scene"]: float(item["start"]) for item in data}
+def get_all_word_timestamps(audio_path, tmpdir, total_duration):
+    """Split audio, transcribe each chunk, merge word timestamps."""
+    print("  Splitting audio into ~60s chunks...")
+    chunk_list = split_audio_chunks(audio_path, tmpdir)
+    print(f"  ✓ {len(chunk_list)} chunks created")
 
-    # Derive end times: each scene ends when the next starts; last ends at total_duration
+    all_words = []
+    for i, (chunk_path, offset) in enumerate(chunk_list):
+        dur = get_audio_duration(chunk_path)
+        size_kb = os.path.getsize(chunk_path) // 1024
+        print(f"  Transcribing chunk {i+1}/{len(chunk_list)} "
+              f"(offset={offset:.0f}s, dur={dur:.1f}s, size={size_kb}KB)...")
+        words = transcribe_chunk(chunk_path, offset)
+        all_words.extend(words)
+        print(f"    ✓ {len(words)} words (running total: {len(all_words)})")
+        # Small pause between chunks to avoid rate limiting
+        if i < len(chunk_list) - 1:
+            time.sleep(1)
+
+    # Deduplicate any overlapping words at chunk boundaries (keep by time order)
+    all_words.sort(key=lambda w: w["time"])
+    return all_words
+
+# ── Scene boundary alignment ──────────────────────────────────────────────────
+def normalize(text):
+    """Lowercase, strip punctuation for fuzzy matching."""
+    return re.sub(r'[^a-z0-9\s]', '', text.lower()).split()
+
+def align_scenes_to_words(chunks, all_words, total_duration):
+    """
+    For each scene chunk, find the word in all_words that best matches
+    the first few words of that chunk. Returns list of {"start", "end"}.
+    """
+    word_times = [w["time"] for w in all_words]
+    word_texts = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in all_words]
+
+    scene_starts = []
+
+    for i, chunk in enumerate(chunks):
+        chunk_words = normalize(chunk)
+        if not chunk_words:
+            scene_starts.append(word_times[0] if word_times else 0.0)
+            continue
+
+        # Search for the best matching position using first 4 words of chunk
+        search_words = chunk_words[:4]
+        n = len(word_texts)
+        m = len(search_words)
+
+        if i == 0:
+            # First scene always starts at 0
+            scene_starts.append(0.0)
+            continue
+
+        # Only search after the previous scene start to enforce monotonicity
+        prev_start_time = scene_starts[-1] if scene_starts else 0.0
+        # Find index in word_times where time >= prev_start_time
+        search_from = 0
+        for k, t in enumerate(word_times):
+            if t >= prev_start_time:
+                search_from = k
+                break
+
+        best_score = -1
+        best_idx = search_from
+
+        for j in range(search_from, min(n - m + 1, n)):
+            score = sum(
+                1 for k, sw in enumerate(search_words)
+                if j + k < n and word_texts[j + k] == sw
+            )
+            if score > best_score:
+                best_score = score
+                best_idx = j
+
+        scene_starts.append(word_times[best_idx])
+
+    # Build timings from starts
     timings = []
     for i in range(len(chunks)):
-        scene_num = i + 1
-        start = start_map.get(scene_num, None)
-        if start is None:
-            # Fallback: use previous end
-            start = timings[-1]["end"] if timings else 0.0
-        next_start = start_map.get(scene_num + 1, total_duration)
-        timings.append({"start": start, "end": next_start})
+        start = scene_starts[i]
+        end = scene_starts[i + 1] if i + 1 < len(scene_starts) else total_duration
+        if end <= start:
+            end = start + (total_duration - start) / max(len(chunks) - i, 1)
+        timings.append({"start": start, "end": end})
 
-    # Clamp last scene to total_duration
     timings[-1]["end"] = total_duration
     return timings
 
@@ -307,8 +390,12 @@ def main():
         chunks = split_narration(script_text, n)
         print(f"  ✓ Script split into {len(chunks)} scene chunks")
 
-        print("\nAligning scenes to audio via Gemini...")
-        timings = gemini_get_timestamps(audio_path, chunks, total_duration)
+        print("\nTranscribing audio via Gemini (chunked)...")
+        all_words = get_all_word_timestamps(audio_path, tmpdir, total_duration)
+        print(f"  ✓ Total words transcribed: {len(all_words)}")
+
+        print("\nAligning scene boundaries to transcribed words...")
+        timings = align_scenes_to_words(chunks, all_words, total_duration)
 
         # Build CSV rows
         rows = []
