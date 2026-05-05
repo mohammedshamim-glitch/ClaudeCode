@@ -11,15 +11,21 @@ Generate auto_timings.csv using Gemini audio transcription.
 
 import base64, csv, json, os, re, sys, tempfile, shutil, subprocess, requests, time
 
-TOKEN_FILE     = "/home/user/ClaudeCode/token.json"
-GEMINI_API_KEY = "AIzaSyBJRb4hEmBngO4G3UwgidRouvKCkL0gzd0"
-GEMINI_MODEL   = "gemini-2.0-flash"
-CHUNK_SECONDS  = 60  # split audio into 60s segments
+TOKEN_FILE    = "/home/user/ClaudeCode/token.json"
+GEMINI_MODEL  = "gemini-2.0-flash"
+CHUNK_SECONDS = 60  # split audio into 60s segments
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
     with open(TOKEN_FILE) as f:
         return json.load(f)
+
+def get_gemini_api_key():
+    key = load_tokens().get("gemini_api_key", "")
+    if not key:
+        print("ERROR: gemini_api_key is not set in token.json")
+        sys.exit(1)
+    return key
 
 def save_tokens(tokens):
     with open(TOKEN_FILE, "w") as f:
@@ -211,7 +217,7 @@ Rules:
 
 Example format: [{{"word":"hello","time":0.00}},{{"word":"world","time":0.45}}]"""
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={get_gemini_api_key()}"
     body = {
         "contents": [{
             "parts": [

@@ -12,7 +12,6 @@ import base64, json, re, time, wave, io, os, sys
 import requests
 
 # ── Config ────────────────────────────────────────────────────────────────────
-GEMINI_API_KEY  = os.environ.get("GEMINI_API_KEY", "AIzaSyBJRb4hEmBngO4G3UwgidRouvKCkL0gzd0")
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
@@ -32,6 +31,13 @@ def load_tokens():
 def save_tokens(tokens):
     with open(TOKEN_FILE, "w") as f:
         json.dump(tokens, f, indent=2)
+
+def get_gemini_api_key():
+    key = load_tokens().get("gemini_api_key", "")
+    if not key:
+        print("ERROR: gemini_api_key is not set in token.json")
+        sys.exit(1)
+    return key
 
 def get_access_token():
     tokens = load_tokens()
@@ -131,7 +137,7 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 
 # ── Gemini TTS ────────────────────────────────────────────────────────────────
 def tts_chunk(text):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
     body = {
         "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
