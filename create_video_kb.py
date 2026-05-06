@@ -154,17 +154,17 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
 KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
 
 EFFECT_NAMES = [
-    "zoom in → centre",
     "pan left → right",
     "pan right → left",
-    "zoom out ← centre",
+    "pan top → bottom",
+    "pan bottom → top",
 ]
 
 def get_kb_filter(idx, duration, w, h):
     """
     Returns a smooth Ken Burns vf filter string using scale+crop+t.
     Image is pre-scaled to KB_SCALE× output, then a time-varying crop
-    window slides/zooms across it, then rescaled to w×h.
+    window pans across it, then rescaled to w×h.
     't' is ffmpeg's built-in time variable (seconds, continuous).
     idx selects one of 4 effects.
     """
@@ -179,30 +179,28 @@ def get_kb_filter(idx, duration, w, h):
     P = f"min(t/{D:.6f},1)"
 
     effects = [
-        # 0. Zoom in to centre
+        # 0. Pan left → right
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
-         f"crop=w='{LW}-{px}*{P}':h='{LH}-{py}*{P}'"
-         f":x='{cx}*{P}':y='{cy}*{P}',"
-         f"scale={w}:{h},setsar=1"),
-
-        # 1. Pan left → right
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 2. Pan right → left
+        # 1. Pan right → left
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 3. Zoom out from centre
+        # 2. Pan top → bottom
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=black,"
-         f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
-         f":x='{cx}*(1-{P})':y='{cy}*(1-{P})',"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
+         f"scale={w}:{h},setsar=1"),
+
+        # 3. Pan bottom → top
+        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
+         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % len(effects)]
@@ -210,18 +208,20 @@ def get_kb_filter(idx, duration, w, h):
 
 def movement_to_effect_idx(text):
     """
-    Maps a KB movement description from 05-kb-movements.txt to one of the
-    4 ffmpeg effect indices:
-      0 = zoom in   1 = pan L→R   2 = pan R→L   3 = zoom out
+    Maps a KB label from 05-kb-movements.txt to one of the 4 effect indices:
+      0 = pan left to right
+      1 = pan right to left
+      2 = pan top to bottom
+      3 = pan bottom to top
     """
     t = text.lower()
-    if any(k in t for k in ["zoom out", "pull back", "slow zoom out", "pull away"]):
-        return 3
-    if any(k in t for k in ["pan right to left", "right to left", "pan right →", "pan from right"]):
-        return 2
-    if any(k in t for k in ["left to right", "pan left", "pan slowly left", "pan from", "pan from the", "track left", "track the line"]):
+    if any(k in t for k in ["right to left", "pan right to left"]):
         return 1
-    # Default: zoom in (covers push in, tilt up, hold/breathe, track forward, etc.)
+    if any(k in t for k in ["top to bottom", "pan top to bottom"]):
+        return 2
+    if any(k in t for k in ["bottom to top", "pan bottom to top"]):
+        return 3
+    # Default: pan left to right
     return 0
 
 

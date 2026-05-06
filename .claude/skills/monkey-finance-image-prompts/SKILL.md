@@ -149,12 +149,12 @@ There are exactly **4 effects** available. Every scene in `05-kb-movements.txt` 
 
 | Label | What it does | Best for |
 |---|---|---|
-| `zoom in` | Slowly pushes into the centre of the frame | Key stats, monkey reactions, single focal point |
 | `pan left to right` | Camera travels left → right | Timelines, before/after, reveal on the right |
 | `pan right to left` | Camera travels right → left | Contrast, correction, reversal of expectation |
-| `zoom out` | Slowly pulls back from the centre | Scale reveals, zooming out to show full context |
+| `pan top to bottom` | Camera drifts downward | Downward pressure, falling values, bad news |
+| `pan bottom to top` | Camera drifts upward | Rising charts, growth, upward momentum, optimism |
 
-**Assign by choosing the effect that serves the scene's emotional job.** When in doubt, `zoom in` is the default — it works for almost any scene and creates focus and tension.
+**Assign by choosing the effect that serves the scene's emotional job.** When in doubt, `pan left to right` is the default.
 
 Vary the effects across the video — avoid using the same effect more than 3 times in a row.
 
@@ -174,20 +174,20 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 ### KB Movements (`05-kb-movements.txt`)
 One of the 4 exact effect labels per scene. Scene number + label only. No descriptions, no explanations.
 ```
-1.1 zoom in
+1.1 pan left to right
 
-1.2 pan left to right
+1.2 pan right to left
 
-1.3 zoom out
+1.3 pan top to bottom
 
-1.4 pan right to left
+1.4 pan bottom to top
 ```
 
 **Critical formatting:**
 - Scene number at start of every line in both files
 - Image prompts: everything in one paragraph, blank line between scenes
 - KB file: scene number + exact effect label only, blank line between scenes
-- **Only these 4 labels are valid:** `zoom in` / `pan left to right` / `pan right to left` / `zoom out`
+- **Only these 4 labels are valid:** `pan left to right` / `pan right to left` / `pan top to bottom` / `pan bottom to top`
 - **Central 70% instruction verbatim in every single image prompt** — never omit
 - **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts
 - **No file title, no section headers, no dividers** — scene number and label only
