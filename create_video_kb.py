@@ -304,7 +304,7 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if use_kb:
+        if use_kb and i % 4 == 0:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
@@ -321,7 +321,6 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label}")
         else:
             vf = static_vf
-            print(f"  Scene {i+1}/{n}: {dur:.2f}s  static")
         create_segment(img, seg, dur, vf, w, h)
         segments.append(seg)
 
