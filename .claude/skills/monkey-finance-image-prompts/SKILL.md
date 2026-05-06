@@ -143,6 +143,23 @@ One dominant element with generous white space gives KB room to travel. Overcrow
 
 ---
 
+## The 4 KB Effects — Use These Exact Labels
+
+There are exactly **4 effects** available. Every scene in `05-kb-movements.txt` must use one of these four labels verbatim — nothing else:
+
+| Label | What it does | Best for |
+|---|---|---|
+| `zoom in` | Slowly pushes into the centre of the frame | Key stats, monkey reactions, single focal point |
+| `pan left to right` | Camera travels left → right | Timelines, before/after, reveal on the right |
+| `pan right to left` | Camera travels right → left | Contrast, correction, reversal of expectation |
+| `zoom out` | Slowly pulls back from the centre | Scale reveals, zooming out to show full context |
+
+**Assign by choosing the effect that serves the scene's emotional job.** When in doubt, `zoom in` is the default — it works for almost any scene and creates focus and tension.
+
+Vary the effects across the video — avoid using the same effect more than 3 times in a row.
+
+---
+
 ## Output Format
 
 Generate TWO files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
@@ -155,20 +172,25 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 ```
 
 ### KB Movements (`05-kb-movements.txt`)
-Camera movements in a dedicated separate file. Scene number + movement description only. No prompt text.
+One of the 4 exact effect labels per scene. Scene number + label only. No descriptions, no explanations.
 ```
-1.1 Slow push in toward the thought bubble — the dream feels vivid and close.
+1.1 zoom in
 
-1.2 Hold on the monkey's shocked face, then slow pan right to '92%' — the number arrives like a gut punch.
+1.2 pan left to right
+
+1.3 zoom out
+
+1.4 pan right to left
 ```
 
 **Critical formatting:**
 - Scene number at start of every line in both files
 - Image prompts: everything in one paragraph, blank line between scenes
-- KB file: scene number + movement description only, blank line between scenes
+- KB file: scene number + exact effect label only, blank line between scenes
+- **Only these 4 labels are valid:** `zoom in` / `pan left to right` / `pan right to left` / `zoom out`
 - **Central 70% instruction verbatim in every single image prompt** — never omit
 - **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts
-- **No file title, no section headers, no dividers** — scene number and content only
+- **No file title, no section headers, no dividers** — scene number and label only
 
 Save both files to Drive in run's project folder.
 Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
