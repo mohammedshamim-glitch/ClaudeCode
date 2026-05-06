@@ -253,6 +253,88 @@ def align_scenes(scenes, words, total_duration):
     timings[-1]["end"] = round(total_duration, 3)
     return timings
 
+def validate_and_fix_timings(timings, scenes, total_duration):
+    """
+    Self-check: flag scenes where duration is implausible for their word count,
+    then auto-correct by proportional interpolation between valid anchor boundaries.
+
+    Normal narration pace: 100–180 wpm. We flag anything outside 0.40x–2.50x of
+    what the video-specific speech rate predicts.  A 26-word scene that clocks in
+    at 31s (~50 wpm) or 1s (~1560 wpm) is clearly a Whisper alignment error.
+    """
+    word_counts = [len(s.split()) for s in scenes]
+    total_words = sum(word_counts)
+    global_wps  = total_words / total_duration          # words per second
+    expected_wpm = global_wps * 60
+
+    print(f"\n  Speech rate check: {expected_wpm:.0f} wpm "
+          f"({total_words} words / {total_duration:.1f}s)")
+
+    # Detect suspect scenes using each scene's independently-detected end boundary
+    suspects = set()
+    for i in range(len(timings)):
+        dur = timings[i]["end"] - timings[i]["start"]
+        exp = word_counts[i] / global_wps
+        ratio = dur / exp if exp > 0 else 999
+        if ratio < 0.40 or ratio > 2.50:
+            suspects.add(i)
+            print(f"  ⚠ Scene {i+1}: {dur:.1f}s actual vs ~{exp:.1f}s expected "
+                  f"({word_counts[i]} words, {ratio:.2f}x) — SUSPECT")
+
+    if not suspects:
+        print(f"  ✓ All {len(timings)} scenes within 0.4–2.5x of expected duration")
+        return timings
+
+    print(f"  Auto-correcting {len(suspects)} scene(s)...")
+
+    # Work on the end-boundary array (each independently detected by Whisper)
+    boundaries = [t["end"] for t in timings]
+
+    # Fix each contiguous run of suspects
+    i = 0
+    while i < len(boundaries):
+        if i not in suspects:
+            i += 1
+            continue
+        run_start = i
+        while i < len(boundaries) and i in suspects:
+            i += 1
+        run_end = i  # first non-suspect after run (exclusive)
+
+        # Left anchor: nearest non-suspect boundary before the run
+        li = run_start - 1
+        while li > 0 and li in suspects:
+            li -= 1
+        left_time = boundaries[li] if li >= 0 and li not in suspects else 0.0
+
+        # Right anchor: nearest non-suspect boundary after the run
+        right_time = (boundaries[run_end]
+                      if run_end < len(boundaries) else total_duration)
+
+        span_words = sum(word_counts[run_start:run_end])
+        span_time  = right_time - left_time
+        if span_words == 0:
+            continue
+
+        cumulative = 0
+        for j in range(run_start, run_end):
+            old_dur = timings[j]["end"] - timings[j]["start"]
+            cumulative += word_counts[j]
+            boundaries[j] = round(left_time + (cumulative / span_words) * span_time, 3)
+            new_dur = boundaries[j] - (boundaries[j - 1] if j > 0 else 0.0)
+            exp = word_counts[j] / global_wps
+            print(f"    Scene {j+1}: {old_dur:.1f}s → {new_dur:.1f}s "
+                  f"(expected ~{exp:.1f}s, {word_counts[j]} words) ✓ fixed")
+
+    # Rebuild start/end pairs from corrected boundaries
+    fixed = []
+    for i in range(len(boundaries)):
+        start = 0.0 if i == 0 else boundaries[i - 1]
+        fixed.append({"start": round(start, 3), "end": boundaries[i]})
+    fixed[-1]["end"] = round(total_duration, 3)
+    return fixed
+
+
 def fmt_time(seconds):
     m = int(seconds) // 60
     s = seconds - m * 60
@@ -335,6 +417,9 @@ def main():
         # Align scenes to word boundaries
         print("\nAligning scene boundaries to word end-times...")
         timings = align_scenes(scenes, whisper_words, total_duration)
+
+        # Self-check: catch and fix implausible timings using speech rate
+        timings = validate_and_fix_timings(timings, scenes, total_duration)
 
         # Build CSV rows — narration_excerpt is the FULL scene text
         rows = []
