@@ -92,7 +92,7 @@ def drive_load_csv(token, file_id):
         headers={"Authorization": f"Bearer {token}"},
     )
     r.raise_for_status()
-    reader = csv.DictReader(io.StringIO(r.text))
+    reader = csv.DictReader(io.StringIO(r.content.decode("utf-8")))
     return list(reader)
 
 def drive_download_file(token, file_id, local_path):
@@ -213,16 +213,19 @@ def movement_to_effect_idx(text):
       1 = pan right to left
       2 = pan top to bottom
       3 = pan bottom to top
+    Returns None for unrecognised text (old-format descriptions) so the
+    caller can fall back to cycling.
     """
-    t = text.lower()
-    if any(k in t for k in ["right to left", "pan right to left"]):
+    t = text.strip().lower()
+    if t == "pan left to right":
+        return 0
+    if t == "pan right to left":
         return 1
-    if any(k in t for k in ["top to bottom", "pan top to bottom"]):
+    if t == "pan top to bottom":
         return 2
-    if any(k in t for k in ["bottom to top", "pan bottom to top"]):
+    if t == "pan bottom to top":
         return 3
-    # Default: pan left to right
-    return 0
+    return None
 
 
 def load_kb_movements(local_path):
@@ -296,22 +299,26 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
         f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
     )
-    kb_cycle_idx = 0  # fallback counter used only when no movements file
+    kb_cycle_idx = 0
 
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if use_kb and i % 4 == 0:
+        if use_kb:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
-                label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}: {movement_text[:50]}]"
+                if effect_idx is None:
+                    # Old-format description — cycle through the 4 effects
+                    effect_idx = kb_cycle_idx % 4
+                    kb_cycle_idx += 1
+                label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}]"
             else:
                 effect_idx = kb_cycle_idx % 4
-                label = f"{EFFECT_NAMES[effect_idx]} [cycle fallback]"
+                label = f"{EFFECT_NAMES[effect_idx]} [cycle]"
                 kb_cycle_idx += 1
             vf = get_kb_filter(effect_idx, dur, w, h)
-            print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label} [Ken Burns]")
+            print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label}")
         else:
             vf = static_vf
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  static")
@@ -390,17 +397,20 @@ def main():
     print("Finding narration.mp3...")
     all_files = drive_list_files(token, folder_id)
     audio_file   = next((f for f in all_files if f["name"] == "narration.mp3"), None)
-    timings_file = next((f for f in all_files if f["name"] == "auto_timings.csv"), None)
+    timings_file = (
+        next((f for f in all_files if f["name"] == "audio_timings_new.csv"), None) or
+        next((f for f in all_files if f["name"] == "auto_timings.csv"), None)
+    )
     kb_file      = next((f for f in all_files if f["name"] == "05-kb-movements.txt"), None)
     if not audio_file:
         print("ERROR: narration.mp3 not found.")
         sys.exit(1)
     print(f"  ✓ Found narration.mp3")
     if timings_file:
-        print(f"  ✓ Found auto_timings.csv — will use per-scene durations")
+        print(f"  ✓ Found {timings_file['name']} — will use per-scene durations")
     else:
-        print(f"  ⚠ auto_timings.csv not found — falling back to equal splits")
-        print(f"    Run generate_timings.py first for smarter scene durations")
+        print(f"  ⚠ No timings CSV found — falling back to equal splits")
+        print(f"    Run generate_timings_whisper.py first for accurate scene durations")
     if kb_file:
         print(f"  ✓ Found 05-kb-movements.txt — KB effects will follow the file")
     else:
