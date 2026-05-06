@@ -62,10 +62,10 @@ Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 
 
 ### Pass 2 — Write Two Files (The Artist)
 Generate both output files simultaneously:
-1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 70% rule in every prompt
+1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
 2. **KB movements** (`05-kb-movements.txt`) — one line per scene: scene number + camera movement only
 
-Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
 
 Format KB file: `1.1 Slow push in toward X — [why it works emotionally].`
 
@@ -77,7 +77,7 @@ Read all prompts as a sequence. Check:
 - [ ] Every stat has the number explicitly written on canvas
 - [ ] Green suit monkey ONLY in first and final scenes
 - [ ] Scene numbers at start of each line, all content in one paragraph
-- [ ] Central 70% instruction present in every image prompt
+- [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] KB movements in separate file only — never embedded in image prompts
 - [ ] Camera movements logical and varied
 
@@ -129,17 +129,17 @@ Wherever the narration mentions a statistic, percentage, or number, the image pr
 
 Videos use Ken Burns effects — slow zoom in, zoom out, or pan across each static image. Two rules are non-negotiable:
 
-**Rule 1 — Central 70% only. Always.**
-All critical elements (stats, characters, key text, diagrams) must be positioned within the central 70% of the frame. Leave a minimum 15% clear margin on all four edges. KB will crop the edges during zoom — anything outside the 70% zone risks being cut entirely.
+**Rule 1 — Central 60% only. Always.**
+All critical elements (stats, characters, key text, diagrams) must be positioned within the central 60% of the frame. Leave a minimum 20% clear margin on all four edges. The KB pan will travel across the outer 20% — anything outside the 60% zone risks being cropped.
 
 Add this exact instruction to every single prompt, just before the closing style line:
-> `All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges.`
+> `All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges.`
 
-**Rule 2 — Give KB somewhere to travel.**
-Place the focal point slightly off-centre. For left-to-right layouts (before/after, timelines, two-column), the payoff element sits right of centre — KB pans toward it. For zoom-in scenes, the key stat or character is slightly right or up from dead-centre.
+**Rule 2 — KB applies to 25% of scenes only.**
+Only every 4th scene gets a Ken Burns effect — the rest are static. Design all images with the 20% margin regardless, but do not force dramatic off-centre compositions for static scenes.
 
 **Rule 3 — Sparse beats crowded.**
-One dominant element with generous white space gives KB room to travel. Overcrowded compositions look static under KB.
+One dominant element with generous white space. Overcrowded compositions look worse under any movement.
 
 ---
 
@@ -166,9 +166,9 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 70% of the frame — minimum 15% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 ```
 
 ### KB Movements (`05-kb-movements.txt`)
@@ -188,7 +188,7 @@ One of the 4 exact effect labels per scene. Scene number + label only. No descri
 - Image prompts: everything in one paragraph, blank line between scenes
 - KB file: scene number + exact effect label only, blank line between scenes
 - **Only these 4 labels are valid:** `pan left to right` / `pan right to left` / `pan top to bottom` / `pan bottom to top`
-- **Central 70% instruction verbatim in every single image prompt** — never omit
+- **Central 60% / 20% border instruction verbatim in every single image prompt** — never omit
 - **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts
 - **No file title, no section headers, no dividers** — scene number and label only
 

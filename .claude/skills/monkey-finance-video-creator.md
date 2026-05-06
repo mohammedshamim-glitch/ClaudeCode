@@ -71,9 +71,9 @@ Episode Folder/
 | Aspect ratio | Preserved with black padding |
 | Auth | OAuth2 refresh token (shared with TTS skill) |
 | Min scene duration | 4.0 seconds (shorter scenes merged with neighbour) |
-| Ken Burns frequency | Every 4th scene; rest are static (use `--no-kb` to disable all) |
-| Ken Burns zoom | 1.2× (reduced to avoid cropping text) |
-| Ken Burns styles | Zoom in, pan L→R, pan R→L, zoom out (cycles) |
+| Ken Burns frequency | 25% of scenes (every 4th); rest are static (use `--no-kb` to disable all) |
+| Ken Burns zoom | 1.2× pan travel (no zoom in/out) |
+| Ken Burns styles | Pan L→R, pan R→L, pan T→B, pan B→T (cycles) |
 
 ## Notes
 - Images are ordered by **modification time** (oldest = scene 1). If order is wrong, check file timestamps on Drive.
