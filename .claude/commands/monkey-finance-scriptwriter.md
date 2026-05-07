@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-scriptwriter/SKILL.md and write a broadcast-ready narration script for the Monkey Finance channel based on the topic or brief provided.

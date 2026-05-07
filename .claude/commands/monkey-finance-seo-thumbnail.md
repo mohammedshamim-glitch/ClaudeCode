@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-seo-thumbnail/SKILL.md and produce the full SEO + thumbnail package for the Monkey Finance episode: title, description, tags, hashtags, chapters, and thumbnail prompt.

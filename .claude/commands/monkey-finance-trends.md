@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-trends/SKILL.md and run a full YouTube trend research report for the Monkey Finance channel — trending topics, competitor analysis, keyword research, and top video recommendations.

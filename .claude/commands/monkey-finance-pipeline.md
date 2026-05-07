@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-pipeline/SKILL.md and run the full Monkey Finance video production pipeline. This orchestrates all 6 stages — trend research → script → TTS → image prompts → video assembly → YouTube upload — with a human approval gate after each stage.
