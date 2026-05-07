@@ -215,8 +215,12 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 
 ## Delivery
 
-Output both `04-image-prompts.txt` and `05-video-prompts.txt` to Drive and display the on-screen approval prompt per CONTEXT.md §5.
-Then confirm: *"Stage 3 complete — {sub_scene_count} image & video prompts saved to Drive. Ready for your review before Stage 4."*
+Before generating any files, ask: *"Do you want me to also generate the KB movements file (`05-kb-movements.txt`) alongside the image prompts, or image prompts only?"*
+
+- If image prompts only → save `04-image-prompts.txt` to Drive only.
+- If both → save `04-image-prompts.txt` and `05-kb-movements.txt` to Drive.
+
+Then confirm: *"Stage 3 complete — {sub_scene_count} image prompts saved to Drive. Ready for your review before Stage 4."*
 
 ---
 
