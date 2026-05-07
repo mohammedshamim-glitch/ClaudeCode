@@ -47,6 +47,10 @@ You cannot be the best finance channel without knowing what you're competing aga
 | **Pensioncraft** | Pension specialist — deep content, engaged audience | Pension topics he covers vs angles he misses |
 | **Martin Lewis / MoneySavingExpert** | The giant — dominates consumer finance | What he's NOT covering in video format (his gaps = your opportunity) |
 | **MoneyMagpie** | Broad personal finance, more female demographic | Topics performing well we can do better |
+| **Casual Finance** | Subscribed channel — direct niche overlap likely | Recent uploads, titles, view velocity |
+| **MonkeyExplains** | Subscribed channel — similar animated/explainer format | Style, topics, engagement patterns |
+| **Primate Economics** | Subscribed channel — possible direct competitor given name | Topics covered, audience overlap |
+| **Wealth Logic** | Subscribed channel — UK finance content | Angles, title formulas, gaps left open |
 
 ### How to Track
 
