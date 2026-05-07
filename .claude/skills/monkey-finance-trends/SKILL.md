@@ -42,7 +42,9 @@ Phase 6: Content Brief Output → full brief per top idea, ready for pipeline
 | Item | Value |
 |---|---|
 | Channel | Monkey Finance (Monkey See Money) |
-| Target audience | UK-based, financially curious, 25–45 age range |
+| Channel scope | **General finance** — macro events, global markets, geopolitics + money, business stories, AND UK personal finance. Not exclusively UK personal finance. |
+| Target audience | Financially curious adults 25–45, UK-based but global topics welcome |
+| Content mix | ~60% general/macro finance, ~40% UK personal finance |
 | Video format | 10–12 min explainer / whiteboard animation |
 | Tone | Plain English, relatable, no jargon unless explained |
 | Upload cadence | Weekly |
@@ -88,6 +90,21 @@ Run Phase 1E (see `references/RESEARCH.md`) alongside the trend sweep. Score eve
 
 **Seed list — always check these categories for fresh angles:**
 
+### General / Macro Finance (prioritise these)
+| Category | Example angles |
+|---|---|
+| **Global markets** | Why markets crash, how recessions start, what a bear market means |
+| **Central banks** | How the Fed/BoE sets rates, what quantitative easing actually is, money printing explained |
+| **Geopolitics + money** | How wars move markets, oil price explained, petrodollar system, sanctions |
+| **Trade & tariffs** | How tariffs work, who really pays them, trade war impact on everyday life |
+| **Big business stories** | Company collapses, IPOs, hostile takeovers, short sellers explained |
+| **Economic concepts** | Inflation explained simply, deflation, stagflation, GDP what it actually means |
+| **Crypto & digital assets** | Bitcoin explained, stablecoins, why crypto crashes, CBDCs |
+| **Banking system** | How banks create money, what happens when a bank fails, fractional reserve explained |
+| **Wealth inequality** | Why the rich get richer, tax havens explained, billionaire economics |
+| **Market mechanics** | Short selling, hedge funds, derivatives, dark pools explained simply |
+
+### UK Personal Finance (supporting pillar)
 | Category | Example angles |
 |---|---|
 | **Investing vs Property** | S&P 500 vs buying a house, index funds vs buy-to-let, stocks vs bricks |
@@ -95,13 +112,10 @@ Run Phase 1E (see `references/RESEARCH.md`) alongside the trend sweep. Score eve
 | **Pension basics** | How much do I need to retire, SIPP vs workplace pension, pension drawdown explained |
 | **Compound interest** | The power of starting early, compound interest explained simply |
 | **Index funds** | Index funds for beginners, why most fund managers lose to the index |
-| **Emergency fund** | How much to save, where to keep it, savings account types |
-| **Budgeting** | 50/30/20 rule, zero-based budgeting, best budgeting apps UK |
-| **Debt** | Paying off debt vs investing, good debt vs bad debt, clearing credit cards |
 | **Tax efficiency** | Capital gains tax explained, income tax bands UK, salary sacrifice |
 | **First-time investing** | How to start investing with £100, best beginner investment platforms UK |
 
-When surfacing an evergreen pick, flag it clearly as **EVERGREEN** in the report so Sham knows it's a long-shelf-life video rather than a time-sensitive one.
+When surfacing an evergreen pick, flag it clearly as **EVERGREEN** and tag it as either **[MACRO]** or **[UK PERSONAL]** so the content mix stays balanced.
 
 ---
 
@@ -121,9 +135,11 @@ Deliver a clean **Trend Report** structured as:
 
 - **Always use web search** — never rely on training data for trend research. Finance moves fast.
 - **Prioritise recency** — focus on content published in the last 7–30 days unless researching evergreen.
-- **UK-first lens** — flag if a topic is US-heavy and assess UK relevance separately.
+- **Broad finance lens** — topics don't have to be UK-specific. Global macro, US markets, international events are all fair game if they're explainable simply and relevant to a financially curious audience.
+- **UK relevance check** — for global topics, always note the UK angle or impact where it exists, but don't reject a topic just because it's not UK-only.
 - **Solo creator filter** — always check if big channels dominate. We need winnable ground.
 - **No fluff** — every recommendation must be backed by a signal (search data, view count, trend graph, etc.)
+- **Content mix** — across every 5 recommendations, aim for ~3 general/macro and ~2 UK personal finance. Never all one type.
 - **Pipeline-ready** — the winning topic from this report should be passable directly to Stage 1 of the pipeline.
 
 ---

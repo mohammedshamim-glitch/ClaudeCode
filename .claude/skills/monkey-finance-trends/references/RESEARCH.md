@@ -116,10 +116,12 @@ Add a **Competitor Snapshot** section to the trend report:
 
 ### 1a — YouTube Trend Signals
 Run these searches and note top results (title, views, upload date, channel size):
-- `"personal finance" youtube trending 2025`
+- `"personal finance" youtube trending 2026`
 - `"investing" youtube most viewed this week`
-- `"money" youtube viral 2025`
-- `finance youtube trending UK 2025`
+- `"money" youtube viral 2026`
+- `finance youtube trending 2026`
+- `"economy explained" youtube trending 2026`
+- `"stock market" youtube viral 2026`
 - `best performing finance youtube videos [current month]`
 
 Note for each result:
