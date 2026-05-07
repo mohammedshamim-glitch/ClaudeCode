@@ -25,7 +25,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **UTF-8 decoding**: All Drive text/CSV downloads must use `r.content.decode('utf-8')` — `r.text` silently corrupts em-dashes and £ signs (latin-1 default).
 - **Scene splitting**: Narration script scenes are separated by blank lines — never split by word count or sentence count.
 - **Whisper alignment**: Use end-word boundary method (last 6 words of scene → `word["end"]`). Add `validate_and_fix_timings()` pass after alignment to catch speech-rate outliers (flag if duration < 0.4× or > 2.5× expected at the video's measured wpm).
-- **KB every-4th**: `i % 4 == 0` in the render loop = 25% KB. Removing that condition = 100% KB (too much).
+- **KB every-4th**: `i > 0 and i % 4 == 1` in the render loop = 25% KB, skipping scene 0 (the opening hook). Never apply KB to the first scene.
 - **SEO parser**: `06-seo-metadata.txt` uses `━━━` separator lines — requires a line-by-line state machine parser, not regex on separator chars.
 - **YouTube API**: Must be enabled in Google Cloud Console before first upload (project 452685133802). YouTube uses a separate refresh token (`youtube_refresh_token`) from Drive.
 - **Audio subfolder**: For the S&P 500 war episode, audio is in an `Audio` subfolder as `.wav`, not `narration.mp3` in the root.
