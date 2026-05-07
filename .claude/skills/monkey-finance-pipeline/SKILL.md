@@ -22,8 +22,8 @@ Every Monkey Finance video flows through these stages in order:
 | **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.md` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-video-prompts.txt` |
-| **4** | `monkey-finance-seo-thumbnail` | Script + brief | `06-seo-metadata.txt` |
-| **5** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` + `narration.srt` |
+| **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` + `narration.srt` |
+| **5** | `monkey-finance-seo-thumbnail` | Script + brief + `narration.srt` | `06-seo-metadata.txt` |
 | **6** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` |
 | **7** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
 
@@ -108,27 +108,15 @@ Wait for Sham's approval before Stage 4.
 
 ---
 
-### ▶ STAGE 4 — SEO & Thumbnail
-**Skill:** `monkey-finance-seo-thumbnail`
-
-Generate the full Click Package: 3 title variants, description, tags, hashtags, chapters, thumbnail brief, and Grok thumbnail prompt. Save as `06-seo-metadata.txt` to Drive.
-
-**Approval gate:**
-> *"Stage 4 complete. SEO package saved to Drive — [link]. Primary title: '[title]'. Want to tweak anything, or shall I generate the audio next?"*
-
-Wait for Sham's approval before Stage 5.
-
----
-
-### ▶ STAGE 5 — Audio Generation (TTS) + Subtitles
+### ▶ STAGE 4 — Audio Generation (TTS) + Subtitles
 **Skill:** `monkey-finance-tts`
 
-**Step 5a — Generate audio:**
+**Step 4a — Generate audio:**
 ```bash
 python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id> narration.mp3
 ```
 
-**Step 5b — Generate SRT subtitle file:**
+**Step 4b — Generate SRT subtitle file:**
 ```bash
 python3 /home/user/ClaudeCode/generate_srt.py <episode_folder_id>
 ```
@@ -138,9 +126,21 @@ This downloads the script and audio from Drive, calculates timestamps proportion
 Both files are uploaded to Drive. The `.srt` is uploaded to YouTube Studio → Subtitles within 24 hours of the video going live — this makes every spoken word indexable by Google Search.
 
 **Approval gate:**
-> *"Stage 5 complete. `narration.mp3` ([X]m [Y]s) and `narration.srt` ([Z] subtitle cards) uploaded to Drive. Ready to build the video — with or without Ken Burns effects?"*
+> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) and `narration.srt` ([Z] subtitle cards) uploaded to Drive. Ready to generate the SEO package — I'll use the SRT timestamps to set accurate chapter markers."*
 
-Wait for Sham's Ken Burns preference before Stage 6.
+Wait for Sham's approval before Stage 5.
+
+---
+
+### ▶ STAGE 5 — SEO & Thumbnail
+**Skill:** `monkey-finance-seo-thumbnail`
+
+Generate the full Click Package: 3 title variants, description, tags, hashtags, chapters, thumbnail brief, and Grok thumbnail prompt. Use the `narration.srt` timestamps from Stage 4 to set accurate YouTube chapter markers. Save as `06-seo-metadata.txt` to Drive.
+
+**Approval gate:**
+> *"Stage 5 complete. SEO package saved to Drive — [link]. Primary title: '[title]'. Chapters are timestamped from the SRT file. Want to tweak anything, or shall I build the video?"*
+
+Wait for Sham's approval before Stage 6.
 
 ---
 
@@ -270,8 +270,8 @@ Save a brief `07-analytics-review.md` to the episode Drive folder with:
 | "Run the pipeline" / "Make a video" | Stage 1 (or Stage 2 if topic given) |
 | "I have a brief, write the script" | Stage 2 |
 | "Script's done, make the image prompts" | Stage 3 |
-| "Generate the SEO" | Stage 4 |
-| "Generate the audio" | Stage 5 |
+| "Generate the audio" | Stage 4 |
+| "Generate the SEO" | Stage 5 |
 | "Build the video" | Stage 6 |
 
 ---

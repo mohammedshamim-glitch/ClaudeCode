@@ -7,8 +7,8 @@ Automated end-to-end video production system for the [Monkey Finance](https://ww
 ## Pipeline Overview
 
 ```
-Trend Research → Script → TTS Audio → Image Prompts → Video Assembly → YouTube Upload
-    Stage 1         Stage 2   Stage 3      Stage 4          Stage 5         Stage 6
+Trend Research → Script → Image Prompts → TTS Audio → SEO & Thumbnail → Video Assembly → YouTube Upload
+    Stage 1        Stage 2    Stage 3        Stage 4       Stage 5            Stage 6         Stage 7
 ```
 
 Each stage is a Claude Code skill, invokable as a slash command.
