@@ -92,7 +92,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 ---
 
-## Final Quality Check — Clear All 8 Before Delivering
+## Final Quality Check — Clear All 9 Before Delivering
 
 - [ ] **Grand Payoff identified** — there's one unmissable moment the whole script builds toward
 - [ ] **Hook written last** — and it makes you want to keep reading immediately
@@ -102,6 +102,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
 - [ ] **Word count 1,400–1,600** — not under, not over
+- [ ] **Scene word count 20–35** — every scene checked, no outliers below 20 or above 35
 
 ---
 
@@ -111,7 +112,10 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 Break the script into exactly 25-word scenes, maintaining the section structure.
 
-**Minimum scene length — hard rule:** Every scene paragraph must be at least 20 words. Any paragraph that falls below 20 words must be merged with an adjacent scene before saving. Never output a scene shorter than 20 words under any circumstances.
+**Scene length — hard rules (both must pass before saving):**
+- **Minimum 20 words:** Any paragraph below 20 words must be merged with an adjacent scene.
+- **Maximum 35 words:** Any paragraph above 35 words must be split into two scenes.
+- After writing, run a word-count check across every scene. Fix any violation before outputting either file.
 
 Then automatically:
 
