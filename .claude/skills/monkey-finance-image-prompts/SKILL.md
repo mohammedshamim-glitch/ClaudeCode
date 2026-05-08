@@ -99,7 +99,7 @@ This must be the exact first line of every single prompt. No exceptions. No vari
 |---|---|
 | **Scene 01** | Green suit monkey ONLY — brand intro |
 | **Final scene** | Green suit monkey ONLY — brand sign-off |
-| **Select emotional scenes** | Plain monkey (no suit) — shock, confusion, relief, realisation |
+| **Select emotional scenes** | Monkey — shock, confusion, relief, realisation |
 | **Most scenes** | No monkey — pure visual storytelling |
 
 **Monkey threshold:** Use a monkey in roughly 15–20% of scenes (8–12 scenes in a typical 55-scene video). Choose moments of strongest emotional reaction: the "aha" moment, the horror reveal, the satisfied conclusion.

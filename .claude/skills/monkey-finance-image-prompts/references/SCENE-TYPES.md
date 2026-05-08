@@ -141,7 +141,7 @@ Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape 
 
 ### Type G — Narrative / Story
 **Used for:** Storytelling scenes — "picture this", relatable scenarios, examples
-**Monkey:** Plain monkey when the scene benefits from a "protagonist" — otherwise no monkey
+**Monkey:** Monkey when the scene benefits from a "protagonist" — otherwise no monkey
 
 **Formula:**
 ```
