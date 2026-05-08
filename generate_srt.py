@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 """
 SRT subtitle generator for Monkey Finance episodes.
-1. Downloads narration_script.txt and narration.mp3 from Drive
-2. Splits script into subtitle cards at blank lines (25-word scenes)
-3. Calculates timestamps proportionally by word count vs total audio duration
-4. Outputs a properly formatted .srt file
-5. Uploads narration.srt back to the episode Drive folder
+Uses Whisper-derived timings (audio_timings_new.csv) for exact per-scene timestamps.
+Falls back to proportional word count if the CSV is not present.
 
 Usage:
     python3 generate_srt.py <episode_folder_id>
 """
 
-import json, os, re, subprocess, sys, tempfile
+import csv, io, json, os, re, subprocess, sys, tempfile
 import requests
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
-LOCAL_SCRIPT    = "/tmp/srt_narration_script.txt"
-LOCAL_MP3       = "/tmp/srt_narration.mp3"
-LOCAL_SRT       = "/tmp/narration.srt"
-SCRIPT_FILENAME = "03-narration-script-clean.txt"
-AUDIO_FILENAME  = "narration.mp3"
-OUTPUT_FILENAME = "narration.srt"
+TOKEN_FILE       = "/home/user/ClaudeCode/token.json"
+LOCAL_SRT        = "/tmp/narration.srt"
+SCRIPT_FILENAME  = "03-narration-script-clean.txt"
+AUDIO_FILENAME   = "narration.mp3"
+TIMINGS_FILENAME = "audio_timings_new.csv"
+OUTPUT_FILENAME  = "narration.srt"
 
-# Max characters per subtitle line (accessibility standard)
-MAX_LINE_CHARS  = 42
+MAX_LINE_CHARS   = 42   # accessibility standard: max chars per subtitle line
 
 # ── OAuth2 ─────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -56,8 +51,7 @@ def get_access_token():
     if not r.ok:
         print(f"ERROR refreshing token: {r.text}")
         sys.exit(1)
-    new_tokens = r.json()
-    tokens["access_token"] = new_tokens["access_token"]
+    tokens["access_token"] = r.json()["access_token"]
     save_tokens(tokens)
     return tokens["access_token"]
 
@@ -96,8 +90,15 @@ def drive_download(token, file_id, local_path):
         for chunk in r.iter_content(chunk_size=65536):
             f.write(chunk)
 
+def drive_download_text(token, file_id):
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r.raise_for_status()
+    return r.content.decode("utf-8")
+
 def drive_delete_existing(token, filename, folder_id):
-    """Delete any existing files with this name in the folder before uploading."""
     r = requests.get(
         "https://www.googleapis.com/drive/v3/files",
         headers={"Authorization": f"Bearer {token}"},
@@ -141,98 +142,69 @@ def drive_upload(token, local_path, filename, folder_id):
 
 # ── Audio duration ──────────────────────────────────────────────────────────────
 def get_audio_duration(mp3_path):
-    """Use ffprobe to get duration in seconds."""
     result = subprocess.run(
-        [
-            "ffprobe", "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            mp3_path,
-        ],
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=noprint_wrappers=1:nokey=1", mp3_path],
         capture_output=True, text=True, check=True,
     )
     return float(result.stdout.strip())
 
-# ── Script parsing ──────────────────────────────────────────────────────────────
-def parse_scenes(text):
-    """
-    Split the clean narration script into scenes.
-    Scenes are separated by blank lines (one per ~25-word block).
-    Returns list of (scene_text, word_count) tuples.
-    """
-    raw_blocks = re.split(r'\n\s*\n', text.strip())
-    scenes = []
-    for block in raw_blocks:
-        cleaned = block.strip()
-        if not cleaned:
-            continue
-        word_count = len(cleaned.split())
-        scenes.append((cleaned, word_count))
-    return scenes
-
 # ── Timestamp formatting ────────────────────────────────────────────────────────
 def fmt_srt_time(seconds):
-    """Convert float seconds to SRT timestamp: HH:MM:SS,mmm"""
+    """Float seconds → SRT timestamp HH:MM:SS,mmm"""
     ms = int(round((seconds % 1) * 1000))
     s  = int(seconds)
-    m  = s // 60
-    h  = m // 60
-    s  = s % 60
-    m  = m % 60
+    m, s = divmod(s, 60)
+    h, m = divmod(m, 60)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 # ── Line wrapping ───────────────────────────────────────────────────────────────
 def wrap_subtitle(text, max_chars=MAX_LINE_CHARS):
-    """
-    Wrap subtitle text to max 2 lines, max_chars per line.
-    Tries to break at a word boundary near the midpoint.
-    """
     if len(text) <= max_chars:
         return text
-    # Try to split near middle at a space
     mid = len(text) // 2
-    # Search forward then backward for a space
     for i in range(mid, len(text)):
         if text[i] == ' ':
-            line1, line2 = text[:i].strip(), text[i+1:].strip()
-            if len(line1) <= max_chars and len(line2) <= max_chars:
-                return f"{line1}\n{line2}"
+            l1, l2 = text[:i].strip(), text[i+1:].strip()
+            if len(l1) <= max_chars and len(l2) <= max_chars:
+                return f"{l1}\n{l2}"
             break
     for i in range(mid, -1, -1):
         if text[i] == ' ':
-            line1, line2 = text[:i].strip(), text[i+1:].strip()
-            if len(line1) <= max_chars and len(line2) <= max_chars:
-                return f"{line1}\n{line2}"
+            l1, l2 = text[:i].strip(), text[i+1:].strip()
+            if len(l1) <= max_chars and len(l2) <= max_chars:
+                return f"{l1}\n{l2}"
             break
-    # Fallback: hard wrap at max_chars
     return f"{text[:max_chars]}\n{text[max_chars:].strip()}"
 
-# ── SRT generation ──────────────────────────────────────────────────────────────
-def build_srt(scenes, total_duration):
+# ── SRT builders ────────────────────────────────────────────────────────────────
+def build_srt_from_whisper(rows):
     """
-    Assign timestamps to each scene proportionally by word count.
-    Returns the full SRT file content as a string.
+    Build SRT from audio_timings_new.csv rows.
+    Uses exact Whisper-derived start_seconds / end_seconds.
     """
-    total_words = sum(wc for _, wc in scenes)
+    rows_sorted = sorted(rows, key=lambda r: int(r["scene"]))
     lines = []
-    current_time = 0.0
-
-    for idx, (text, word_count) in enumerate(scenes, 1):
-        scene_duration = (word_count / total_words) * total_duration
-        # Add a tiny leading gap on first scene
-        start = current_time
-        end   = current_time + scene_duration
-        # Clamp end to total duration
-        end = min(end, total_duration)
-
+    for idx, row in enumerate(rows_sorted, 1):
+        start = float(row["start_seconds"])
+        end   = float(row["end_seconds"])
+        text  = row["narration_excerpt"].strip()
         wrapped = wrap_subtitle(text)
-        lines.append(str(idx))
-        lines.append(f"{fmt_srt_time(start)} --> {fmt_srt_time(end)}")
-        lines.append(wrapped)
-        lines.append("")  # blank line between cards
+        lines += [str(idx), f"{fmt_srt_time(start)} --> {fmt_srt_time(end)}", wrapped, ""]
+    return "\n".join(lines)
 
-        current_time = end
-
+def build_srt_proportional(scenes, total_duration):
+    """Fallback: assign timestamps proportionally by word count."""
+    total_words = sum(len(t.split()) for t in scenes)
+    lines = []
+    current = 0.0
+    for idx, text in enumerate(scenes, 1):
+        wc  = len(text.split())
+        dur = (wc / total_words) * total_duration
+        end = min(current + dur, total_duration)
+        wrapped = wrap_subtitle(text)
+        lines += [str(idx), f"{fmt_srt_time(current)} --> {fmt_srt_time(end)}", wrapped, ""]
+        current = end
     return "\n".join(lines)
 
 # ── Main ────────────────────────────────────────────────────────────────────────
@@ -243,59 +215,64 @@ def main():
 
     folder_id = sys.argv[1]
 
-    print("Authenticating with Google Drive...")
+    print("Authenticating...")
     token = get_access_token()
     print("  ✓ Authenticated")
 
-    print(f"Listing files in folder {folder_id}...")
-    files = drive_list_files(token, folder_id)
+    print("Listing episode files...")
+    files    = drive_list_files(token, folder_id)
     file_map = {f["name"]: f["id"] for f in files}
 
-    # Find script
-    if SCRIPT_FILENAME not in file_map:
-        print(f"ERROR: '{SCRIPT_FILENAME}' not found in folder.")
-        print(f"  Found: {list(file_map.keys())}")
-        sys.exit(1)
+    # ── Try Whisper timings first ──────────────────────────────────────────────
+    if TIMINGS_FILENAME in file_map:
+        print(f"  ✓ Found {TIMINGS_FILENAME} — using exact Whisper timestamps")
+        raw = drive_download_text(token, file_map[TIMINGS_FILENAME])
+        rows = list(csv.DictReader(io.StringIO(raw)))
+        print(f"  ✓ {len(rows)} scenes loaded from Whisper CSV")
+        srt_content = build_srt_from_whisper(rows)
+        method = "Whisper (exact)"
+        scene_count = len(rows)
 
-    # Find audio
-    if AUDIO_FILENAME not in file_map:
-        print(f"ERROR: '{AUDIO_FILENAME}' not found in folder. Run TTS first.")
-        sys.exit(1)
+    # ── Fallback: proportional word count ─────────────────────────────────────
+    else:
+        print(f"  ⚠ {TIMINGS_FILENAME} not found — falling back to proportional timestamps")
+        print(f"    Run generate_timings_whisper.py for more accurate captions")
 
-    print(f"Downloading {SCRIPT_FILENAME}...")
-    drive_download(token, file_map[SCRIPT_FILENAME], LOCAL_SCRIPT)
-    with open(LOCAL_SCRIPT, "r") as f:
-        script_text = f.read()
-    print(f"  ✓ {len(script_text.split())} words")
+        if SCRIPT_FILENAME not in file_map:
+            print(f"ERROR: '{SCRIPT_FILENAME}' not found in folder.")
+            sys.exit(1)
+        if AUDIO_FILENAME not in file_map:
+            print(f"ERROR: '{AUDIO_FILENAME}' not found. Run TTS first.")
+            sys.exit(1)
 
-    print(f"Downloading {AUDIO_FILENAME}...")
-    drive_download(token, file_map[AUDIO_FILENAME], LOCAL_MP3)
-    print(f"  ✓ Downloaded")
+        script_text = drive_download_text(token, file_map[SCRIPT_FILENAME])
+        scenes = [b.strip() for b in re.split(r'\n\s*\n', script_text.strip()) if b.strip()]
+        print(f"  ✓ {len(scenes)} scenes parsed from script")
 
-    print("Getting audio duration...")
-    total_duration = get_audio_duration(LOCAL_MP3)
-    mins = int(total_duration // 60)
-    secs = total_duration % 60
-    print(f"  ✓ Duration: {mins}m {secs:.1f}s ({total_duration:.2f}s)")
+        local_mp3 = "/tmp/srt_narration.mp3"
+        print(f"Downloading audio for duration...")
+        drive_download(token, file_map[AUDIO_FILENAME], local_mp3)
+        total_duration = get_audio_duration(local_mp3)
+        print(f"  ✓ Audio: {total_duration:.2f}s")
 
-    print("Parsing narration into scenes...")
-    scenes = parse_scenes(script_text)
-    print(f"  ✓ {len(scenes)} scenes parsed")
+        srt_content = build_srt_proportional(scenes, total_duration)
+        method = "proportional (estimated)"
+        scene_count = len(scenes)
 
-    print("Generating SRT timestamps...")
-    srt_content = build_srt(scenes, total_duration)
+    # ── Write and upload ───────────────────────────────────────────────────────
     with open(LOCAL_SRT, "w", encoding="utf-8") as f:
         f.write(srt_content)
-    print(f"  ✓ SRT written: {len(scenes)} subtitle cards")
+    print(f"\nSRT generated: {scene_count} subtitle cards ({method})")
 
     print(f"Uploading {OUTPUT_FILENAME} to Drive...")
     token = get_access_token()
     drive_delete_existing(token, OUTPUT_FILENAME, folder_id)
     result = drive_upload(token, LOCAL_SRT, OUTPUT_FILENAME, folder_id)
     print(f"  ✓ Uploaded: {result['name']}")
-    print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
+    print(f"  ✓ View:     {result.get('webViewLink', 'n/a')}")
     print()
-    print("Done. Upload narration.srt to YouTube Studio → Subtitles within 24 hours of publishing.")
+    print("Next step: upload narration.srt to YouTube Studio → Subtitles")
+    print("  Can be done now while the video is still private.")
 
 if __name__ == "__main__":
     main()
