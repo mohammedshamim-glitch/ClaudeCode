@@ -4,19 +4,49 @@ Upload a Monkey Finance episode to YouTube with full SEO metadata.
 
 1. Downloads video and 06-seo-metadata.txt from the episode Drive folder
 2. Parses title, description, tags, and chapters from the SEO package
-3. Uploads video to YouTube via resumable upload
-4. Sets all metadata, category, and privacy status
+3. Renames video file to title slug (SEO best practice)
+4. Uploads video + thumbnail to YouTube via resumable upload
+5. Schedules publish for next Wednesday 4pm UK time, min 2 days from upload
+6. Sets language to en-GB (YouTube auto-generates captions)
 
 Usage:
-    python3 upload_youtube.py <episode_folder_id> [--privacy private|unlisted|public]
+    python3 upload_youtube.py <episode_folder_id>
 """
 
 import json, os, re, sys, tempfile, shutil, requests, time
+from datetime import datetime, timedelta, timezone
 
-TOKEN_FILE   = "/home/user/ClaudeCode/token.json"
-VIDEO_MIME   = "video/mp4"
-YT_CATEGORY  = "27"   # Education
-YT_LANGUAGE  = "en-GB"
+TOKEN_FILE        = "/home/user/ClaudeCode/token.json"
+VIDEO_MIME        = "video/mp4"
+YT_CATEGORY       = "27"   # Education
+YT_LANGUAGE       = "en-GB"
+PUBLISH_HOUR_UK   = 16     # 4:00pm UK time
+MIN_DAYS_BUFFER   = 2      # minimum days between upload and publish
+BEST_WEEKDAY      = 2      # Wednesday (Mon=0 … Sun=6)
+
+
+def get_scheduled_publish_time():
+    """
+    Returns the next Wednesday at 4:00pm UK time, at least MIN_DAYS_BUFFER days
+    from now. Accounts for BST (UTC+1, last Sun Mar – last Sun Oct) vs GMT (UTC+0).
+    """
+    # Determine UK UTC offset for the target date (approximate: BST Apr–Oct)
+    def uk_utc_offset(d):
+        return 1 if 4 <= d.month <= 10 else 0
+
+    today = datetime.now(timezone.utc).date()
+    earliest = today + timedelta(days=MIN_DAYS_BUFFER)
+
+    # Find next Wednesday on or after earliest
+    days_ahead = (BEST_WEEKDAY - earliest.weekday()) % 7
+    publish_date = earliest + timedelta(days=days_ahead)
+
+    offset = uk_utc_offset(publish_date)
+    publish_utc = datetime(
+        publish_date.year, publish_date.month, publish_date.day,
+        PUBLISH_HOUR_UK - offset, 0, 0, tzinfo=timezone.utc
+    )
+    return publish_utc
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -178,6 +208,7 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
     file_size = os.path.getsize(video_path)
 
     # Step 1: Initiate resumable upload session
+    publish_at = get_scheduled_publish_time()
     body = {
         "snippet": {
             "title":                 metadata["title"],
@@ -188,7 +219,8 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
             "defaultAudioLanguage":  YT_LANGUAGE,
         },
         "status": {
-            "privacyStatus":           metadata.get("privacy", "private"),
+            "privacyStatus":           "private",
+            "publishAt":               publish_at.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "selfDeclaredMadeForKids": False,
             "embeddable":              True,
             "publicStatsViewable":     True,
@@ -246,22 +278,23 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 upload_youtube.py <episode_folder_id> [--privacy private|unlisted|public]")
+        print("Usage: python3 upload_youtube.py <episode_folder_id>")
         sys.exit(1)
 
     folder_id = sys.argv[1]
-    privacy   = "private"
-    if "--privacy" in sys.argv:
-        idx = sys.argv.index("--privacy")
-        if idx + 1 < len(sys.argv):
-            privacy = sys.argv[idx + 1]
+
+    publish_at = get_scheduled_publish_time()
+    # UK display time
+    uk_offset  = 1 if 4 <= publish_at.month <= 10 else 0
+    uk_time    = publish_at + timedelta(hours=uk_offset)
+    uk_label   = "BST" if uk_offset else "GMT"
 
     print("Authenticating...")
     drive_token = get_drive_token()
     yt_token    = get_youtube_token()
     folder_name = drive_get_name(drive_token, folder_id)
-    print(f"  ✓ Episode: {folder_name}")
-    print(f"  ✓ Privacy: {privacy}")
+    print(f"  ✓ Episode:   {folder_name}")
+    print(f"  ✓ Scheduled: {uk_time.strftime('%A %d %B %Y at %I:%M%p')} {uk_label}")
 
     print("Listing episode files...")
     items = drive_list_all(drive_token, folder_id)
@@ -300,7 +333,7 @@ def main():
         print("  ✓ SEO metadata downloaded")
 
         metadata = parse_seo_metadata(seo_text)
-        metadata["privacy"] = privacy
+        metadata["privacy"] = "private"
 
         if not metadata["title"]:
             print("ERROR: Could not parse title from 06-seo-metadata.txt")
@@ -353,7 +386,7 @@ def main():
         print(f"  ✓ Video ID:    {video_id}")
         print(f"  ✓ Watch URL:   {yt_url}")
         print(f"  ✓ Studio URL:  {yt_studio}")
-        print(f"  ✓ Privacy:     {privacy}")
+        print(f"  ✓ Scheduled:   {uk_time.strftime('%A %d %B %Y at %I:%M%p')} {uk_label}")
         print(f"{'='*60}\n")
 
     finally:
