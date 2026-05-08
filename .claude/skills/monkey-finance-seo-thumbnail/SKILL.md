@@ -113,9 +113,11 @@ Output the complete Click Package in clean, labelled sections. Then automaticall
 
 1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, thumbnail brief, and AI thumbnail prompt.
 
-2. **Display the package** on-screen in copy-paste ready format for immediate use in YouTube Studio and Grok.
+2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
 
-3. Once saved, confirm with the Drive link and ask: *"SEO package complete and saved to Drive. Ready to use for upload, or want to tweak any section?"*
+3. **Display the package** on-screen in copy-paste ready format for immediate use in YouTube Studio and Grok.
+
+4. Once saved, confirm with the Drive links and ask: *"SEO package complete. `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` saved to Drive. Ready to use for upload, or want to tweak any section?"*
 
 ---
 
