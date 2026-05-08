@@ -93,6 +93,20 @@ This must be the exact first line of every single prompt. No exceptions. No vari
 
 ---
 
+## Mandatory Rule — No Channel Branding Ever
+
+**This rule applies to every single scene, including and especially the final scene.**
+
+Never write any of the following on the canvas in any prompt:
+- ❌ "Monkey Finance"
+- ❌ "Monkey See Money"
+- ❌ Any channel name, show name, or brand name
+- ❌ Any URL, handle, or social media reference
+
+The green suit monkey in the final scene is the brand sign-off — the visual alone is the identifier. No text branding is ever needed or permitted. If you catch yourself writing a channel name into a prompt, delete it immediately.
+
+---
+
 ## Monkey Usage Rules — Strict
 
 | Scene | Rule |

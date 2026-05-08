@@ -14,9 +14,10 @@ OUTPUT_VIDEO    = "/home/user/ClaudeCode/video_kb.mp4"
 RESOLUTION_W    = 1920
 RESOLUTION_H    = 1080
 FPS             = 30
-VIDEO_CRF       = 23
-AUDIO_BITRATE   = "192k"
-OUTPUT_FILENAME = "video_kb.mp4"
+VIDEO_CRF            = 23
+AUDIO_BITRATE        = "192k"
+OUTPUT_FILENAME      = "video_kb.mp4"
+LAST_SCENE_BONUS_SECONDS = 5   # extra hold time on the final scene after narration ends
 
 # ── OAuth2 (shared) ───────────────────────────────────────────────────────────
 def load_tokens():
@@ -441,6 +442,8 @@ def main():
             rows.sort(key=lambda r: int(r["scene"]))
             if len(rows) == len(image_paths):
                 durations = [float(r["duration_seconds"]) for r in rows]
+                durations[-1] += LAST_SCENE_BONUS_SECONDS
+                print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
             else:
                 print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
 

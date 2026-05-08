@@ -109,7 +109,11 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 ## Delivery
 
-Break the script into exactly 25-word scenes, maintaining the section structure. Then automatically:
+Break the script into exactly 25-word scenes, maintaining the section structure.
+
+**Minimum scene length — hard rule:** Every scene paragraph must be at least 20 words. Any paragraph that falls below 20 words must be merged with an adjacent scene before saving. Never output a scene shorter than 20 words under any circumstances.
+
+Then automatically:
 
 1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), scene numbers (1.1, 1.2, etc.), and exactly 25 words per scene clearly marked.
 
