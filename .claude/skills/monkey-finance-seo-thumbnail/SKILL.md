@@ -36,7 +36,7 @@ Every run outputs a complete **Click Package** containing:
 | **Chapters** | Timestamped sections for watch time and search visibility |
 | **Upload timing** | Best day and time to publish for maximum launch-window impact |
 | **Pinned comment** | Ready-to-post comment — paste within 60 minutes of going live |
-| **SRT reminder** | Prompt to generate and upload `narration.srt` within 24hrs of publish |
+| **Caption note** | YouTube auto-generates captions — no SRT needed. Language set to en-GB on upload. |
 | **Thumbnail Brief** | Visual concept, emotional trigger, layout direction |
 | **AI Image Prompt** | Ready-to-paste Grok/Midjourney prompt for the thumbnail |
 
@@ -59,14 +59,13 @@ Every run outputs a complete **Click Package** containing:
 This is the correct pipeline order:
 1. Script → TTS → Images → Video assembly → Whisper timings
 2. **Then run this skill** — using the Whisper CSV for exact chapter timestamps
-3. Generate SRT from the same Whisper data
-4. Upload video + metadata + SRT + thumbnail together in one session
+3. Upload video + metadata + thumbnail together in one session
 
 **Why this order matters:**
 - Chapter timestamps must come from `audio_timings_new.csv` — not estimated from word counts
 - Thumbnail is ready at upload time, not added later in Studio
-- SRT is attached before the video goes public, not as an afterthought
 - Everything ships together cleanly in a single upload session
+- YouTube auto-generates en-GB captions — no SRT file needed
 
 ---
 
@@ -115,9 +114,11 @@ Output the complete Click Package in clean, labelled sections. Then automaticall
 
 2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
 
-3. **Display the package** on-screen in copy-paste ready format for immediate use in YouTube Studio and Grok.
+3. **Thumbnail naming reminder**: When Sham saves the generated thumbnail to Drive, it must be named `thumbnail` in the episode folder. `upload_youtube.py` finds it by that name and uploads it automatically alongside the video.
 
-4. Once saved, confirm with the Drive links and ask: *"SEO package complete. `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` saved to Drive. Ready to use for upload, or want to tweak any section?"*
+4. **Display the package** on-screen in copy-paste ready format for immediate use in YouTube Studio and Grok.
+
+5. Once saved, confirm with the Drive links and ask: *"SEO package complete. `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` saved to Drive. Have you saved the thumbnail to Drive as 'thumbnail'? Once ready, we can upload everything in one go."*
 
 ---
 

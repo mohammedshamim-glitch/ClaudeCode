@@ -188,8 +188,10 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
             "defaultAudioLanguage":  YT_LANGUAGE,
         },
         "status": {
-            "privacyStatus":             metadata.get("privacy", "private"),
-            "selfDeclaredMadeForKids":   False,
+            "privacyStatus":           metadata.get("privacy", "private"),
+            "selfDeclaredMadeForKids": False,
+            "embeddable":              True,
+            "publicStatsViewable":     True,
         },
     }
 
@@ -308,6 +310,14 @@ def main():
         print(f"  Tags:   {len(metadata['tags'])} tags")
         print(f"  Desc:   {len(metadata['description'])} chars")
 
+        # Rename video file to title slug (SEO best practice)
+        title_slug = re.sub(r'[^\w\s-]', '', metadata["title"].lower())
+        title_slug = re.sub(r'[\s_]+', '-', title_slug).strip('-')
+        slugged_path = os.path.join(tmpdir, f"{title_slug}.mp4")
+        os.rename(video_path, slugged_path)
+        video_path = slugged_path
+        print(f"  ✓ Filename:  {title_slug}.mp4")
+
         print(f"\nDownloading video ({video_file['name']})...")
         drive_download(drive_token, video_file["id"], video_path)
         size_mb = os.path.getsize(video_path) / 1024 / 1024
@@ -319,6 +329,24 @@ def main():
         video_id  = result.get("id", "unknown")
         yt_url    = f"https://www.youtube.com/watch?v={video_id}"
         yt_studio = f"https://studio.youtube.com/video/{video_id}/edit"
+
+        # Upload thumbnail if present in episode folder
+        thumb_file = next((f for f in items if f["mimeType"].startswith("image/") and "thumbnail" in f["name"].lower()), None)
+        if thumb_file:
+            print("\nUploading thumbnail...")
+            thumb_path = os.path.join(tmpdir, "thumbnail.jpg")
+            drive_download(drive_token, thumb_file["id"], thumb_path)
+            r = requests.post(
+                f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}&uploadType=media",
+                headers={"Authorization": f"Bearer {yt_token}", "Content-Type": "image/jpeg"},
+                data=open(thumb_path, "rb").read(),
+            )
+            if r.ok:
+                print(f"  ✓ Thumbnail uploaded")
+            else:
+                print(f"  ⚠ Thumbnail upload failed: {r.status_code} {r.text[:100]}")
+        else:
+            print("\n  ⚠ No thumbnail found in episode folder — upload manually in Studio")
 
         print(f"\n{'='*60}")
         print(f"  ✓ Upload complete!")
