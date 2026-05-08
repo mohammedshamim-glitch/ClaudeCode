@@ -52,10 +52,29 @@ Every run outputs a complete **Click Package** containing:
 
 ---
 
+## When to Run This Skill — Pipeline Position
+
+**Run AFTER video assembly and Whisper timing generation, not before.**
+
+This is the correct pipeline order:
+1. Script → TTS → Images → Video assembly → Whisper timings
+2. **Then run this skill** — using the Whisper CSV for exact chapter timestamps
+3. Generate SRT from the same Whisper data
+4. Upload video + metadata + SRT + thumbnail together in one session
+
+**Why this order matters:**
+- Chapter timestamps must come from `audio_timings_new.csv` — not estimated from word counts
+- Thumbnail is ready at upload time, not added later in Studio
+- SRT is attached before the video goes public, not as an afterthought
+- Everything ships together cleanly in a single upload session
+
+---
+
 ## Input
 
 This skill works from any of:
-- A completed script (best — most context)
+- A completed script + `audio_timings_new.csv` (best — exact timestamps available)
+- A completed script only (chapters estimated from word counts — less accurate)
 - A content brief from the trend report
 - A topic title + key talking points
 - A topic title only (skill infers the rest — confirm angle before proceeding)
