@@ -83,7 +83,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 | Spec | Requirement |
 |---|---|
-| Length | 1,400–1,600 words (10–12 min at ~130 wpm) |
+| Length | 1,900–2,100 words (14–16 min at ~130 wpm) |
 | Format | Pure narration — no visual cues, no stage directions, no timestamps |
 | Tone | Storytelling-led, conversational, punchy |
 | Monkey theme | Light — 1–2 moments max, never forced |
@@ -101,7 +101,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Every section ends with a mini-hook** — the viewer is always pulled forward
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
-- [ ] **Word count 1,400–1,600** — not under, not over
+- [ ] **Word count 1,900–2,100** — not under, not over
 - [ ] **Scene word count 20–35** — every scene checked, no outliers below 20 or above 35
 
 ---

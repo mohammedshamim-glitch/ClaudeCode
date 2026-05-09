@@ -12,7 +12,7 @@ If the answer ever dips to "maybe not" — they're gone. The script must be desi
 
 ## The Blueprint
 
-Target: **1,400–1,600 words** | **10–12 minutes** | Pure narration, no visual cues
+Target: **1,900–2,100 words** | **14–16 minutes** | Pure narration, no visual cues
 
 ---
 
@@ -160,11 +160,11 @@ The viewer just received real value. Now — and only now — is the moment to a
 | Section | Name | Words | Time |
 |---|---|---|---|
 | 0 | Hook | ~100 | 0:00–0:45 |
-| 1 | The Problem | ~200 | 0:45–2:15 |
-| 2 | Foundation | ~250 | 2:15–4:30 |
-| 3 | Core Content | ~500 | 4:30–8:30 |
-| 4 | Takeaways | ~200 | 8:30–10:00 |
-| 5 | CTA & Sign-Off | ~120 | 10:00–11:00 |
-| **Total** | | **~1,370** | **~10:30** |
+| 1 | The Problem | ~250 | 0:45–2:30 |
+| 2 | Foundation | ~300 | 2:30–4:45 |
+| 3 | Core Content | ~850 | 4:45–11:15 |
+| 4 | Takeaways | ~350 | 11:15–13:50 |
+| 5 | CTA & Sign-Off | ~150 | 13:50–15:00 |
+| **Total** | | **~2,000** | **~15:00** |
 
-Pad to 1,400–1,600 with richer examples, analogies, or deeper explanation in Sections 2–3. Never pad with filler — only add if it adds value.
+Reach 1,900–2,100 with deeper monetary examples, analogies, and specific actionable steps in Sections 2–3. Never pad with filler — every extra word must add value.
