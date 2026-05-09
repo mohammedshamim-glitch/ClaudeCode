@@ -21,11 +21,14 @@ Every Monkey Finance video flows through these stages in order:
 |---|---|---|---|
 | **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.md` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
-| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-video-prompts.txt` |
-| **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` + `narration.srt` |
-| **5** | `monkey-finance-seo-thumbnail` | Script + brief + `narration.srt` | `06-seo-metadata.txt` |
-| **6** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` |
-| **7** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
+| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` |
+| **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
+| **5** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` + `audio_timings_new.csv` |
+| **6** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` + competitor data | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
+| **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
+| **8** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
+
+**yt-dlp is used at Stages 1 and 6** — pulling live YouTube data during trend research and competitor tags during SEO generation.
 
 ---
 
@@ -72,7 +75,7 @@ Search Drive first. If Sham says the folder is already there, get its ID before 
 ### ▶ STAGE 1 — Trend Research
 **Skill:** `monkey-finance-trends`
 
-Run the full trend sweep: 6 phases, scored opportunities, full content brief for the top pick.
+Run the full trend sweep: Phase 0 (yt-dlp live data) + 6 phases + competitor transcript analysis. Produces scored opportunities and a full content brief with competitive differentiation note.
 
 **Approval gate:**
 > *"Stage 1 complete. Here are the top 3 opportunities with scores. My recommendation is [X] — confidence [Y/10]. Shall I run the pipeline with this topic, or do you want to pick a different one?"*
@@ -87,7 +90,7 @@ Wait for Sham's go-ahead. Once topic is confirmed:
 ### ▶ STAGE 2 — Script Writing
 **Skill:** `monkey-finance-scriptwriter`
 
-Write the full narration script using the approved topic/brief. 4-pass method. 1,400–1,600 words. 25-word scenes. Save both files to Drive.
+Write the full narration script using the approved topic/brief. 4-pass method. 1,900–2,100 words. 25-word scenes (min 20, max 35). Save both files to Drive.
 
 **Approval gate:**
 > *"Stage 2 complete. Script saved to Drive — [link]. Word count: [X]. Want to punch up any section, or shall we move to image prompts?"*
@@ -116,53 +119,58 @@ Wait for Sham's approval before Stage 4.
 python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id> narration.mp3
 ```
 
-**Step 4b — Generate SRT subtitle file:**
-```bash
-python3 /home/user/ClaudeCode/generate_srt.py <episode_folder_id>
-```
-
-This downloads the script and audio from Drive, calculates timestamps proportionally by word count, and uploads `narration.srt` to the episode folder.
-
-Both files are uploaded to Drive. The `.srt` is uploaded to YouTube Studio → Subtitles within 24 hours of the video going live — this makes every spoken word indexable by Google Search.
+No SRT generation needed — YouTube auto-generates en-GB captions when `defaultAudioLanguage` is set to `en-GB` on upload (handled automatically by `upload_youtube.py`).
 
 **Approval gate:**
-> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) and `narration.srt` ([Z] subtitle cards) uploaded to Drive. Ready to generate the SEO package — I'll use the SRT timestamps to set accurate chapter markers."*
+> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) uploaded to Drive. Ready to move to video assembly."*
 
 Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5 — SEO & Thumbnail
-**Skill:** `monkey-finance-seo-thumbnail`
+### ▶ STAGE 5 — Video Assembly
+**Skill:** `monkey-finance-video-creator`
 
-Generate the full Click Package: 3 title variants, description, tags, hashtags, chapters, thumbnail brief, and Grok thumbnail prompt. Use the `narration.srt` timestamps from Stage 4 to set accurate YouTube chapter markers. Save as `06-seo-metadata.txt` to Drive.
+1. Generate Whisper timing CSV:
+```bash
+python3 /home/user/ClaudeCode/generate_timings_whisper.py <episode_folder_id>
+```
+
+2. Create the video:
+```bash
+python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
+```
+
+This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploaded to Drive.
 
 **Approval gate:**
-> *"Stage 5 complete. SEO package saved to Drive — [link]. Primary title: '[title]'. Chapters are timestamped from the SRT file. Want to tweak anything, or shall I build the video?"*
-
-Wait for Sham's approval before Stage 6.
+> *"Stage 5 complete. Video assembled and uploaded to Drive — [link]. Running SEO next using the Whisper timestamps."*
 
 ---
 
-### ▶ STAGE 6 — Video Assembly
-**Skill:** `monkey-finance-video-creator`
+### ▶ STAGE 6 — SEO & Thumbnail
+**Skill:** `monkey-finance-seo-thumbnail`
 
-1. Generate smart timing CSV:
+Generate the full Click Package: 3 title variants, description, tags (competitor-validated via yt-dlp), hashtags, chapters (from `audio_timings_new.csv`), thumbnail brief, and Grok thumbnail prompt. Save as `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` to Drive.
+
+**Approval gate:**
+> *"Stage 6 complete. SEO package saved to Drive — [link]. Primary title: '[title]'. Chapters use exact Whisper timestamps. Have you saved the thumbnail to Drive as 'thumbnail'? Once ready I'll upload everything together."*
+
+Wait for Sham's approval and thumbnail confirmation before Stage 7.
+
+---
+
+### ▶ STAGE 7 — YouTube Upload
+**Skill:** `monkey-finance-youtube-upload`
+
 ```bash
-python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
+python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id>
 ```
 
-2. Create the video (with or without Ken Burns per Sham's choice):
-```bash
-# With Ken Burns (default)
-python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
-
-# Without Ken Burns
-python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --no-kb
-```
+Auto-schedules for next Wednesday 4pm UK time (minimum 2 days after upload). Sets `defaultLanguage` and `defaultAudioLanguage` to `en-GB`. Uploads thumbnail automatically if named `thumbnail` in the episode folder.
 
 **Pipeline complete:**
-> *"Pipeline complete. `<episode-title>.mp4` uploaded to Drive — [link]. All 6 stages done. Ready to upload to YouTube using the SEO package from Stage 4."*
+> *"Pipeline complete. Video scheduled for [date] at 4pm UK. All stages done."*
 
 ---
 
@@ -271,8 +279,9 @@ Save a brief `07-analytics-review.md` to the episode Drive folder with:
 | "I have a brief, write the script" | Stage 2 |
 | "Script's done, make the image prompts" | Stage 3 |
 | "Generate the audio" | Stage 4 |
-| "Generate the SEO" | Stage 5 |
-| "Build the video" | Stage 6 |
+| "Build the video" | Stage 5 |
+| "Generate the SEO" | Stage 6 |
+| "Upload the video" | Stage 7 |
 
 ---
 

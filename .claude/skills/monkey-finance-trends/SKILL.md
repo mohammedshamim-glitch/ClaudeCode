@@ -27,13 +27,58 @@ All execution detail is in the `references/` folder:
 ## Workflow at a Glance
 
 ```
-Phase 1: Trend Sweep          → find what's hot RIGHT NOW in finance (last 7–30 days)
-Phase 2: SEO Deep Dive        → keywords, titles, tags, length, competition
-Phase 3: Gap Analysis         → high demand + weak competition = your opportunity
-Phase 4: Audience Signals     → emotional triggers, comment sentiment, algorithm cues
-Phase 5: Scoring & Ranking    → score each idea on 5-point matrix
-Phase 6: Content Brief Output → full brief per top idea, ready for pipeline
+Phase 0: YouTube Live Data     → yt-dlp search: real view counts, tags, upload dates
+Phase 1: Trend Sweep           → find what's hot RIGHT NOW in finance (last 7–30 days)
+Phase 2: SEO Deep Dive         → keywords, titles, tags, length, competition
+Phase 2E: Competitor Tag Pull  → yt-dlp: exact hidden tags from top 5 competing videos
+Phase 3: Gap Analysis          → high demand + weak competition = your opportunity
+Phase 4: Audience Signals      → emotional triggers, comment sentiment, algorithm cues
+Phase 4C: Transcript Analysis  → yt-dlp: pull + analyse top 2 competitor scripts on topic
+Phase 5: Scoring & Ranking     → score each idea on 5-point matrix
+Phase 6: Content Brief Output  → full brief per top idea, ready for pipeline
 ```
+
+---
+
+## yt-dlp Integration — How to Use It
+
+The `yt-dlp` MCP server is available in this project. Use it at three points in every trend run:
+
+### Phase 0 — YouTube Live Data (run before Phase 1)
+Before any web search, query YouTube directly for real performance data:
+
+```
+Search: "<topic keyword> UK" — limit 20 results, last 30 days
+Extract per video: title, view count, upload date, duration, channel
+```
+
+This gives you actual numbers — not estimates — for what's performing right now. Feed this into Phase 1 as your primary signal source.
+
+### Phase 2E — Competitor Tag Pull (run after shortlisting)
+Once you have 3–5 candidate topics, pull hidden tags from the top 2 competitor videos per topic:
+
+```
+For each competing video URL:
+→ Extract: tags, description, exact title, view count
+```
+
+Tags are invisible to regular users but yt-dlp reads them directly. This data feeds straight into the SEO package at Stage 5.
+
+### Phase 4C — Transcript Analysis (run on the winning topic before finalising brief)
+For the top-ranked topic, download and analyse the transcript of the 2 best-performing competitor videos:
+
+```
+For each competitor video:
+→ Download: auto-generated or manual subtitles (strip timestamps → clean text)
+→ Analyse: hook structure (first 60 seconds), section breakdown, analogies used, what they missed
+```
+
+Output a brief "competitive differentiation" note in the content brief:
+- What angle the competitors took
+- What they didn't cover or got wrong
+- The angle Monkey See Money should take to be clearly different and better
+
+**Never copy their structure. Use it to find the gap.**
 
 ---
 
@@ -56,13 +101,16 @@ Phase 6: Content Brief Output → full brief per top idea, ready for pipeline
 
 | # | Phase | What happens | Output |
 |---|---|---|---|
+| 0 | **YouTube Live Data** | yt-dlp search: real view counts, tags, upload dates from YouTube directly | Live performance data on 20 recent videos |
 | 1 | Trend Sweep | Web search YouTube + Google Trends + Reddit + news | Raw list of 15–20 candidate topics |
 | 1E | Evergreen Sweep | Research always-popular UK finance topics with sustained demand | Raw list of 8–10 evergreen candidates |
 | 2 | SEO Deep Dive | Keyword research, title patterns, video length, tags | SEO data per topic |
+| 2E | **Competitor Tag Pull** | yt-dlp: extract hidden tags from top competing videos | Exact tags competitors rank for |
 | 3 | Gap Analysis | Competition check, authority dominance, underserved angles | Shortlist of 5–8 winnable ideas |
 | 4 | Audience Signals | Emotional triggers, comment sentiment, algorithm cues | Hook angles per idea |
+| 4C | **Transcript Analysis** | yt-dlp: download + analyse top 2 competitor scripts on winning topic | Competitive differentiation note for brief |
 | 5 | Scoring & Ranking | Score each idea on matrix (see SCORING.md) | Ranked top 3–5 ideas |
-| 6 | Content Brief | Full brief per idea (see BRIEF_TEMPLATE.md) | Ready-to-use content briefs |
+| 6 | Content Brief | Full brief per idea including competitive differentiation note | Ready-to-use content briefs |
 
 ---
 
@@ -133,6 +181,7 @@ Deliver a clean **Trend Report** structured as:
 
 ## Critical Rules
 
+- **Always use yt-dlp** — run Phase 0 before any web search. Real YouTube data beats inferred data every time.
 - **Always use web search** — never rely on training data for trend research. Finance moves fast.
 - **Prioritise recency** — focus on content published in the last 7–30 days unless researching evergreen.
 - **Broad finance lens** — topics don't have to be UK-specific. Global macro, US markets, international events are all fair game if they're explainable simply and relevant to a financially curious audience.

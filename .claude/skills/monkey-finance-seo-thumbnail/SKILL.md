@@ -102,7 +102,21 @@ Choose the dominant emotion for this video's packaging:
 
 **Step 5 — Write the description** (see `SEO.md`)
 
-**Step 6 — Generate tags, hashtags, chapters** (see `SEO.md`)
+**Step 6 — Pull competitor tags with yt-dlp, then generate tags, hashtags, chapters**
+
+Before writing the tag list, use yt-dlp to extract the exact hidden tags from the top 3–5 competitor videos on the same topic:
+
+```
+For each competitor video URL:
+→ Extract: tags array, description, view count
+```
+
+Use the competitor tags to:
+- Identify the terms that top-performing videos rank for
+- Include the strongest ones in our tag list where relevant
+- Spot gaps — tags they're not using that we should own
+
+Then generate tags, hashtags, and chapters per `SEO.md`. Tag list should blend competitor-validated terms with channel-specific long-tails.
 
 **Step 7 — Build the thumbnail brief and AI prompt** (see `THUMBNAIL.md` and `PROMPTS.md`)
 
