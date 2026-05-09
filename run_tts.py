@@ -207,7 +207,7 @@ def main():
     wav_chunks = []
     for i, chunk in enumerate(chunks, 1):
         print(f"\nGenerating audio chunk {i}/{len(chunks)} ({len(chunk.split())} words)...")
-        for attempt in range(3):
+        for attempt in range(6):
             try:
                 pcm, mime = tts_chunk(chunk)
                 rate = SAMPLE_RATE
@@ -218,12 +218,12 @@ def main():
                 print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz")
                 break
             except Exception as e:
-                if attempt < 2:
-                    wait = 2 ** attempt
+                if attempt < 5:
+                    wait = min(60, 5 * (2 ** attempt))
                     print(f"  Retry in {wait}s... ({e})")
                     time.sleep(wait)
                 else:
-                    print(f"  Failed after 3 attempts: {e}")
+                    print(f"  Failed after 6 attempts: {e}")
                     sys.exit(1)
 
     print(f"\nMerging audio into WAV...")
