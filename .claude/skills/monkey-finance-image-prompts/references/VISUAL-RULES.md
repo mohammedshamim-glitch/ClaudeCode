@@ -65,21 +65,25 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 - Always positioned on the right side of the frame, facing left (toward the content)
 - Slightly larger than the monkey — this is the brand moment
 
-### Monkey (Emotional scenes only — ~15–20% of scenes)
+### Monkey (~75% of scenes — guide, narrator, reactor)
 - Same monkey character, no suit — casual, unguarded, human
-- Used only at moments of peak emotional reaction
+- Present in approximately 75% of all scenes as a consistent guide and emotional anchor
+- Roles vary: explaining, pointing, reacting, gesturing, presenting, questioning
 - Expressive face is everything — the emotion must be readable at a glance:
   - **Shock/horror:** hands on head, mouth open, eyes wide
   - **Confusion/disbelief:** arms crossed, one eyebrow raised, dismissive expression
   - **Realisation:** pointing forward, eyes wide open, mouth forming an "O"
   - **Relief/satisfaction:** relaxed posture, slight smile, thumbs up
   - **Concern/worry:** hand on chin, furrowed brow, leaning forward
-- May hold simple props: a thought bubble, a question mark, a coffee cup
+  - **Guiding/explaining:** arm extended toward diagram, expression attentive
+  - **Encouraging:** palm open toward viewer, warm expression
+- May hold simple props: a thought bubble, a question mark, a clipboard, a card, a globe
 
-### No Monkey (Most scenes — ~65–70% of scenes)
-- Pure visual storytelling — diagrams, stats, timelines, comparisons, equations
-- These scenes are often the most powerful — no character to distract from the data
+### No Monkey (~25% of scenes — pure stat/data scenes only)
+- Reserved for scenes where a statistic, equation, or diagram must own the entire frame
+- The number or chart IS the visual — a character would dilute its impact
 - Content is centred, given full canvas space, and composed cleanly
+- Typical no-monkey scenes: massive percentage reveals, before/after financial comparisons, key equations
 
 ---
 

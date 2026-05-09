@@ -113,14 +113,14 @@ The green suit monkey in the final scene is the brand sign-off — the visual al
 |---|---|
 | **Scene 01** | Green suit monkey ONLY — brand intro |
 | **Final scene** | Green suit monkey ONLY — brand sign-off |
-| **Select emotional scenes** | Monkey — shock, confusion, relief, realisation |
-| **Most scenes** | No monkey — pure visual storytelling |
+| **Most scenes** | Monkey — present in ~75% of all scenes as guide, narrator, reactor |
+| **Stat-heavy scenes** | No monkey — pure data/diagram visuals only (~25% of scenes) |
 
-**Monkey threshold:** Use a monkey in roughly 15–20% of scenes (8–12 scenes in a typical 55-scene video). Choose moments of strongest emotional reaction: the "aha" moment, the horror reveal, the satisfied conclusion.
+**Monkey threshold:** Use a monkey in approximately 75% of scenes. Reserve no-monkey treatment for scenes where a statistic or diagram is the sole centrepiece and a character would distract from the number. The monkey acts as guide, narrator, and emotional reactor throughout — not just at peak moments.
 
 **Never use:**
 - ❌ Green suit monkey in any scene except Scene 01 and the final scene
-- ❌ A monkey in scenes that work better as pure data/diagram visuals
+- ❌ A monkey in scenes where a stat must dominate the entire frame
 - ❌ Logos of any kind
 - ❌ A physical whiteboard object (frame, tray, eraser) — just clean white background
 - ❌ Jungle settings, vines, tropical colours as primary environment
