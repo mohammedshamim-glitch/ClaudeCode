@@ -51,10 +51,13 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 
 ## Known Drive Folder IDs
 
-| Episode | Folder ID |
+| Location | Folder ID |
 |---|---|
+| **Monkey See Money (default root)** | `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` |
+| Monkey Finance (old root) | `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` |
 | S&P 500 vs Picking Your Own Stocks (53 scenes) | `1VSu4FuGUQhDxk6yC5HAjnze6YetAEecO` |
 | S&P 500 All-Time High During War (51 scenes) | `1fFJnQTbnJ6hAKmD5sXDhVFdk77U_f52U` |
+| The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
 
 ## Project Overview
 

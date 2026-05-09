@@ -54,7 +54,7 @@ The episode folder is created **automatically after the topic is approved** at t
 Use the Drive `create_file` tool with:
 - `title`: `YYYY-MM-DD - <Episode Title>` (use today's date, format the title cleanly)
 - `mimeType` (set as the file's mime type): `application/vnd.google-apps.folder`
-- `parentId`: `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` (Monkey Finance root)
+- `parentId`: `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` (Monkey See Money root — default)
 
 Example folder name: `2026-05-03 - S&P 500 vs Buying a House`
 
@@ -258,8 +258,8 @@ Save a brief `07-analytics-review.md` to the episode Drive folder with:
 
 | Channel | Drive Folder ID |
 |---|---|
-| Monkey Finance | `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` |
-| Monkey See Money | `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` |
+| **Monkey See Money (default)** | `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` |
+| Monkey Finance (old) | `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` |
 
 ---
 
