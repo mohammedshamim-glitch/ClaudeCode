@@ -206,6 +206,8 @@ def main():
 
     wav_chunks = []
     for i, chunk in enumerate(chunks, 1):
+        if i > 1:
+            time.sleep(8)  # inter-chunk delay to stay within rate limits
         print(f"\nGenerating audio chunk {i}/{len(chunks)} ({len(chunk.split())} words)...")
         for attempt in range(6):
             try:
