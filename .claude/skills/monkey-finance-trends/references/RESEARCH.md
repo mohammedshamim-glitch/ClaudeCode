@@ -54,15 +54,26 @@ You cannot be the best finance channel without knowing what you're competing aga
 
 ### How to Track
 
-For each channel, search:
-- `"[channel name]" youtube recent videos 2026`
-- `site:youtube.com "[channel name]"` filtered to last 30 days
-- Directly check their YouTube page for recent uploads
+**Use yt-dlp to pull directly from each channel** — do not web search for this. yt-dlp reads the channel's video list directly from YouTube, giving real view counts, upload dates, and titles without any guessing.
 
-For each recent video note:
+For each channel, fetch their recent uploads:
 ```
-Title | Upload date | Estimated views | View velocity (views ÷ days) | Topic covered
+yt-dlp --dump-json --playlist-items 1-10 "https://www.youtube.com/@[ChannelHandle]/videos"
 ```
+
+Extract per video:
+```
+Title | Upload date | View count | Duration | Video URL
+```
+
+Then for their top 1–2 performing videos (highest views in last 30 days), pull full metadata:
+```
+yt-dlp --dump-json "[video URL]"
+```
+
+Extract: title, description, tags array, view count, like count, upload date.
+
+This replaces web searching for competitor data entirely — yt-dlp gives exact numbers, not estimates.
 
 ### Three Questions to Answer
 

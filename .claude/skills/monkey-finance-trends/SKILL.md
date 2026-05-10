@@ -44,15 +44,16 @@ Phase 6: Content Brief Output  → full brief per top idea, ready for pipeline
 
 The `yt-dlp` MCP server is available in this project. Use it at three points in every trend run:
 
-### Phase 0 — YouTube Live Data (run before Phase 1)
-Before any web search, query YouTube directly for real performance data:
+### Phase 0 — Competitor Channel Sweep (run before Phase 1)
+Pull directly from each competitor channel listed in `references/RESEARCH.md` using yt-dlp. Do not web search — yt-dlp reads real YouTube data.
 
-```
-Search: "<topic keyword> UK" — limit 20 results, last 30 days
-Extract per video: title, view count, upload date, duration, channel
-```
+For each channel, fetch their 10 most recent uploads and extract:
+- Title, view count, upload date, duration
 
-This gives you actual numbers — not estimates — for what's performing right now. Feed this into Phase 1 as your primary signal source.
+Then for their top 1–2 performers (last 30 days), pull full metadata:
+- Tags array, description, exact view and like counts
+
+This tells you what topics are being pushed by the algorithm right now, what's performing, and — most importantly — what gaps the competitors have left open. The gap analysis IS the content brief. Feed these findings directly into Phase 1.
 
 ### Phase 2E — Competitor Tag Pull (run after shortlisting)
 Once you have 3–5 candidate topics, pull hidden tags from the top 2 competitor videos per topic:
@@ -101,7 +102,7 @@ Output a brief "competitive differentiation" note in the content brief:
 
 | # | Phase | What happens | Output |
 |---|---|---|---|
-| 0 | **YouTube Live Data** | yt-dlp search: real view counts, tags, upload dates from YouTube directly | Live performance data on 20 recent videos |
+| 0 | **Competitor Channel Sweep** | yt-dlp: pull latest 10 uploads + top performer metadata from each competitor channel | Real view counts, tags, and gap analysis per channel |
 | 1 | Trend Sweep | Web search YouTube + Google Trends + Reddit + news | Raw list of 15–20 candidate topics |
 | 1E | Evergreen Sweep | Research always-popular UK finance topics with sustained demand | Raw list of 8–10 evergreen candidates |
 | 2 | SEO Deep Dive | Keyword research, title patterns, video length, tags | SEO data per topic |
