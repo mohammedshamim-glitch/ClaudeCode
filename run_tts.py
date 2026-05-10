@@ -4,8 +4,9 @@ Gemini TTS pipeline
 1. Downloads narration text from Google Drive
 2. Chunks into ~150 words
 3. Calls gemini-2.5-flash-preview-tts for each chunk
-4. Merges PCM audio into a single WAV + MP3
-5. Uploads to Google Drive via OAuth2 (user credentials)
+4. Saves each chunk WAV to disk (resume-safe — skips already-completed chunks)
+5. Merges all chunk WAVs into a single WAV + MP3
+6. Uploads to Google Drive via OAuth2 (user credentials)
 """
 
 import base64, json, re, time, wave, io, os, sys
@@ -19,6 +20,7 @@ CHUNK_WORDS     = 150
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
 OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
+CHUNKS_DIR      = "/home/user/ClaudeCode/tts_chunks"
 
 # ── OAuth2 token management ───────────────────────────────────────────────────
 def load_tokens():
@@ -42,7 +44,6 @@ def get_gemini_api_key():
 def get_access_token():
     tokens = load_tokens()
     if "access_token" in tokens:
-        # Quick check if token is still valid
         r = requests.get(
             "https://www.googleapis.com/oauth2/v1/tokeninfo",
             params={"access_token": tokens["access_token"]}
@@ -50,7 +51,6 @@ def get_access_token():
         if r.ok and r.json().get("expires_in", 0) > 60:
             return tokens["access_token"]
 
-    # Refresh the token
     r = requests.post("https://oauth2.googleapis.com/token", data={
         "client_id":     tokens["client_id"],
         "client_secret": tokens["client_secret"],
@@ -72,10 +72,9 @@ def drive_download_text(token, file_id):
         headers={"Authorization": f"Bearer {token}"}
     )
     r.raise_for_status()
-    return r.text
+    return r.content.decode("utf-8")
 
 def drive_delete_existing(token, filename, folder_id):
-    """Delete any existing files with this name in the folder before uploading."""
     r = requests.get(
         "https://www.googleapis.com/drive/v3/files",
         headers={"Authorization": f"Bearer {token}"},
@@ -164,10 +163,10 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
         wf.writeframes(pcm_bytes)
     return buf.getvalue()
 
-def merge_wavs(wav_list, output_path):
+def merge_wavs_from_files(chunk_paths, output_path):
     frames, params = b"", None
-    for w in wav_list:
-        with wave.open(io.BytesIO(w), "rb") as wf:
+    for path in chunk_paths:
+        with wave.open(path, "rb") as wf:
             if params is None:
                 params = wf.getparams()
             frames += wf.readframes(wf.getnframes())
@@ -182,6 +181,14 @@ def wav_to_mp3(wav_path, mp3_path, bitrate="128k"):
         check=True, capture_output=True
     )
 
+# ── Chunk file helpers ────────────────────────────────────────────────────────
+def chunk_path(run_id, i, total):
+    digits = len(str(total))
+    return os.path.join(CHUNKS_DIR, f"{run_id}_chunk_{str(i).zfill(digits)}.wav")
+
+def chunk_exists(path):
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     if len(sys.argv) < 3:
@@ -193,6 +200,10 @@ def main():
     folder_id = sys.argv[2]
     out_name  = sys.argv[3] if len(sys.argv) > 3 else "narration.mp3"
 
+    # Use file_id as the run identifier so chunks are tied to the narration file
+    run_id = file_id[:20]
+    os.makedirs(CHUNKS_DIR, exist_ok=True)
+
     print("Authenticating with Google Drive...")
     token = get_access_token()
     print("  ✓ Authenticated")
@@ -202,13 +213,27 @@ def main():
     print(f"  ✓ {len(text.split())} words downloaded")
 
     chunks = chunk_text(text)
-    print(f"  ✓ Split into {len(chunks)} chunk(s) of ~{CHUNK_WORDS} words")
+    total  = len(chunks)
+    print(f"  ✓ Split into {total} chunk(s) of ~{CHUNK_WORDS} words")
 
-    wav_chunks = []
+    # Check which chunks already exist on disk
+    existing = [chunk_exists(chunk_path(run_id, i, total)) for i in range(1, total + 1)]
+    n_existing = sum(existing)
+    if n_existing:
+        print(f"  ✓ Resuming — {n_existing}/{total} chunks already on disk, generating remaining {total - n_existing}")
+
+    first_new = True
     for i, chunk in enumerate(chunks, 1):
-        if i > 1:
+        path = chunk_path(run_id, i, total)
+        if chunk_exists(path):
+            print(f"  Chunk {i}/{total} — already done, skipping")
+            continue
+
+        if not first_new:
             time.sleep(30)  # inter-chunk delay to stay within rate limits
-        print(f"\nGenerating audio chunk {i}/{len(chunks)} ({len(chunk.split())} words)...")
+        first_new = False
+
+        print(f"\nGenerating audio chunk {i}/{total} ({len(chunk.split())} words)...")
         for attempt in range(6):
             try:
                 pcm, mime = tts_chunk(chunk)
@@ -216,8 +241,10 @@ def main():
                 m = re.search(r'rate=(\d+)', mime)
                 if m:
                     rate = int(m.group(1))
-                wav_chunks.append(pcm_to_wav(pcm, sample_rate=rate))
-                print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz")
+                wav_bytes = pcm_to_wav(pcm, sample_rate=rate)
+                with open(path, "wb") as f:
+                    f.write(wav_bytes)
+                print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz → saved to disk")
                 break
             except Exception as e:
                 if attempt < 5:
@@ -226,26 +253,33 @@ def main():
                     time.sleep(wait)
                 else:
                     print(f"  Failed after 6 attempts: {e}")
+                    print(f"  Chunks 1–{i-1} are saved. Re-run to resume from chunk {i}.")
                     sys.exit(1)
 
-    print(f"\nMerging audio into WAV...")
-    merge_wavs(wav_chunks, OUTPUT_WAV)
+    # All chunks on disk — merge
+    chunk_paths = [chunk_path(run_id, i, total) for i in range(1, total + 1)]
+    print(f"\nMerging {total} chunks into WAV...")
+    merge_wavs_from_files(chunk_paths, OUTPUT_WAV)
     print(f"  ✓ WAV: {os.path.getsize(OUTPUT_WAV):,} bytes")
 
     print("Converting to MP3...")
     wav_to_mp3(OUTPUT_WAV, OUTPUT_MP3)
     print(f"  ✓ MP3: {os.path.getsize(OUTPUT_MP3):,} bytes")
 
-    # Upload MP3 (or WAV if name ends in .wav)
     upload_path = OUTPUT_WAV if out_name.endswith(".wav") else OUTPUT_MP3
     upload_mime = "audio/wav" if out_name.endswith(".wav") else "audio/mpeg"
 
     print(f"\nUploading {out_name} to Google Drive...")
-    token = get_access_token()  # refresh if needed
+    token = get_access_token()
     drive_delete_existing(token, out_name, folder_id)
     result = drive_upload(token, upload_path, out_name, folder_id, mime=upload_mime)
     print(f"  ✓ Uploaded: {result['name']}")
     print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
+
+    # Clean up chunk files after successful upload
+    for path in chunk_paths:
+        os.remove(path)
+    print(f"  ✓ Chunk files cleaned up")
 
 if __name__ == "__main__":
     main()
