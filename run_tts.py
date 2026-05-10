@@ -230,7 +230,7 @@ def main():
             continue
 
         if not first_new:
-            time.sleep(30)  # inter-chunk delay to stay within rate limits
+            time.sleep(8)  # inter-chunk delay to stay within rate limits
         first_new = False
 
         print(f"\nGenerating audio chunk {i}/{total} ({len(chunk.split())} words)...")
