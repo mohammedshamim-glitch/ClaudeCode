@@ -13,10 +13,10 @@ description: >
 
 # 📊 Monkey Finance — Trends & SEO Skill
 
-This skill turns you into a full YouTube Growth Strategist. It researches what's trending in finance right now, analyses the SEO landscape, identifies gaps you can win, and produces a ranked content brief ready to feed straight into the pipeline.
+This skill turns you into a full YouTube Growth Strategist. Four steps. No fluff. Every recommendation backed by a real signal.
 
 All execution detail is in the `references/` folder:
-- **`references/RESEARCH.md`** — step-by-step research process, search queries, signal sources
+- **`references/RESEARCH.md`** — step-by-step research process for all 4 steps
 - **`references/SCORING.md`** — opportunity scoring matrix and how to rank ideas
 - **`references/BRIEF_TEMPLATE.md`** — full content brief format per video idea
 
@@ -27,59 +27,42 @@ All execution detail is in the `references/` folder:
 ## Workflow at a Glance
 
 ```
-Phase 0: YouTube Live Data     → yt-dlp search: real view counts, tags, upload dates
-Phase 1: Trend Sweep           → find what's hot RIGHT NOW in finance (last 7–30 days)
-Phase 2: SEO Deep Dive         → keywords, titles, tags, length, competition
-Phase 2E: Competitor Tag Pull  → yt-dlp: exact hidden tags from top 5 competing videos
-Phase 3: Gap Analysis          → high demand + weak competition = your opportunity
-Phase 4: Audience Signals      → emotional triggers, comment sentiment, algorithm cues
-Phase 4C: Transcript Analysis  → yt-dlp: pull + analyse top 2 competitor scripts on topic
-Phase 5: Scoring & Ranking     → score each idea on 5-point matrix
-Phase 6: Content Brief Output  → full brief per top idea, ready for pipeline
+Step 1: Competitor Intelligence  → yt-dlp: all competitor channels — recent uploads + top metadata + hidden tags
+Step 2: Trend & Gap Sweep        → web search: what's hot now + gap analysis vs competitors simultaneously
+Step 3: SEO + Audience Research  → keyword data + emotional triggers per shortlisted topic
+Step 4: Score, Brief & Differentiate → yt-dlp transcripts + scoring + full content brief
 ```
 
 ---
 
-## yt-dlp Integration — How to Use It
+## yt-dlp Integration
 
-The `yt-dlp` MCP server is available in this project. Use it at three points in every trend run:
+The `yt-dlp` MCP server is available in this project. Use it at two points in every trend run:
 
-### Phase 0 — Competitor Channel Sweep (run before Phase 1)
-Pull directly from each competitor channel listed in `references/RESEARCH.md` using yt-dlp. Do not web search — yt-dlp reads real YouTube data.
+### Step 1 — Competitor Channel Sweep
+Pull directly from each competitor channel listed in `references/RESEARCH.md`. Do not web search for competitor data — yt-dlp reads real YouTube numbers.
 
-For each channel, fetch their 10 most recent uploads and extract:
-- Title, view count, upload date, duration
-
-Then for their top 1–2 performers (last 30 days), pull full metadata:
-- Tags array, description, exact view and like counts
-
-This tells you what topics are being pushed by the algorithm right now, what's performing, and — most importantly — what gaps the competitors have left open. The gap analysis IS the content brief. Feed these findings directly into Phase 1.
-
-### Phase 2E — Competitor Tag Pull (run after shortlisting)
-Once you have 3–5 candidate topics, pull hidden tags from the top 2 competitor videos per topic:
-
+For each channel:
 ```
-For each competing video URL:
-→ Extract: tags, description, exact title, view count
+yt-dlp --dump-json --playlist-items 1-10 "https://www.youtube.com/@[ChannelHandle]/videos"
 ```
+Extract: title, view count, upload date, duration, video URL.
 
-Tags are invisible to regular users but yt-dlp reads them directly. This data feeds straight into the SEO package at Stage 5.
-
-### Phase 4C — Transcript Analysis (run on the winning topic before finalising brief)
-For the top-ranked topic, download and analyse the transcript of the 2 best-performing competitor videos:
-
+For their top 1–2 performers (last 30 days), pull full metadata:
 ```
-For each competitor video:
+yt-dlp --dump-json "[video URL]"
+```
+Extract: tags array, description, exact view and like counts.
+
+Also pull the hidden tags from top 2–3 competitor videos per shortlisted topic — these feed directly into the SEO package at Stage 6.
+
+### Step 4 — Transcript Analysis (winning topic only)
+For the top-ranked topic, download and analyse transcripts from the 2 best-performing competitor videos:
+```
 → Download: auto-generated or manual subtitles (strip timestamps → clean text)
-→ Analyse: hook structure (first 60 seconds), section breakdown, analogies used, what they missed
+→ Analyse: hook structure (first 60s), section breakdown, analogies used, what they missed
 ```
-
-Output a brief "competitive differentiation" note in the content brief:
-- What angle the competitors took
-- What they didn't cover or got wrong
-- The angle Monkey See Money should take to be clearly different and better
-
-**Never copy their structure. Use it to find the gap.**
+Output a "competitive differentiation" note in the content brief: what angle they took, what they missed, what angle we take instead. Never copy their structure — use it to find the gap.
 
 ---
 
@@ -88,7 +71,7 @@ Output a brief "competitive differentiation" note in the content brief:
 | Item | Value |
 |---|---|
 | Channel | Monkey Finance (Monkey See Money) |
-| Channel scope | **General finance** — macro events, global markets, geopolitics + money, business stories, AND UK personal finance. Not exclusively UK personal finance. |
+| Channel scope | **General finance** — macro events, global markets, geopolitics + money, business stories, AND UK personal finance |
 | Target audience | Financially curious adults 25–45, UK-based but global topics welcome |
 | Content mix | ~60% general/macro finance, ~40% UK personal finance |
 | Video format | 10–12 min explainer / whiteboard animation |
@@ -98,20 +81,14 @@ Output a brief "competitive differentiation" note in the content brief:
 
 ---
 
-## Phase Summary
+## Step Summary
 
-| # | Phase | What happens | Output |
+| # | Step | What happens | Output |
 |---|---|---|---|
-| 0 | **Competitor Channel Sweep** | yt-dlp: pull latest 10 uploads + top performer metadata from each competitor channel | Real view counts, tags, and gap analysis per channel |
-| 1 | Trend Sweep | Web search YouTube + Google Trends + Reddit + news | Raw list of 15–20 candidate topics |
-| 1E | Evergreen Sweep | Research always-popular UK finance topics with sustained demand | Raw list of 8–10 evergreen candidates |
-| 2 | SEO Deep Dive | Keyword research, title patterns, video length, tags | SEO data per topic |
-| 2E | **Competitor Tag Pull** | yt-dlp: extract hidden tags from top competing videos | Exact tags competitors rank for |
-| 3 | Gap Analysis | Competition check, authority dominance, underserved angles | Shortlist of 5–8 winnable ideas |
-| 4 | Audience Signals | Emotional triggers, comment sentiment, algorithm cues | Hook angles per idea |
-| 4C | **Transcript Analysis** | yt-dlp: download + analyse top 2 competitor scripts on winning topic | Competitive differentiation note for brief |
-| 5 | Scoring & Ranking | Score each idea on matrix (see SCORING.md) | Ranked top 3–5 ideas |
-| 6 | Content Brief | Full brief per idea including competitive differentiation note | Ready-to-use content briefs |
+| 1 | **Competitor Intelligence** | yt-dlp: all competitor channels — recent uploads, top performer metadata, hidden tags | Live view counts, gap classification, competitor tag list |
+| 2 | **Trend & Gap Sweep** | Web search: what's trending + seasonal check + gap analysis vs Step 1 findings | Raw list of 10–15 candidate topics, gaps classified |
+| 3 | **SEO + Audience Research** | Keyword research + title patterns + emotional triggers per shortlisted topic | SEO data and hook angles for top 5–8 topics |
+| 4 | **Score, Brief & Differentiate** | Scoring matrix + yt-dlp transcript analysis on winner + full content brief | Ranked ideas + ready-to-use content brief |
 
 ---
 
@@ -133,11 +110,9 @@ Each idea is scored out of 5 across these dimensions. Full rubric in `references
 
 ## Evergreen Popular Topics
 
-In addition to trending topics, always surface a set of **permanently popular finance topics** — videos that get steady views year-round regardless of news cycles. These are lower-risk bets with long shelf life and consistent search demand.
+Always surface a set of **permanently popular finance topics** alongside trending ones. These generate steady views year-round with long shelf life.
 
-Run Phase 1E (see `references/RESEARCH.md`) alongside the trend sweep. Score evergreen topics on the same matrix — note that Trend Velocity scores lower (by design) but Search Volume and Monetisation often score higher.
-
-**Seed list — always check these categories for fresh angles:**
+Flag evergreen picks clearly as **EVERGREEN** and tag as **[MACRO]** or **[UK PERSONAL]** to keep the content mix balanced.
 
 ### General / Macro Finance (prioritise these)
 | Category | Example angles |
@@ -164,40 +139,39 @@ Run Phase 1E (see `references/RESEARCH.md`) alongside the trend sweep. Score eve
 | **Tax efficiency** | Capital gains tax explained, income tax bands UK, salary sacrifice |
 | **First-time investing** | How to start investing with £100, best beginner investment platforms UK |
 
-When surfacing an evergreen pick, flag it clearly as **EVERGREEN** and tag it as either **[MACRO]** or **[UK PERSONAL]** so the content mix stays balanced.
-
 ---
 
 ## Output Format
 
 Deliver a clean **Trend Report** structured as:
 
-1. **Market Snapshot** — 3–4 sentences on what's dominating finance YouTube right now
-2. **Top Trending Opportunities** — ranked list of 3–5 trending video ideas with scores
-3. **Top Evergreen Opportunities** — ranked list of 2–3 always-popular ideas with scores and "why now" angle
-4. **Full Content Brief** — one per idea across both lists
-5. **One Recommended Next Video** — the single best pick (trending or evergreen) with confidence rating and shelf-life indicator
+1. **Competitor Snapshot** — table of all channels: recent top video, view velocity, gap identified, gap type
+2. **Market Snapshot** — 3–4 sentences on what's dominating finance YouTube right now
+3. **Top Trending Opportunities** — ranked list of 3–5 trending video ideas with scores
+4. **Top Evergreen Opportunities** — ranked list of 2–3 always-popular ideas with scores and "why now" angle
+5. **Full Content Brief** — one per idea across both lists (use `references/BRIEF_TEMPLATE.md`)
+6. **One Recommended Next Video** — the single best pick with confidence rating and shelf-life indicator
 
 ---
 
 ## Critical Rules
 
-- **Always use yt-dlp** — run Phase 0 before any web search. Real YouTube data beats inferred data every time.
+- **Always use yt-dlp first** — run Step 1 before any web search. Real YouTube data beats inferred data every time.
 - **Always use web search** — never rely on training data for trend research. Finance moves fast.
 - **Prioritise recency** — focus on content published in the last 7–30 days unless researching evergreen.
-- **Broad finance lens** — topics don't have to be UK-specific. Global macro, US markets, international events are all fair game if they're explainable simply and relevant to a financially curious audience.
-- **UK relevance check** — for global topics, always note the UK angle or impact where it exists, but don't reject a topic just because it's not UK-only.
+- **Broad finance lens** — topics don't have to be UK-specific. Global macro, US markets, international events are all fair game.
+- **UK relevance check** — for global topics, always note the UK angle where it exists.
 - **Solo creator filter** — always check if big channels dominate. We need winnable ground.
 - **No fluff** — every recommendation must be backed by a signal (search data, view count, trend graph, etc.)
-- **Content mix** — across every 5 recommendations, aim for ~3 general/macro and ~2 UK personal finance. Never all one type.
-- **Pipeline-ready** — the winning topic from this report should be passable directly to Stage 1 of the pipeline.
+- **Content mix** — across every 5 recommendations, aim for ~3 general/macro and ~2 UK personal finance.
+- **Pipeline-ready** — the winning topic from this report passes directly to Stage 2 (scriptwriting).
 
 ---
 
 ## How to Start a Trend Run
 
-1. Read `references/RESEARCH.md` — follow the search strategy step by step.
-2. Run all 6 phases in order.
+1. Read `references/RESEARCH.md` — follow the 4-step process.
+2. Run all 4 steps in order.
 3. Produce the full Trend Report at the end.
 4. Ask Sham: *"Want to run the pipeline with the top pick?"*
 

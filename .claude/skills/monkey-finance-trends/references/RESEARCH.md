@@ -1,12 +1,12 @@
 # RESEARCH.md — Trend Research Process
 
-Follow these phases in order. Use web_search for every step — never rely on training data.
+Four steps. Run them in order. Never skip a step. Never rely on training data — finance moves fast.
 
 ---
 
-## Seasonal Finance Calendar — Check This First
+## Before You Start — Seasonal Check
 
-Before running any phase, check today's date and identify which seasonal window applies. These are the highest-traffic periods in UK personal finance YouTube — being early is worth 10× the views of being late.
+Check today's date and identify which seasonal window applies. Being early is worth 10× the views of being late.
 
 | Month(s) | Event | Top content angles |
 |---|---|---|
@@ -21,91 +21,74 @@ Before running any phase, check today's date and identify which seasonal window 
 | **Ongoing** | Bank of England MPC meetings | Rate decisions → mortgage content spikes every 6 weeks |
 | **Ongoing** | Inflation data releases | CPI/RPI releases → savings rate content, real returns content |
 
-**Action:** Before Phase 1, check:
-1. What seasonal window are we in right now?
-2. Is there a Budget, MPC meeting, or major announcement in the next 30 days?
-3. Are we within 6 weeks of April 5th (ISA/tax year deadline)?
-
-If yes to any — **prioritise time-sensitive seasonal content above all else.** A video published 3 weeks before ISA deadline will outperform the same video published after by a factor of 5–10×.
+If we're within 6 weeks of a major event — **prioritise time-sensitive content above everything else.** A video 3 weeks before the ISA deadline outperforms the same video after by 5–10×.
 
 ---
 
-## Competitor Channel Tracking — Run Before Phase 1
+## Step 1: Competitor Intelligence
 
 **Goal:** Know exactly what the top UK finance channels have published in the last 30 days, what's performing, and — most importantly — what gaps they've left open.
 
-You cannot be the best finance channel without knowing what you're competing against. Run this every trend report.
+**Method: yt-dlp only. No web search for this step.**
 
 ### Channels to Track
 
-| Channel | Why they matter | What to watch for |
+| Channel | Handle | Why they matter |
 |---|---|---|
-| **Damien Talks Money** | Closest competitor — similar relatable style, overlapping audience | Topics he's covered recently, his top-performing videos this month |
-| **James Shack** | High-production investing content, strong SEO | Long-form investing topics, titles that are working |
-| **Toby Newbatt** | UK FIRE/investing, consistent uploader, good search traffic | Evergreen angles he's hitting, keyword patterns in titles |
-| **Be Clever With Your Cash** | Deals/savings, very high search traffic | Savings rate content, ISA comparisons, rate-change videos |
-| **Pensioncraft** | Pension specialist — deep content, engaged audience | Pension topics he covers vs angles he misses |
-| **Martin Lewis / MoneySavingExpert** | The giant — dominates consumer finance | What he's NOT covering in video format (his gaps = your opportunity) |
-| **MoneyMagpie** | Broad personal finance, more female demographic | Topics performing well we can do better |
-| **Casual Finance** | Subscribed channel — direct niche overlap likely | Recent uploads, titles, view velocity |
-| **MonkeyExplains** | Subscribed channel — similar animated/explainer format | Style, topics, engagement patterns |
-| **Primate Economics** | Subscribed channel — possible direct competitor given name | Topics covered, audience overlap |
-| **Wealth Logic** | Subscribed channel — UK finance content | Angles, title formulas, gaps left open |
+| **Damien Talks Money** | @DamienTalksMoney | Closest competitor — similar relatable style, overlapping audience |
+| **James Shack** | @JamesShack | High-production investing content, strong SEO |
+| **Toby Newbatt** | @TobyNewbatt | UK FIRE/investing, consistent uploader, good search traffic |
+| **Be Clever With Your Cash** | @BeCleverWithYourCash | Deals/savings, very high search traffic |
+| **Pensioncraft** | @Pensioncraft | Pension specialist — deep content, engaged audience |
+| **Casual Finance** | @CasualFinance | Direct niche overlap |
+| **MonkeyExplains** | @MonkeyExplains | Similar animated/explainer format |
+| **Primate Economics** | @PrimateEconomics | Possible direct competitor given name |
+| **Wealth Logic** | @WealthLogic | UK finance content |
 
-### How to Track
+### What to Pull
 
-**Use yt-dlp to pull directly from each channel** — do not web search for this. yt-dlp reads the channel's video list directly from YouTube, giving real view counts, upload dates, and titles without any guessing.
-
-For each channel, fetch their recent uploads:
+For each channel, fetch their 10 most recent uploads:
 ```
-yt-dlp --dump-json --playlist-items 1-10 "https://www.youtube.com/@[ChannelHandle]/videos"
+yt-dlp --dump-json --playlist-items 1-10 "https://www.youtube.com/@[Handle]/videos"
 ```
 
-Extract per video:
-```
-Title | Upload date | View count | Duration | Video URL
-```
+Extract per video: title, upload date, view count, duration, video URL.
 
-Then for their top 1–2 performing videos (highest views in last 30 days), pull full metadata:
+For their top 1–2 performers (highest views, uploaded in last 30 days), pull full metadata:
 ```
 yt-dlp --dump-json "[video URL]"
 ```
-
-Extract: title, description, tags array, view count, like count, upload date.
-
-This replaces web searching for competitor data entirely — yt-dlp gives exact numbers, not estimates.
+Extract: tags array, description, exact view count, like count.
 
 ### Three Questions to Answer
 
 **1. What have they published in the last 30 days?**
-List all recent uploads. This tells you what topics are being fed to the algorithm right now.
+List all uploads. This shows what topics are being fed to the algorithm right now.
 
 **2. What's their top-performing video this month?**
-High view velocity = the algorithm is pushing it = the topic is hot. If you can make a better version of that video, do it now.
+High view velocity = algorithm is pushing it = topic is hot. If you can make a better version, do it now.
 
 **3. What have they NOT covered?**
-This is the gold. Scan their last 50 videos. Find:
-- Topics they've ignored entirely
-- Angles they've taken that leave obvious follow-up questions unanswered
+Scan their last 30–50 videos. Find:
+- Topics ignored entirely
+- Angles that leave obvious follow-up questions unanswered
 - UK-specific versions of US topics nobody has done
 - Old videos (2+ years) on topics still being searched — the refresh opportunity
 
 ### Gap Classification
 
-Label each competitor gap as one of:
+Label each competitor gap as:
 
 | Type | What it means |
 |---|---|
 | 🟥 **Hard gap** | Nobody has covered this topic at all — first mover wins |
-| 🟧 **Angle gap** | Topic is covered but only from one angle — your different take wins |
-| 🟨 **Quality gap** | Topic is covered but badly — your better version wins |
-| 🟩 **Refresh gap** | Topic was covered 2+ years ago — new video wins on recency |
+| 🟧 **Angle gap** | Topic covered but only from one angle — your different take wins |
+| 🟨 **Quality gap** | Topic covered but badly — your better version wins |
+| 🟩 **Refresh gap** | Topic covered 2+ years ago — new video wins on recency |
 
-**Only pursue gaps rated 🟥 or 🟧 first.** Quality and refresh gaps are still valuable but require more patience to rank.
+Prioritise 🟥 and 🟧 first.
 
-### Competitor Intelligence Output
-
-Add a **Competitor Snapshot** section to the trend report:
+### Step 1 Output
 
 ```
 ## Competitor Snapshot
@@ -119,103 +102,70 @@ Add a **Competitor Snapshot** section to the trend report:
 **Biggest gap this week:** [One sentence — the clearest opportunity the competitors have left open]
 ```
 
+Also save the hidden tags from Step 1 top performers — these feed into Step 3 SEO research and Stage 6.
+
 ---
 
-## Phase 1: Trend Sweep
+## Step 2: Trend & Gap Sweep
 
-**Goal:** Build a raw list of 15–20 candidate finance topics trending right now.
+**Goal:** Build a raw list of 10–15 candidate finance topics trending right now, cross-referenced against the gaps identified in Step 1.
 
-### 1a — YouTube Trend Signals
-Run these searches and note top results (title, views, upload date, channel size):
-- `"personal finance" youtube trending 2026`
-- `"investing" youtube most viewed this week`
-- `"money" youtube viral 2026`
-- `finance youtube trending 2026`
+**Method: web search.**
+
+### 2a — YouTube Trend Signals
+Run these searches. Note top results (title, views, upload date, channel size):
+- `finance youtube trending [current month] 2026`
+- `"personal finance" youtube most viewed this week`
+- `"investing" youtube viral 2026`
 - `"economy explained" youtube trending 2026`
-- `"stock market" youtube viral 2026`
 - `best performing finance youtube videos [current month]`
 
-Note for each result:
-- Topic / title
-- View count + upload date (calculate view velocity: views ÷ days since upload)
-- Channel subscriber count (flag if under 100k — winnable)
-- Is this evergreen or time-sensitive?
+Note per result: topic, view velocity (views ÷ days), channel sub count (flag if under 100k — winnable), evergreen or timely.
 
-### 1b — Google Trends Cross-Reference
-Search Google Trends data for the top topics found above:
-- `google trends finance topics rising 2025`
-- `google trends "personal finance" UK spike`
-- Look for topics with a rising trajectory, not already peaked
-
-### 1c — Reddit & News Signal Check
-- `reddit personalfinance hot posts this week`
-- `reddit UKPersonalFinance trending`
-- `BBC news personal finance 2025`
+### 2b — Google Trends + News Check
+- `google trends finance topics rising 2026`
 - `finance news UK trending [current month]`
+- `reddit UKPersonalFinance hot posts this week`
+- `BBC news personal finance [current month] 2026`
 
-This validates that the topic has real-world conversation volume behind it.
+Look for topics with a rising trajectory — not already peaked. Reddit and news validate real-world conversation volume.
 
-### 1d — Compile Raw List
-List all candidate topics found. Format:
-```
-Topic | Source | Signal strength (High/Med/Low) | Evergreen or Timely
-```
-
----
-
-## Phase 1E: Evergreen Popular Topics Sweep
-
-**Goal:** Identify 8–10 permanently popular UK finance topics with sustained year-round search demand. These run alongside the trending sweep — not instead of it.
-
-**Why this matters:** Trending topics spike and fade. Evergreen topics generate steady views for 2–3 years. A channel needs both: trending for algorithm boosts, evergreen for long-term watch time.
-
-### 1E-a — Search for Sustained Performers
-Run these searches to find topics with consistent long-term demand:
+### 2c — Evergreen Sweep
+Run alongside the trend search to find topics with sustained year-round demand:
 - `most searched personal finance topics UK`
 - `top finance youtube videos all time UK`
-- `"personal finance" youtube most viewed evergreen`
 - `investing basics youtube most views UK`
-- `best performing finance videos past 2 years youtube`
 
-For each result note: views, upload date, channel size, topic category.
+For any evergreen candidate, check: `"[topic]" youtube 2023 OR 2024 OR 2025`
+- Top videos 2+ years old? → **Refresh opportunity**
+- US-focused? → **UK angle opportunity**
+- Long and dense? → **Accessible plain-English opportunity**
 
-### 1E-b — Check the Core Evergreen Categories
-Always scan these categories for fresh angles we haven't covered yet:
+### 2d — Gap Cross-Reference
+For each candidate topic from 2a–2c, check it against the Step 1 competitor gaps:
+- Does this topic map to a 🟥 or 🟧 gap? → Move to shortlist immediately
+- Is it already well-covered by a competitor with high view velocity? → Lower priority
+- Does it combine a trending signal AND a competitor gap? → Top priority
 
-| Category | Check for angles on... |
-|---|---|
-| **Investing vs Property** | S&P 500 vs buying a house, index funds vs buy-to-let, is property still the best investment? |
-| **ISA strategy** | Stocks & Shares ISA explained, ISA vs pension, maxing your ISA |
-| **Pension** | How much to retire, SIPP vs workplace pension, pension drawdown, state pension age |
-| **Compound interest** | Starting early, the 8th wonder, compound interest with real numbers |
-| **Index funds** | Beginner guide, why they beat most fund managers, how to pick one |
-| **Emergency fund** | How much, where to keep it, savings rates UK |
-| **Debt vs investing** | Should I pay off debt or invest? Good debt vs bad debt |
-| **Tax efficiency** | Capital gains tax, income tax bands, salary sacrifice, dividend allowance |
-| **First-time investing** | Starting with £100/£500, best UK platforms for beginners |
-| **Budgeting** | 50/30/20, zero-based budgeting, envelope method |
+### Step 2 Output
 
-### 1E-c — Find the Fresh Angle
-For any evergreen topic we cover, search: `"[topic]" youtube 2023 OR 2024 OR 2025`
-- Are the top videos 2+ years old? → **Refresh opportunity**
-- Are they US-focused? → **UK angle opportunity**
-- Are they long and dense? → **Accessible plain-English opportunity**
-
-Flag each evergreen pick with one of: `Refresh` / `UK angle` / `Accessible take` / `New data`
-
-### 1E-d — Compile Evergreen List
-Format:
+Raw candidate list:
 ```
-Topic | Angle | Why winnable | Shelf life estimate
+Topic | Source | Trending signal | Competitor gap? | Evergreen or Timely
 ```
+
+Shortlist of 5–8 topics to take forward to Step 3.
 
 ---
 
-## Phase 2: SEO Deep Dive
+## Step 3: SEO + Audience Research
 
-**Goal:** For each shortlisted topic, gather keyword and format data.
+**Goal:** For each shortlisted topic, gather keyword data, title patterns, and the emotional angle that will make it click.
 
-### 2a — Keyword Research
+Work through each shortlisted topic from Step 2.
+
+### 3a — Keyword Research
+
 For each topic, search:
 - `"[topic]" youtube keyword search volume`
 - `best keywords for "[topic]" youtube 2025`
@@ -224,87 +174,91 @@ For each topic, search:
 Identify:
 - **Primary keyword** — the main search term
 - **Secondary keywords** — 3–5 supporting terms
-- **LSI keywords** — semantically related terms (what YouTube's algorithm associates)
 - **Long-tail variants** — specific questions people search (great for titles)
 
-### 2b — Title Pattern Analysis
+Blend these with the competitor tags pulled in Step 1.
+
+### 3b — Title Pattern Analysis
+
 Search top videos on the topic and identify:
 - Common title formulas (e.g. "X Things You Need to Know About...", "Why [Topic] is About to Change")
 - Power words appearing frequently (e.g. "Warning", "Mistake", "Secret", "Explained")
 - Use of numbers (listicles perform well in finance)
-- Question-format titles vs statement titles
-- Optimal title length (aim for 60 chars or under for no truncation)
+- Optimal title length (aim for 60 chars or under)
 
-### 2c — Video Length & Structure
-For top performers on each topic, note:
-- Average video length
-- Whether they use chapters/timestamps (yes = better watch time signal)
-- Typical video structure (hook → problem → explanation → solution → CTA)
+### 3c — Competition Check
 
-### 2d — Tag & Description Patterns
-Where visible, note tag strategies and description formats used by top videos.
-
----
-
-## Phase 3: Gap Analysis
-
-**Goal:** Find topics where demand is high but competition is weak.
-
-### 3a — Competition Check
-For each candidate topic:
-- Search YouTube directly: how many videos exist on this exact topic?
-- Are the top results from channels with 500k+ subscribers? (if yes = hard to crack)
+For each topic:
+- How many videos exist on this exact topic?
+- Are the top results from channels with 500k+ subscribers? (if yes = hard to crack without a specific angle)
 - Are there videos from smaller channels in top results? (if yes = opportunity)
 - When were the top videos uploaded? (if 2+ years ago = refresh opportunity)
 
-### 3b — Underserved Angle Check
-Look for:
-- A popular topic covered only from a US perspective → make the UK version
-- A complex topic with only dense/boring explanations → make it accessible
-- A trending news story with no explainer video yet → be first
-- A topic with high views but low like/comment engagement → audience wants better content
+### 3d — Emotional Trigger
 
-### 3c — Refresh Opportunities
-Search: `"[topic]" youtube 2022 OR 2023` — if top results are old but topic is still searched, a fresh take ranks easily.
-
----
-
-## Phase 4: Audience & Algorithm Signals
-
-**Goal:** Understand *why* people click and watch, and what hooks work.
-
-### 4a — Emotional Trigger Analysis
-Finance content performs on these emotions — identify which applies to each topic:
+Finance content performs on these emotions. Identify which applies to each topic:
 - 😨 **Fear** — "You're losing money if you don't know this"
 - 🤑 **Greed/Aspiration** — "How to make your money work harder"
 - 😤 **Frustration** — "Why your bank is ripping you off"
 - 😮 **Curiosity** — "The secret most people don't know about ISAs"
-- 😅 **Relief** — "It's not too late to start investing"
+- 😅 **Relief/Urgency** — "It's not too late to start investing"
 
-### 4b — Comment Sentiment Scan
-Search: `"[topic]" youtube comments questions 2025`
-Look for:
-- What questions are viewers asking in comments? (= content gaps)
-- What do people say they wished was covered?
-- What complaints appear about existing videos?
+### Step 3 Output
 
-### 4c — Algorithm Cues
-- What thumbnails are working? (face + text + contrast = typical winner)
-- Are Shorts driving traffic to long-form on this topic?
-- Is the topic being recommended alongside other high-performing topics?
+Per shortlisted topic:
+```
+Topic | Primary keyword | Secondary keywords | Best title formula | Emotional trigger | Competition level
+```
 
 ---
 
-## Phase 5: Scoring
+## Step 4: Score, Brief & Differentiate
 
-Apply the Opportunity Scoring Matrix from `references/SCORING.md` to each shortlisted idea.
+**Goal:** Score all shortlisted topics, identify the winner, analyse competitor transcripts on the winning topic, and produce the full content brief.
+
+### 4a — Score All Topics
+
+Apply the Opportunity Scoring Matrix from `references/SCORING.md` to each shortlisted topic.
+
+```
+| Idea | Search Vol | Competition | Trend Velocity | Monetisation | Channel Fit | TOTAL |
+|------|-----------|-------------|----------------|--------------|-------------|-------|
+```
+
 Drop anything under 12/25. Rank the rest.
 
----
+### 4b — Transcript Analysis (winning topic only)
 
-## Phase 6: Content Brief
+For the top-ranked topic, use yt-dlp to download transcripts from the 2 best-performing competitor videos:
+```
+yt-dlp --write-auto-sub --skip-download --sub-format vtt "[video URL]"
+```
+Strip timestamps → clean text. Analyse:
+- Hook structure (first 60 seconds)
+- Section breakdown and pacing
+- Analogies and examples used
+- What they missed or got wrong
 
-For each top-ranked idea, produce a full brief using the template in `references/BRIEF_TEMPLATE.md`.
+Output a "competitive differentiation" note:
+- What angle the competitors took
+- What they didn't cover or glossed over
+- The angle Monkey See Money should take to be clearly different and better
 
-Conclude with a single **Recommended Next Video** — the highest scoring, most timely, most winnable pick.
-Ask Sham if he wants to feed it straight into the pipeline.
+**Never copy their structure. Use it to find the gap.**
+
+### 4c — Full Content Brief
+
+Produce one full brief per top-ranked idea using `references/BRIEF_TEMPLATE.md`. The brief for the winning topic must include the competitive differentiation note from 4b.
+
+### Step 4 Output — Full Trend Report
+
+Deliver the complete Trend Report:
+
+1. **Competitor Snapshot** — table from Step 1
+2. **Market Snapshot** — 3–4 sentences on what's dominating finance YouTube right now
+3. **Top Trending Opportunities** — ranked list of 3–5 trending ideas with scores
+4. **Top Evergreen Opportunities** — ranked list of 2–3 evergreen ideas with scores and "why now" angle
+5. **Full Content Briefs** — one per idea
+6. **Recommended Next Video** — the single best pick, confidence rating, shelf-life indicator
+
+Then ask Sham: *"Want to run the pipeline with the top pick?"*
