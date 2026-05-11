@@ -60,15 +60,12 @@ Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
 - **Whether a monkey** adds value — green suit (first & last only) / plain / none
 
-### Pass 2 — Write Three Files (The Artist)
-Generate all three output files simultaneously:
+### Pass 2 — Write Two Files (The Artist)
+Generate both output files simultaneously:
 1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
-2. **KB movements** (`05-kb-movements.txt`) — one line per scene: scene number + camera movement label only
-3. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
+2. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
 
 Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
-
-Format KB file: `1.1 pan left to right`
 
 Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement. X seconds.`
 
@@ -81,8 +78,7 @@ Read all prompts as a sequence. Check:
 - [ ] Green suit monkey ONLY in first and final scenes
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
-- [ ] KB movements in separate file only — never embedded in image prompts
-- [ ] Camera movements logical and varied
+- [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
 - [ ] Video prompts: monkey in ~75% of scenes, no mouth movement, facial expressions only, 4–7 seconds each, no two adjacent scenes with identical camera move
 
 ---
@@ -143,62 +139,28 @@ Wherever the narration mentions a statistic, percentage, or number, the image pr
 
 ---
 
-## Ken Burns Composition Rules
-
-Videos use Ken Burns effects — slow zoom in, zoom out, or pan across each static image. Two rules are non-negotiable:
+## Composition Rules
 
 **Rule 1 — Central 60% only. Always.**
-All critical elements (stats, characters, key text, diagrams) must be positioned within the central 60% of the frame. Leave a minimum 20% clear margin on all four edges. The KB pan will travel across the outer 20% — anything outside the 60% zone risks being cropped.
+All critical elements (stats, characters, key text, diagrams) must be positioned within the central 60% of the frame. Leave a minimum 20% clear margin on all four edges.
 
-Add this exact instruction to every single prompt, just before the closing style line:
+Add this exact instruction to every single image prompt, just before the closing style line:
 > `All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges.`
 
-**Rule 2 — KB applies to 25% of scenes only.**
-Only every 4th scene gets a Ken Burns effect — the rest are static. Design all images with the 20% margin regardless, but do not force dramatic off-centre compositions for static scenes.
-
-**Rule 3 — Sparse beats crowded.**
-One dominant element with generous white space. Overcrowded compositions look worse under any movement.
-
----
-
-## The 4 KB Effects — Use These Exact Labels
-
-There are exactly **4 effects** available. Every scene in `05-kb-movements.txt` must use one of these four labels verbatim — nothing else:
-
-| Label | What it does | Best for |
-|---|---|---|
-| `pan left to right` | Camera travels left → right | Timelines, before/after, reveal on the right |
-| `pan right to left` | Camera travels right → left | Contrast, correction, reversal of expectation |
-| `pan top to bottom` | Camera drifts downward | Downward pressure, falling values, bad news |
-| `pan bottom to top` | Camera drifts upward | Rising charts, growth, upward momentum, optimism |
-
-**Assign by choosing the effect that serves the scene's emotional job.** When in doubt, `pan left to right` is the default.
-
-Vary the effects across the video — avoid using the same effect more than 3 times in a row.
+**Rule 2 — Sparse beats crowded.**
+One dominant element with generous white space. Overcrowded compositions lose impact.
 
 ---
 
 ## Output Format
 
-Generate THREE files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
+Generate TWO files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
 1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 
 1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
-```
-
-### KB Movements (`05-kb-movements.txt`)
-One of the 4 exact effect labels per scene. Scene number + label only. No descriptions, no explanations.
-```
-1.1 pan left to right
-
-1.2 pan right to left
-
-1.3 pan top to bottom
-
-1.4 pan bottom to top
 ```
 
 ### Video Prompts (`05-video-prompts.txt`)
@@ -218,17 +180,14 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 - Animation sequence describes what draws in, what appears, what pulses — in order
 - Stats: describe the number drawing itself in stroke by stroke for maximum impact
 
-**Critical formatting (all three files):**
-- Scene number at start of every line in all three files
+**Critical formatting:**
+- Scene number at start of every line in both files
 - Image prompts: everything in one paragraph, blank line between scenes
-- KB file: scene number + exact effect label only, blank line between scenes
 - Video prompts: everything in one paragraph, blank line between scenes
-- **Only these 4 KB labels are valid:** `pan left to right` / `pan right to left` / `pan top to bottom` / `pan bottom to top`
 - **Central 60% / 20% border instruction verbatim in every single image prompt** — never omit
-- **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts or video prompts
 - **No file title, no section headers, no dividers** — scene number and content only
 
-Save all three files to Drive in the run's project folder.
+Save both files to Drive in the run's project folder.
 Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 
 ---
@@ -247,10 +206,6 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical
 - [ ] **Central 60% / 20% border instruction** present in every image prompt
 
-**KB movements:**
-- [ ] **Exactly 4 labels used** — no other text, no descriptions
-- [ ] **Varied** — same label not used more than 3 times in a row
-
 **Video prompts:**
 - [ ] **Monkey in ~75% of scenes** — matches image prompt monkey distribution exactly
 - [ ] **No mouth movement** stated in every prompt with a monkey
@@ -264,12 +219,11 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 
 ## Delivery
 
-Always generate all three files without asking. Save all three to Drive in the episode folder:
+Always generate both files without asking. Save both to Drive in the episode folder:
 - `04-image-prompts.txt`
-- `05-kb-movements.txt`
 - `05-video-prompts.txt`
 
-Then confirm: *"Stage 3 complete — {sub_scene_count} scenes. Image prompts, KB movements, and video prompts saved to Drive. Ready for your review before Stage 4."*
+Then confirm: *"Stage 3 complete — {sub_scene_count} scenes. Image prompts and video prompts saved to Drive. Ready for your review before Stage 4."*
 
 ---
 
