@@ -67,7 +67,7 @@ Generate both output files simultaneously:
 
 Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
 
-Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement. X seconds.`
+Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement.`
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
@@ -79,7 +79,7 @@ Read all prompts as a sequence. Check:
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
-- [ ] Video prompts: monkey in ~50% of scenes, no mouth movement, facial expressions only, 4–7 seconds each, no two adjacent scenes with identical camera move
+- [ ] Video prompts: monkey in ~50% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
 
 ---
 
@@ -166,16 +166,16 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 ### Video Prompts (`05-video-prompts.txt`)
 Full animation brief per scene. Scene number + everything in one paragraph. Blank line between scenes.
 ```
-1.1 Whiteboard animation, clean white background. [character or no-character setup]. [animation sequence — what draws in, what appears, in what order, with timing cues]. [monkey facial expression change if present — no mouth movement]. [camera move]. No mouth movement. X seconds.
+1.1 Whiteboard animation, clean white background. [character or no-character setup]. [animation sequence — what draws in, what appears, in what order]. [monkey facial expression change if present — no mouth movement]. [camera move]. No mouth movement.
 
-1.2 Whiteboard animation, clean white background. [description]. [animation]. [expression]. [camera]. No mouth movement. X seconds.
+1.2 Whiteboard animation, clean white background. [description]. [animation]. [expression]. [camera]. No mouth movement.
 ```
 
 **Video prompt rules (non-negotiable):**
 - Monkey in ~50% of scenes — facial expressions only, no mouth movement ever
 - No-monkey scenes: stat-heavy frames where a character would distract from the number
 - Green suit monkey ONLY in Scene 01 and the final scene
-- Each prompt: 4–7 seconds, one clear animation sequence
+- Each prompt: one clear animation sequence — no timing specified
 - Camera variety: zoom in / zoom out / pan left-right / pan right-left / hold steady — never the same move more than twice in a row
 - Animation sequence describes what draws in, what appears, what pulses — in order
 - Stats: describe the number drawing itself in stroke by stroke for maximum impact
@@ -210,7 +210,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Monkey in ~50% of scenes** — matches image prompt monkey distribution exactly
 - [ ] **No mouth movement** stated in every prompt with a monkey
 - [ ] **Facial expressions only** — no lip sync, no talking animation
-- [ ] **4–7 seconds** per scene, stated at end of each prompt
+- [ ] **No timing** specified in any video prompt
 - [ ] **Animation sequence is specific** — describes what draws in, appears, pulses, in order
 - [ ] **Camera variety** — no identical move on adjacent scenes
 - [ ] **No headers or section labels** in any output file
