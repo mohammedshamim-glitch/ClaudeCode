@@ -79,7 +79,7 @@ Read all prompts as a sequence. Check:
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
-- [ ] Video prompts: monkey in ~50% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
+- [ ] Video prompts: monkey in ~25% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
 
 ---
 
@@ -113,10 +113,10 @@ The green suit monkey in the final scene is the brand sign-off — the visual al
 |---|---|
 | **Scene 01** | Green suit monkey ONLY — brand intro |
 | **Final scene** | Green suit monkey ONLY — brand sign-off |
-| **Most scenes** | Monkey — present in ~50% of all scenes as guide, narrator, reactor |
-| **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~50% of scenes) |
+| **Most scenes** | Monkey — present in ~25% of all scenes as guide, narrator, reactor |
+| **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~75% of scenes) |
 
-**Monkey threshold:** Use a monkey in approximately 50% of scenes. Reserve no-monkey treatment for scenes where a statistic or diagram is the sole centrepiece and a character would distract from the number. The monkey acts as guide, narrator, and emotional reactor throughout — not just at peak moments.
+**Monkey threshold:** Use a monkey in approximately 25% of scenes. Reserve no-monkey treatment for scenes where a statistic or diagram is the sole centrepiece and a character would distract from the number. The monkey acts as guide, narrator, and emotional reactor throughout — not just at peak moments.
 
 **Never use:**
 - ❌ Green suit monkey in any scene except Scene 01 and the final scene
@@ -172,7 +172,7 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 ```
 
 **Video prompt rules (non-negotiable):**
-- Monkey in ~50% of scenes — facial expressions only, no mouth movement ever
+- Monkey in ~25% of scenes — facial expressions only, no mouth movement ever
 - No-monkey scenes: stat-heavy frames where a character would distract from the number
 - Green suit monkey ONLY in Scene 01 and the final scene
 - Each prompt: one clear animation sequence — no timing specified
@@ -199,7 +199,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Green suit monkey** appears only in Scene 01 and the final scene
-- [ ] **Monkey** used in ~50% of scenes as guide, narrator, reactor
+- [ ] **Monkey** used in ~25% of scenes as guide, narrator, reactor
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
 - [ ] **No channel name, brand name, or text branding** of any kind
@@ -207,7 +207,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Central 60% / 20% border instruction** present in every image prompt
 
 **Video prompts:**
-- [ ] **Monkey in ~50% of scenes** — matches image prompt monkey distribution exactly
+- [ ] **Monkey in ~25% of scenes** — matches image prompt monkey distribution exactly
 - [ ] **No mouth movement** stated in every prompt with a monkey
 - [ ] **Facial expressions only** — no lip sync, no talking animation
 - [ ] **No timing** specified in any video prompt
