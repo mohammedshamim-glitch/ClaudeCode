@@ -347,12 +347,11 @@ def main():
         title_slug = re.sub(r'[^\w\s-]', '', metadata["title"].lower())
         title_slug = re.sub(r'[\s_]+', '-', title_slug).strip('-')
         slugged_path = os.path.join(tmpdir, f"{title_slug}.mp4")
-        os.rename(video_path, slugged_path)
-        video_path = slugged_path
         print(f"  ✓ Filename:  {title_slug}.mp4")
 
         print(f"\nDownloading video ({video_file['name']})...")
-        drive_download(drive_token, video_file["id"], video_path)
+        drive_download(drive_token, video_file["id"], slugged_path)
+        video_path = slugged_path
         size_mb = os.path.getsize(video_path) / 1024 / 1024
         print(f"  ✓ {size_mb:.1f}MB downloaded")
 
@@ -367,11 +366,13 @@ def main():
         thumb_file = next((f for f in items if f["mimeType"].startswith("image/") and "thumbnail" in f["name"].lower()), None)
         if thumb_file:
             print("\nUploading thumbnail...")
-            thumb_path = os.path.join(tmpdir, "thumbnail.jpg")
+            thumb_ext  = ".png" if "png" in thumb_file.get("mimeType", "") else ".jpg"
+            thumb_path = os.path.join(tmpdir, f"thumbnail{thumb_ext}")
             drive_download(drive_token, thumb_file["id"], thumb_path)
+            thumb_mime = thumb_file.get("mimeType", "image/jpeg")
             r = requests.post(
                 f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}&uploadType=media",
-                headers={"Authorization": f"Bearer {yt_token}", "Content-Type": "image/jpeg"},
+                headers={"Authorization": f"Bearer {yt_token}", "Content-Type": thumb_mime},
                 data=open(thumb_path, "rb").read(),
             )
             if r.ok:
