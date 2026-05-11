@@ -43,6 +43,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Audio subfolder**: For the S&P 500 war episode, audio is in an `Audio` subfolder as `.wav`, not `narration.mp3` in the root.
 - **File location default**: All assets (images, audio, scripts, CSVs, videos) are always in Google Drive. Never assume local. Never search locally first. Always go to Drive.
 - **No SRT generation**: YouTube auto-generates captions. Never run generate_srt.py. Set `defaultLanguage` and `defaultAudioLanguage` to `en-GB` on upload — that's all that's needed.
+- **Pinned comment**: upload_youtube.py auto-posts the pinned comment after upload. BUT it only works on public/unlisted videos — not private/scheduled. For scheduled videos, post the comment manually in Studio once live, then pin it (3 dots → Pin) within 60 min.
 - **Auto-scheduling**: upload_youtube.py automatically schedules publish for next Wednesday at 4pm UK time, minimum 2 days after upload. No `--privacy` flag needed — scheduling is always on.
 - **Filename = title slug**: Video and thumbnail filenames must match the video title (slugified). This is SEO best practice. upload_youtube.py handles this automatically.
 - **Thumbnail in Drive**: Name the thumbnail file "thumbnail" in the episode folder. upload_youtube.py will find it and upload it automatically alongside the video.
