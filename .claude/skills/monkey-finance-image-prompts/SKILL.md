@@ -60,14 +60,17 @@ Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
 - **Whether a monkey** adds value — green suit (first & last only) / plain / none
 
-### Pass 2 — Write Two Files (The Artist)
-Generate both output files simultaneously:
+### Pass 2 — Write Three Files (The Artist)
+Generate all three output files simultaneously:
 1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
-2. **KB movements** (`05-kb-movements.txt`) — one line per scene: scene number + camera movement only
+2. **KB movements** (`05-kb-movements.txt`) — one line per scene: scene number + camera movement label only
+3. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
 
 Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
 
-Format KB file: `1.1 Slow push in toward X — [why it works emotionally].`
+Format KB file: `1.1 pan left to right`
+
+Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement. X seconds.`
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
@@ -80,6 +83,7 @@ Read all prompts as a sequence. Check:
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] KB movements in separate file only — never embedded in image prompts
 - [ ] Camera movements logical and varied
+- [ ] Video prompts: monkey in ~75% of scenes, no mouth movement, facial expressions only, 4–7 seconds each, no two adjacent scenes with identical camera move
 
 ---
 
@@ -176,7 +180,7 @@ Vary the effects across the video — avoid using the same effect more than 3 ti
 
 ## Output Format
 
-Generate TWO files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
+Generate THREE files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
@@ -197,44 +201,75 @@ One of the 4 exact effect labels per scene. Scene number + label only. No descri
 1.4 pan bottom to top
 ```
 
-**Critical formatting:**
-- Scene number at start of every line in both files
+### Video Prompts (`05-video-prompts.txt`)
+Full animation brief per scene. Scene number + everything in one paragraph. Blank line between scenes.
+```
+1.1 Whiteboard animation, clean white background. [character or no-character setup]. [animation sequence — what draws in, what appears, in what order, with timing cues]. [monkey facial expression change if present — no mouth movement]. [camera move]. No mouth movement. X seconds.
+
+1.2 Whiteboard animation, clean white background. [description]. [animation]. [expression]. [camera]. No mouth movement. X seconds.
+```
+
+**Video prompt rules (non-negotiable):**
+- Monkey in ~75% of scenes — facial expressions only, no mouth movement ever
+- No-monkey scenes: stat-heavy frames where a character would distract from the number
+- Green suit monkey ONLY in Scene 01 and the final scene
+- Each prompt: 4–7 seconds, one clear animation sequence
+- Camera variety: zoom in / zoom out / pan left-right / pan right-left / hold steady — never the same move more than twice in a row
+- Animation sequence describes what draws in, what appears, what pulses — in order
+- Stats: describe the number drawing itself in stroke by stroke for maximum impact
+
+**Critical formatting (all three files):**
+- Scene number at start of every line in all three files
 - Image prompts: everything in one paragraph, blank line between scenes
 - KB file: scene number + exact effect label only, blank line between scenes
-- **Only these 4 labels are valid:** `pan left to right` / `pan right to left` / `pan top to bottom` / `pan bottom to top`
+- Video prompts: everything in one paragraph, blank line between scenes
+- **Only these 4 KB labels are valid:** `pan left to right` / `pan right to left` / `pan top to bottom` / `pan bottom to top`
 - **Central 60% / 20% border instruction verbatim in every single image prompt** — never omit
-- **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts
-- **No file title, no section headers, no dividers** — scene number and label only
+- **KB movements in `05-kb-movements.txt` ONLY** — never embedded in image prompts or video prompts
+- **No file title, no section headers, no dividers** — scene number and content only
 
-Save both files to Drive in run's project folder.
+Save all three files to Drive in the run's project folder.
 Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 
 ---
 
-## Final Quality Check — Clear All 9 Before Delivering
+## Final Quality Check — Clear All Before Delivering
 
+**Image prompts:**
 - [ ] **Sub-scene count matches narration** — ~25 words each, total 45–55 sub-scenes
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Green suit monkey** appears only in Scene 01 and the final scene
-- [ ] **Monkey** used in 15–20% of scenes at emotional peak moments
+- [ ] **Monkey** used in ~75% of scenes as guide, narrator, reactor
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
-- [ ] **No channel name, brand name, or text branding** of any kind — no "Monkey Finance", "Monkey See Money", or any channel identifier written in the scene
+- [ ] **No channel name, brand name, or text branding** of any kind
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical
-- [ ] **KB composition note** in every prompt — focal element position, margin, and pan direction specified
-- [ ] **No headers or section labels** in either output file — scene number and prompt text only
+- [ ] **Central 60% / 20% border instruction** present in every image prompt
+
+**KB movements:**
+- [ ] **Exactly 4 labels used** — no other text, no descriptions
+- [ ] **Varied** — same label not used more than 3 times in a row
+
+**Video prompts:**
+- [ ] **Monkey in ~75% of scenes** — matches image prompt monkey distribution exactly
+- [ ] **No mouth movement** stated in every prompt with a monkey
+- [ ] **Facial expressions only** — no lip sync, no talking animation
+- [ ] **4–7 seconds** per scene, stated at end of each prompt
+- [ ] **Animation sequence is specific** — describes what draws in, appears, pulses, in order
+- [ ] **Camera variety** — no identical move on adjacent scenes
+- [ ] **No headers or section labels** in any output file
 
 ---
 
 ## Delivery
 
-Before generating any files, ask: *"Do you want me to also generate the KB movements file (`05-kb-movements.txt`) alongside the image prompts, or image prompts only?"*
+Always generate all three files without asking. Save all three to Drive in the episode folder:
+- `04-image-prompts.txt`
+- `05-kb-movements.txt`
+- `05-video-prompts.txt`
 
-- If image prompts only → save `04-image-prompts.txt` to Drive only.
-- If both → save `04-image-prompts.txt` and `05-kb-movements.txt` to Drive.
-
-Then confirm: *"Stage 3 complete — {sub_scene_count} image prompts saved to Drive. Ready for your review before Stage 4."*
+Then confirm: *"Stage 3 complete — {sub_scene_count} scenes. Image prompts, KB movements, and video prompts saved to Drive. Ready for your review before Stage 4."*
 
 ---
 
