@@ -68,8 +68,25 @@ python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id> [--privacy p
 | Tags | All tags from the SEO package (up to 500 chars) |
 | Category | Education (ID 27) |
 | Language | en-GB |
-| Privacy | As specified (default: private) |
+| Privacy | Scheduled private (auto-publishes on target date) |
 | Made for kids | No |
+| Thumbnail | Uploaded automatically from `thumbnail` file in episode folder |
+| Pinned comment | Posted automatically from `06-seo-metadata.txt` PINNED COMMENT section |
+
+---
+
+## Pinned Comment — Auto-Posted, Manual Pin Required
+
+The script automatically posts the pinned comment from `06-seo-metadata.txt` after upload.
+
+**One manual step required:** Go to YouTube Studio → Comments → find the posted comment → click the three dots → **Pin**.
+
+Do this within 60 minutes of the video going live for maximum engagement signal.
+
+If the comment post fails (403), it means YouTube auth needs refreshing with the `youtube.force-ssl` scope:
+```
+python3 /home/user/ClaudeCode/setup_youtube_auth.py
+```
 
 ---
 
@@ -77,26 +94,18 @@ python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id> [--privacy p
 
 Report back with:
 - YouTube watch URL
-- YouTube Studio URL (for thumbnail upload and final review)
-- Reminder to upload the thumbnail manually in Studio (the API requires a verified account for custom thumbnails)
+- YouTube Studio URL
+- Scheduled publish date/time
+- Reminder to **pin the comment** in Studio (3 dots → Pin) within 60 minutes of going live
 
 Example:
 ```
-✓ Uploaded to YouTube (private)
+✓ Uploaded — scheduled for Wednesday 20 May at 4pm BST
 Watch: https://www.youtube.com/watch?v=XXXXX
 Studio: https://studio.youtube.com/video/XXXXX/edit
 
-Next steps in Studio:
-1. Upload the thumbnail (from the SEO package thumbnail brief)
-2. Add end screens and cards
-3. Set the publish date or go public when ready
+One action needed: pin the comment in Studio → Comments within 60 min of going live.
 ```
-
----
-
-## Thumbnail Note
-
-YouTube's API only allows custom thumbnail uploads for **verified channels**. If the channel is verified, the thumbnail can be uploaded programmatically — ask Sham if he wants this added. Otherwise, upload manually in YouTube Studio using the AI thumbnail prompt from `06-seo-metadata.txt`.
 
 ---
 

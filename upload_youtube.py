@@ -382,12 +382,35 @@ def main():
         else:
             print("\n  ⚠ No thumbnail found in episode folder — upload manually in Studio")
 
+        # Post pinned comment (requires youtube.force-ssl scope)
+        pinned_comment = None
+        for key in ["PINNED COMMENT", "PINNED_COMMENT"]:
+            import re as _re
+            m = _re.search(r'PINNED COMMENT\n━+\n\n(.+)', seo_text, _re.DOTALL)
+            if m:
+                pinned_comment = m.group(1).split('\n\n')[0].strip()
+                break
+        if pinned_comment:
+            print("\nPosting pinned comment...")
+            r = requests.post(
+                "https://www.googleapis.com/youtube/v3/commentThreads?part=snippet",
+                headers={"Authorization": f"Bearer {yt_token}", "Content-Type": "application/json"},
+                json={"snippet": {"videoId": video_id, "topLevelComment": {"snippet": {"textOriginal": pinned_comment}}}},
+            )
+            if r.ok:
+                print(f"  ✓ Comment posted — pin it in Studio (3 dots → Pin)")
+                print(f"  ✓ Text: {pinned_comment[:80]}...")
+            else:
+                print(f"  ⚠ Comment post failed ({r.status_code}) — post manually in Studio")
+                print(f"     Text: {pinned_comment}")
+
         print(f"\n{'='*60}")
         print(f"  ✓ Upload complete!")
         print(f"  ✓ Video ID:    {video_id}")
         print(f"  ✓ Watch URL:   {yt_url}")
         print(f"  ✓ Studio URL:  {yt_studio}")
         print(f"  ✓ Scheduled:   {uk_time.strftime('%A %d %B %Y at %I:%M%p')} {uk_label}")
+        print(f"\n  ACTION NEEDED: Go to Studio → Comments → pin the comment posted above")
         print(f"{'='*60}\n")
 
     finally:

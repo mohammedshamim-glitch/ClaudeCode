@@ -8,7 +8,7 @@ Adds youtube_refresh_token to token.json for automated future uploads.
 import json, requests, urllib.parse, sys, os
 
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
-SCOPE = "https://www.googleapis.com/auth/youtube"
+SCOPE = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl"
 
 def main():
     with open(TOKEN_FILE) as f:
