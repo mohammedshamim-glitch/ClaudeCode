@@ -56,6 +56,10 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Thumbnail mime type**: Thumbnails may be PNG not JPEG. upload_youtube.py now reads the actual Drive mimeType and sends the correct Content-Type header. Do not hardcode `image/jpeg`.
 - **AI video clips pipeline**: `create_video_from_clips.py` replaces `create_video_kb.py` when using AI-generated video clips instead of KB-effect images. Looks for `Videos` subfolder, `audio_timings_new.csv`, and audio file. Slows clips where scene > clip duration, trims where scene < clip duration.
 - **Monkey action rule**: Every monkey scene must show the monkey mid-action with a prop (pressing button, holding umbrella, looking through binoculars, etc.). Never just standing. Enforced in VISUAL-RULES.md and SKILL.md.
+- **YouTube transcript extraction**: yt-dlp and youtube-transcript-api both get 403 from this server's IP — YouTube blocks it. Use Gemini API instead: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}` with `{"file_data": {"mime_type": "video/*", "file_uri": "https://www.youtube.com/watch?v=VIDEO_ID"}}` as a part alongside the text prompt. Gemini natively reads YouTube URLs and returns full transcripts. Use model `gemini-2.5-flash` — `gemini-2.0-flash` may hit quota limits.
+- **Competitor video research**: To find a competitor video ID, use the YouTube Data API search endpoint with a refreshed `youtube_refresh_token`: `GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video` with Bearer auth. Then pass the video ID to Gemini for transcript extraction.
+- **Script style — character-driven**: Scripts perform better with named characters (e.g. Jake and Marcus) rather than abstract "you vs you" comparisons. The Wealth Logic "Real Estate vs Stocks" format (1.48M views) uses two characters to make the emotional journey concrete and followable. Adopt this structure for comparison videos.
+- **Script adaptation workflow**: Find the top-performing competitor video on a topic → extract transcript via Gemini → adapt to UK (swap $ for £, add ISA/CGT/Section 24/stamp duty, change characters/scenarios) → keep the proven emotional beats and structure intact.
 
 ## Known Drive Folder IDs
 
@@ -66,6 +70,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | S&P 500 vs Picking Your Own Stocks (53 scenes) | `1VSu4FuGUQhDxk6yC5HAjnze6YetAEecO` |
 | S&P 500 All-Time High During War (51 scenes) | `1fFJnQTbnJ6hAKmD5sXDhVFdk77U_f52U` |
 | The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
+| Property vs Stocks — The Real Math (UK) | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
 
 ## Project Overview
 
