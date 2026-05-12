@@ -49,6 +49,13 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Thumbnail in Drive**: Name the thumbnail file "thumbnail" in the episode folder. upload_youtube.py will find it and upload it automatically alongside the video.
 - **KB movement file**: Old `05-kb-movements.txt` has verbose descriptions — `movement_to_effect_idx()` should return `None` for unrecognised text and fall back to cycling, not default to pan left to right.
 - **KB sample image**: Use file ID `17FRRCFFkVRQUuSC8t7fsPEmjSEgzd88p` from the S&P 500 vs Stocks episode for future KB sample generation.
+- **YouTube Brand Account**: Monkey See Money is a Brand Account on the same Google email as Digital Fusion. Always run `setup_youtube_auth.py` and select **Monkey See Money** — not the personal/Digital Fusion account. The wrong channel auth will silently upload to the wrong channel.
+- **Skip-a-Wednesday scheduling**: To target the Wednesday after next, temporarily set `MIN_DAYS_BUFFER = 4` in `upload_youtube.py` before running, then reset to `2` immediately after. With buffer=4, today (Mon) + 4 days = Fri, next Wednesday = the one after next.
+- **YouTube auth scope**: `setup_youtube_auth.py` now requests both `youtube` and `youtube.force-ssl` scopes — the force-ssl scope is required for posting comments. If comment posting returns 403, re-run auth.
+- **upload_youtube.py rename bug**: The slug rename must happen AFTER download, not before. File is downloaded directly to the slugged filename path now — do not reintroduce a pre-download rename.
+- **Thumbnail mime type**: Thumbnails may be PNG not JPEG. upload_youtube.py now reads the actual Drive mimeType and sends the correct Content-Type header. Do not hardcode `image/jpeg`.
+- **AI video clips pipeline**: `create_video_from_clips.py` replaces `create_video_kb.py` when using AI-generated video clips instead of KB-effect images. Looks for `Videos` subfolder, `audio_timings_new.csv`, and audio file. Slows clips where scene > clip duration, trims where scene < clip duration.
+- **Monkey action rule**: Every monkey scene must show the monkey mid-action with a prop (pressing button, holding umbrella, looking through binoculars, etc.). Never just standing. Enforced in VISUAL-RULES.md and SKILL.md.
 
 ## Known Drive Folder IDs
 
