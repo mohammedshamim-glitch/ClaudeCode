@@ -68,16 +68,38 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 ### Monkey (~75% of scenes — guide, narrator, reactor)
 - Same monkey character, no suit — casual, unguarded, human
 - Present in approximately 75% of all scenes as a consistent guide and emotional anchor
-- Roles vary: explaining, pointing, reacting, gesturing, presenting, questioning
-- Expressive face is everything — the emotion must be readable at a glance:
-  - **Shock/horror:** hands on head, mouth open, eyes wide
-  - **Confusion/disbelief:** arms crossed, one eyebrow raised, dismissive expression
-  - **Realisation:** pointing forward, eyes wide open, mouth forming an "O"
-  - **Relief/satisfaction:** relaxed posture, slight smile, thumbs up
-  - **Concern/worry:** hand on chin, furrowed brow, leaning forward
-  - **Guiding/explaining:** arm extended toward diagram, expression attentive
-  - **Encouraging:** palm open toward viewer, warm expression
-- May hold simple props: a thought bubble, a question mark, a clipboard, a card, a globe
+
+**THE GOLDEN RULE: The monkey must always be DOING something — never just standing.**
+
+Every monkey scene must feature an active physical action with a prop or in a situation. Static poses (just standing, just pointing) are banned. The monkey should look like a frame grabbed from an animation — mid-action, mid-reaction, mid-interaction.
+
+**Action Library — pick one per scene, match it to the narrative moment:**
+
+| Action | Props | When to use |
+|---|---|---|
+| Pressing / slamming a large button | BUY button, SELL button, TAX button | Decision moments, triggering an event |
+| Assembling / placing puzzle pieces | Coloured puzzle pieces labelled with concepts | Explaining how parts fit together |
+| Holding an umbrella in a storm | Umbrella, rain of red arrows or £ signs | Protection, shelter from a financial risk |
+| Looking through binoculars | Binoculars, multiple screens showing charts | Spotting opportunities, forward-looking |
+| Waving a flag to stop / signal | Flag (blue = caution, red = stop, green = go) | Warning moments, rule changes, deadlines |
+| Pulling back a curtain | Heavy curtain revealing a chart or stat | Revealing hidden information |
+| Climbing a ladder | Ladder leaning against a tall bar chart | Growth, progress, compounding over time |
+| Carrying a heavy weight / stack | Stack of £ coins, tax bills, boxes | Burden, debt, large sums |
+| Running from something | Red arrows chasing, HMRC letters | Urgency, danger, deadline |
+| Holding a magnifying glass over text | Magnifying glass over fine print / small number | Hidden details, reading the small print |
+| Juggling | Pension, ISA, mortgage balls | Balancing multiple financial pressures |
+| Standing at a crossroads / fork | Two signposts labelled with options | Decision points, two choices |
+| Catching falling money / coins | Coins, bank notes raining down | Windfall, unexpected gain |
+| Pointing a remote / clicking | Remote control aimed at a chart | Control, activation, setting a strategy |
+| Writing on a large board | Giant marker, whiteboard with key numbers | Teaching, explaining a concept |
+
+**Expression must match the action:**
+- Physical exertion → gritted teeth, focused brow
+- Shock/horror → leaping back, hands raised, eyes wide
+- Realisation → leaning forward, finger-point, mouth open
+- Satisfaction → thumbs up mid-action, relaxed smile
+- Warning → stern face, one hand raised in stop gesture
+- Curiosity → leaning in, squinting, head tilted
 
 ### No Monkey (~25% of scenes — pure stat/data scenes only)
 - Reserved for scenes where a statistic, equation, or diagram must own the entire frame

@@ -107,6 +107,16 @@ The green suit monkey in the final scene is the brand sign-off — the visual al
 
 ---
 
+## Monkey Action Rule — Non-Negotiable
+
+**The monkey must always be DOING something. Never just standing.**
+
+Every scene with a monkey requires an active physical action with a prop — pressing a button, holding an umbrella in a storm, looking through binoculars, assembling puzzle pieces, waving a flag, carrying a weight, pulling back a curtain, writing on a board. The monkey should look mid-action, not posed. A static standing monkey is a failed prompt — rewrite it before delivering.
+
+Full action library is in `references/VISUAL-RULES.md`.
+
+---
+
 ## Monkey Usage Rules — Strict
 
 | Scene | Rule |
@@ -200,6 +210,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Green suit monkey** appears only in Scene 01 and the final scene
 - [ ] **Monkey** used in ~25% of scenes as guide, narrator, reactor
+- [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
 - [ ] **No channel name, brand name, or text branding** of any kind
