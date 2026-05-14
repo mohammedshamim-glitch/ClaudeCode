@@ -62,6 +62,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Script adaptation workflow**: Find the top-performing competitor video on a topic → extract transcript via Gemini → adapt to UK (swap $ for £, add ISA/CGT/Section 24/stamp duty, change characters/scenarios) → keep the proven emotional beats and structure intact.
 - **Script file word counts**: Always include word count in the metadata header of `02-narration-script-structured.txt` AND in the filename/header of the source transcript file (e.g. `00-source-transcript-[channel]-original.txt`). Format: `# Word count: X words` in the header block.
 - **Source transcript filing**: Always save the original competitor transcript to Drive as `00-source-transcript-[channel-name]-original.txt` in the episode folder immediately after extraction. Prefix `00-` so it sorts to the top as a reference file.
+- **TTS daily quota**: `gemini-2.5-flash-preview-tts` free tier hits a daily quota after ~13 chunks (~150 words each, ~2,000 words total). Chunks are saved locally to `/home/user/ClaudeCode/tts_chunks/` and the script resumes automatically on re-run — only missing chunks are regenerated. If quota is hit, wait until the next day (resets ~midnight Pacific / ~8am UK) and re-run. Do NOT delete chunk files between sessions. If this becomes a recurring blocker, upgrade the Gemini API key to a paid tier.
 
 ## Known Drive Folder IDs
 
