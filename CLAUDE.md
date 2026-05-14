@@ -60,6 +60,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Competitor video research**: To find a competitor video ID, use the YouTube Data API search endpoint with a refreshed `youtube_refresh_token`: `GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video` with Bearer auth. Then pass the video ID to Gemini for transcript extraction.
 - **Script style — character-driven**: Scripts perform better with named characters (e.g. Jake and Marcus) rather than abstract "you vs you" comparisons. The Wealth Logic "Real Estate vs Stocks" format (1.48M views) uses two characters to make the emotional journey concrete and followable. Adopt this structure for comparison videos.
 - **Script adaptation workflow**: Find the top-performing competitor video on a topic → extract transcript via Gemini → adapt to UK (swap $ for £, add ISA/CGT/Section 24/stamp duty, change characters/scenarios) → keep the proven emotional beats and structure intact.
+- **Script file word counts**: Always include word count in the metadata header of `02-narration-script-structured.txt` AND in the filename/header of the source transcript file (e.g. `00-source-transcript-[channel]-original.txt`). Format: `# Word count: X words` in the header block.
+- **Source transcript filing**: Always save the original competitor transcript to Drive as `00-source-transcript-[channel-name]-original.txt` in the episode folder immediately after extraction. Prefix `00-` so it sorts to the top as a reference file.
 
 ## Known Drive Folder IDs
 
