@@ -4,7 +4,8 @@
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__search_files",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__download_file_content",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__create_file",
-      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content"
+      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content",
+      "Bash(cp \"/root/.claude/uploads/d2d6d836-cd0e-4a31-887c-3301e22f3a91/c617eecb-client_secret_452685133802js685kk4g3u5qke7flb01dpgohchka5i.apps.googleusercontent.com.json\" /home/user/ClaudeCode/client_secrets.json && echo \"Copied OK\")"
     ]
   }
 }
