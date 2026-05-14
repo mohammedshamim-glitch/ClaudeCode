@@ -63,6 +63,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 
 ## Known Drive Folder IDs
 
+### Monkey Finance / Monkey See Money
 | Location | Folder ID |
 |---|---|
 | **Monkey See Money (default root)** | `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` |
@@ -72,9 +73,21 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
 | Property vs Stocks — The Real Math (UK) | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
 
+### Mala and Maya Kids
+| Location | Folder ID |
+|---|---|
+| **Mala and Maya (root)** | `17FIaircel64AqXwAlCafF7Lhv94TQGNk` |
+| Hop-Little-Bunnies (active) | `10cjiSaN33FDttrlstNJPQR18FGcd3lHL` |
+| Completed | `1kDq0WI-DtNvfvPuXrjbZeG58gDSVVQXY` |
+| What-Does-The-Animal-Say | `1lZ9i4EBUcNeqpLDSVT1FKRuDU_5Ne7aS` |
+| Mayas-Malas-Feelings-Garden | `1GImkxKYVsG5iCa8W-0ahzYK-74ds1leL` |
+| Instructions | `1560C4DKcRv-lugPGSL1yN1IZsUbVZFbq` |
+
 ## Project Overview
 
-Monkey Finance — automated YouTube video production pipeline.
+Two YouTube channels, one shared codebase.
+
+### Monkey Finance — automated YouTube video production pipeline.
 
 ### Key Scripts
 | Script | Purpose |
@@ -93,3 +106,38 @@ Monkey Finance — automated YouTube video production pipeline.
 - Image prompts: 20% border, content within central 60% of frame
 - Development branch: `claude/general-session-8o65N`
 - Whisper model: base (139MB at `~/.cache/whisper/base.pt`)
+
+## Skills Structure
+
+Skills are organised into three folders under `.claude/skills/`:
+
+```
+.claude/skills/
+├── shared/                  ← Generic skills used by both projects
+│   ├── tts.md
+│   ├── video-creator.md
+│   └── youtube-upload/
+│       └── SKILL.md
+├── monkey-finance/          ← Monkey Finance / Monkey See Money only
+│   ├── pipeline/
+│   ├── trends/
+│   ├── scriptwriter/
+│   ├── image-prompts/
+│   └── seo-thumbnail/
+└── mala-maya/               ← Maya & Mala Kids only
+    ├── pipeline/
+    ├── scriptwriter/
+    ├── image-prompts/
+    ├── video-prompts/
+    └── seo/
+```
+
+### Mala and Maya Kids — Key Conventions
+- Content paths: **Path A** (Children's Story, TTS narration) or **Path B** (Nursery Song, Suno)
+- Characters: Maya (black pigtails) and Mala (curly brown hair) — always together, equal size
+- TTS voice: `Aoede` (warm, Disney-like female) via `run_tts.py`
+- Suno style: `children's nursery rhymes, playful, fun and sing along, upbeat, bouncy, whimsical, kids pop`
+- Image style: `Disney/Pixar style:` prefix on every prompt
+- Video category: Kids & Family (ID: 20), Made for Kids = Yes
+- File naming: `01_story_approved.txt`, `02_image_prompts.txt`, `02_video_prompts.txt`, `03_youtube_seo.txt`, `03_thumbnail_prompt.txt`, `04_story_audio.mp3` / `04_song_audio.mp3`
+- Active episode: Hop-Little-Bunnies (folder ID: `10cjiSaN33FDttrlstNJPQR18FGcd3lHL`) — at Step 4 (audio)

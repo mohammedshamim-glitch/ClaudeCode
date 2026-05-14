@@ -1,4 +1,4 @@
-# Monkey Finance Video Creator Skill
+# Video Creator — Shared Skill
 
 Combine images and narration audio from a Drive episode folder into a 1920×1080 MP4 video. Scene durations are driven by a smart timing CSV generated from the narration script and audio length — no equal splits, each scene lasts as long as its narration naturally requires.
 
@@ -6,11 +6,12 @@ Combine images and narration audio from a Drive episode folder into a 1920×1080
 
 ### 1. Find the episode folder
 
-Search Google Drive. For **Monkey Finance** (ID: `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS`):
-- Use `search_files` with: `parentId = '1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS' and title contains '<episode keyword>'`
+Each project has its own Drive root. Search within the correct project root:
 
-For **Monkey See Money** (ID: `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR`):
-- Use `search_files` with: `parentId = '1N0fFEokv69CVVMbSFbIi_FFDsab3kadR' and title contains '<episode keyword>'`
+- **Monkey See Money** (ID: `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR`)
+- **Mala and Maya** (ID: `17FIaircel64AqXwAlCafF7Lhv94TQGNk`)
+
+Use `search_files` with: `parentId = '<project_root_id>' and title contains '<episode keyword>'`
 
 ### 2. Generate the timing CSV
 
@@ -20,7 +21,7 @@ python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
 
 This produces `auto_timings.csv` and uploads it to the episode folder. It:
 - Lists all images (sorted by `modifiedTime` = scene order)
-- Downloads `narration_script.txt` and `narration.mp3`
+- Downloads the narration script and audio file
 - Splits narration at **sentence boundaries** — never mid-sentence
 - Calculates each scene's duration proportionally by word count vs total audio length
 - **Merges any scene shorter than 4 seconds** into its neighbour — all images still used
@@ -39,10 +40,9 @@ python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --no-kb
 ```
 
 Both scripts:
-- Auto-name the output after the Drive folder (e.g. `2026-04-25 - 10 Bad Money Habits That Actually Make You Richer.mp4`)
+- Auto-name the output after the Drive folder name
 - Upload the finished video back into the episode folder
 - Automatically use `auto_timings.csv` if present — otherwise fall back to equal splits
-- Pass a second argument to override the filename
 
 ## Drive structure expected
 
@@ -62,22 +62,18 @@ Episode Folder/
 | Setting | Value |
 |---|---|
 | Timing script | `/home/user/ClaudeCode/generate_timings.py` |
-| Standard script | `/home/user/ClaudeCode/create_video.py` |
 | Ken Burns script | `/home/user/ClaudeCode/create_video_kb.py` |
 | Resolution | 1920×1080 |
 | Video codec | H.264 (libx264), CRF 23 |
 | Audio codec | AAC 192kbps |
 | Image ordering | By Drive `modifiedTime` ascending |
 | Aspect ratio | Preserved with black padding |
-| Auth | OAuth2 refresh token (shared with TTS skill) |
 | Min scene duration | 4.0 seconds (shorter scenes merged with neighbour) |
-| Ken Burns frequency | 25% of scenes (every 4th); rest are static (use `--no-kb` to disable all) |
-| Ken Burns zoom | 1.2× pan travel (no zoom in/out) |
+| Ken Burns frequency | 25% of scenes (every 4th); rest are static |
+| Ken Burns zoom | 1.2× pan travel |
 | Ken Burns styles | Pan L→R, pan R→L, pan T→B, pan B→T (cycles) |
 
 ## Notes
 - Images are ordered by **modification time** (oldest = scene 1). If order is wrong, check file timestamps on Drive.
 - If `narration.mp3` is missing, run the TTS skill first.
 - Output is optimised for web streaming (`-movflags +faststart`).
-- Output filename is automatically taken from the Drive episode folder name.
-- Both **Monkey Finance** and **Monkey See Money** folders are supported.
