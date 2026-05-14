@@ -30,9 +30,9 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 
 | File | What it covers | When to read |
 |---|---|---|
-| `image-prompts/references/VISUAL-RULES.md` | Full brand visual rules, character specs, colour palette, composition principles | Always — read first |
-| `image-prompts/references/SCENE-TYPES.md` | Scene classification system, monkey usage rules, prompt formulas by type | Always — read second |
-| `image-prompts/references/PROMPT-EXAMPLES.md` | 15 annotated example prompts across all scene types | Read when in doubt |
+| `monkey-finance-image-prompts-references/VISUAL-RULES.md` | Full brand visual rules, character specs, colour palette, composition principles | Always — read first |
+| `monkey-finance-image-prompts-references/SCENE-TYPES.md` | Scene classification system, monkey usage rules, prompt formulas by type | Always — read second |
+| `monkey-finance-image-prompts-references/PROMPT-EXAMPLES.md` | 15 annotated example prompts across all scene types | Read when in doubt |
 
 **Do not write a single prompt until all three are loaded.**
 
@@ -113,7 +113,7 @@ The green suit monkey in the final scene is the brand sign-off — the visual al
 
 Every scene with a monkey requires an active physical action with a prop — pressing a button, holding an umbrella in a storm, looking through binoculars, assembling puzzle pieces, waving a flag, carrying a weight, pulling back a curtain, writing on a board. The monkey should look mid-action, not posed. A static standing monkey is a failed prompt — rewrite it before delivering.
 
-Full action library is in `image-prompts/references/VISUAL-RULES.md`.
+Full action library is in `monkey-finance-image-prompts-references/VISUAL-RULES.md`.
 
 ---
 
@@ -238,4 +238,4 @@ Then confirm: *"Stage 3 complete — {sub_scene_count} scenes. Image prompts and
 
 ---
 
-*Visual rules & colour palette: `image-prompts/references/VISUAL-RULES.md` · Scene types & formulas: `image-prompts/references/SCENE-TYPES.md` · Annotated examples: `image-prompts/references/PROMPT-EXAMPLES.md`*
+*Visual rules & colour palette: `monkey-finance-image-prompts-references/VISUAL-RULES.md` · Scene types & formulas: `monkey-finance-image-prompts-references/SCENE-TYPES.md` · Annotated examples: `monkey-finance-image-prompts-references/PROMPT-EXAMPLES.md`*

@@ -46,9 +46,9 @@ Every run outputs a complete **Click Package** containing:
 
 | File | What it covers |
 |---|---|
-| `seo-thumbnail/references/SEO.md` | Title engineering, description architecture, tags, hashtags, chapters |
-| `seo-thumbnail/references/THUMBNAIL.md` | CTR psychology, visual hierarchy, Monkey Finance design system, brief format |
-| `seo-thumbnail/references/PROMPTS.md` | AI image generation prompt templates and formulas for Grok |
+| `monkey-finance-seo-thumbnail-references/SEO.md` | Title engineering, description architecture, tags, hashtags, chapters |
+| `monkey-finance-seo-thumbnail-references/THUMBNAIL.md` | CTR psychology, visual hierarchy, Monkey Finance design system, brief format |
+| `monkey-finance-seo-thumbnail-references/PROMPTS.md` | AI image generation prompt templates and formulas for Grok |
 
 ---
 
@@ -151,4 +151,4 @@ Before delivering, verify:
 
 ---
 
-*SEO architecture: `seo-thumbnail/references/SEO.md` · Thumbnail design: `seo-thumbnail/references/THUMBNAIL.md` · AI prompt formulas: `seo-thumbnail/references/PROMPTS.md`*
+*SEO architecture: `monkey-finance-seo-thumbnail-references/SEO.md` · Thumbnail design: `monkey-finance-seo-thumbnail-references/THUMBNAIL.md` · AI prompt formulas: `monkey-finance-seo-thumbnail-references/PROMPTS.md`*

@@ -109,27 +109,23 @@ Two YouTube channels, one shared codebase.
 
 ## Skills Structure
 
-Skills are organised into three folders under `.claude/skills/`:
+Skills live flat in `.claude/skills/` — prefixed by project:
 
 ```
 .claude/skills/
-├── shared/                  ← Generic skills used by both projects
-│   ├── tts.md
-│   ├── video-creator.md
-│   └── youtube-upload/
-│       └── SKILL.md
-├── monkey-finance/          ← Monkey Finance / Monkey See Money only
-│   ├── pipeline/
-│   ├── trends/
-│   ├── scriptwriter/
-│   ├── image-prompts/
-│   └── seo-thumbnail/
-└── mala-maya/               ← Maya & Mala Kids only
-    ├── pipeline/
-    ├── scriptwriter/
-    ├── image-prompts/
-    ├── video-prompts/
-    └── seo/
+├── shared-tts.md
+├── shared-video-creator.md
+├── shared-youtube-upload.md
+├── monkey-finance-pipeline.md
+├── monkey-finance-trends.md
+├── monkey-finance-scriptwriter.md
+├── monkey-finance-image-prompts.md
+├── monkey-finance-seo-thumbnail.md
+├── mala-maya-pipeline.md
+├── mala-maya-scriptwriter.md
+├── mala-maya-image-prompts.md
+├── mala-maya-video-prompts.md
+└── mala-maya-seo.md
 ```
 
 ### Mala and Maya Kids — Key Conventions
