@@ -1,1 +1,1 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-image-prompts/SKILL.md and generate image prompts (04-image-prompts.txt) and KB movement file (05-kb-movements.txt) for the Monkey Finance episode provided.
+Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-image-prompts.md and generate all image prompts and video prompts for the Monkey Finance episode, saving both files to Drive.

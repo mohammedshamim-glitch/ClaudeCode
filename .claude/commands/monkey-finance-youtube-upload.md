@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-youtube-upload/SKILL.md and upload the finished Monkey Finance video to YouTube with full SEO metadata applied automatically.

@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-video-creator.md and execute it for the Monkey Finance episode the user specifies. Follow the 3-step workflow: find the episode folder, generate timings, create the video.

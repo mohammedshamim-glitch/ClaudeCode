@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/mala-maya-video-prompts.md and generate video prompts with camera movements for all scenes in the Maya & Mala Kids episode, saving to Drive.

@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/shared-video-creator.md and assemble the images and audio from the specified Drive episode folder into a finished MP4, uploading it back to Drive.

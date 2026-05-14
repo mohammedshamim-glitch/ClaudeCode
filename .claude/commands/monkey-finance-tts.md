@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-tts.md and generate the narration audio (MP3) for the Monkey Finance episode specified, uploading it back to the correct Drive folder.

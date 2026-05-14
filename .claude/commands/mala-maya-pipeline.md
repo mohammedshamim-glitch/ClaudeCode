@@ -1,0 +1,1 @@
+Read the skill file at /home/user/ClaudeCode/.claude/skills/mala-maya-pipeline.md and run the full Maya & Mala Kids video production pipeline — Path A (children's story) or Path B (nursery song) — with a human approval gate after each step.
