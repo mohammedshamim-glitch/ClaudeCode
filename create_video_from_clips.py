@@ -112,8 +112,8 @@ def probe_duration(path):
 
 
 def scene_num_from_name(name):
-    m = re.match(r"^(\d+)_", name)
-    return int(m.group(1)) if m else 999
+    m = re.match(r"^(\d+(?:\.\d+)?)_", name)
+    return float(m.group(1)) if m else 999.0
 
 
 def main():
@@ -135,9 +135,9 @@ def main():
     items = drive_list(token, folder_id)
 
     videos_folder = next((f for f in items
-                          if f["name"].lower() == "videos" and "folder" in f["mimeType"]), None)
+                          if f["name"].lower() in ("videos", "vids") and "folder" in f["mimeType"]), None)
     if not videos_folder:
-        print("ERROR: No 'Videos' subfolder found"); sys.exit(1)
+        print("ERROR: No 'Videos' or 'Vids' subfolder found"); sys.exit(1)
 
     timings_file = next((f for f in items if f["name"] == "audio_timings_new.csv"), None)
     if not timings_file:
@@ -178,12 +178,21 @@ def main():
     all_clips = drive_list(token, videos_folder["id"])
     clips = [c for c in all_clips if c.get("mimeType") == "video/mp4"]
     clips.sort(key=lambda c: scene_num_from_name(c["name"]))
-    print(f"  ✓ {len(clips)} clips found")
+    # Deduplicate: for clips sharing the same integer scene number (e.g. 5 and 5.2),
+    # keep only the highest decimal version (5.2 wins over 5).
+    scene_map = {}
+    for c in clips:
+        sn_float = scene_num_from_name(c["name"])
+        sn_int   = int(sn_float)
+        if sn_int not in scene_map or sn_float > scene_map[sn_int][0]:
+            scene_map[sn_int] = (sn_float, c)
+    clips = [v for _, v in sorted(scene_map.values(), key=lambda x: x[0])]
+    print(f"  ✓ {len(clips)} clips found (after dedup)")
 
     # ── Process each clip ─────────────────────────────────────────────────────
     processed_paths = []
     for clip in clips:
-        sn        = scene_num_from_name(clip["name"])
+        sn        = int(scene_num_from_name(clip["name"]))
         scene_dur = timings.get(sn)
         if scene_dur is None:
             print(f"  WARNING: No timing for scene {sn}, skipping"); continue
