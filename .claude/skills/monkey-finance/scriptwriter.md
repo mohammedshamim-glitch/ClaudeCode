@@ -29,9 +29,9 @@ Every script produced by this skill is engineered across three dimensions simult
 
 | File | What it covers | When to read |
 |---|---|---|
-| `references/VOICE.md` | Brand voice, tone, UK language rules, monkey theme, analogy craft | Always — read first |
-| `references/STRUCTURE.md` | Script blueprint, section jobs, word counts, pacing, value escalation | Always — read second |
-| `references/RETENTION.md` | Dopamine loop architecture, curiosity gap science, hook formulas, the 4-pass writing method | Always — read third |
+| `scriptwriter/references/VOICE.md` | Brand voice, tone, UK language rules, monkey theme, analogy craft | Always — read first |
+| `scriptwriter/references/STRUCTURE.md` | Script blueprint, section jobs, word counts, pacing, value escalation | Always — read second |
+| `scriptwriter/references/RETENTION.md` | Dopamine loop architecture, curiosity gap science, hook formulas, the 4-pass writing method | Always — read third |
 
 **Do not write until all three are loaded. The references are the craft. This file is the process.**
 
@@ -128,4 +128,4 @@ Then automatically:
 
 ---
 
-*Voice & tone: `references/VOICE.md` · Structure & pacing: `references/STRUCTURE.md` · Retention science: `references/RETENTION.md`*
+*Voice & tone: `scriptwriter/references/VOICE.md` · Structure & pacing: `scriptwriter/references/STRUCTURE.md` · Retention science: `scriptwriter/references/RETENTION.md`*
