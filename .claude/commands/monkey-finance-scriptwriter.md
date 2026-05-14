@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-scriptwriter.md and write the full narration script for the Monkey Finance episode, saving both the structured and clean TTS versions to Drive.

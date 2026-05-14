@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-trends.md and run a full trend research sweep for the Monkey Finance channel — competitor analysis, trending topics, opportunity scoring, and a ready-to-use content brief.

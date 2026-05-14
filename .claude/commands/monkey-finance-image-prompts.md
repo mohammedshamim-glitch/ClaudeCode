@@ -1,1 +1,0 @@
-Read the skill file at /home/user/ClaudeCode/.claude/skills/monkey-finance-image-prompts.md and generate all image prompts and video prompts for the Monkey Finance episode, saving both files to Drive.
