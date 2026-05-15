@@ -143,9 +143,14 @@ def drive_upload_csv(token, local_path, filename, folder_id):
 
 # ── Scene splitting ───────────────────────────────────────────────────────────
 def split_scenes(raw_text):
-    """Split narration script by blank lines — each paragraph is one scene."""
+    """Split narration/sentence file by blank lines — each paragraph is one scene/sentence."""
     paragraphs = re.split(r'\n\s*\n', raw_text.strip())
-    return [p.strip().replace('\n', ' ') for p in paragraphs if p.strip()]
+    scenes = []
+    for p in paragraphs:
+        p = p.strip().replace('\n', ' ')
+        if p and not re.match(r'^---', p):  # strip footer lines like "--- TOTAL: N sentences ---"
+            scenes.append(p)
+    return scenes
 
 # ── Text normalisation for matching ──────────────────────────────────────────
 def normalize(text):
@@ -356,13 +361,23 @@ def main():
     print("Listing episode files...")
     items = drive_list_all(token, folder_id)
 
+    # Prefer sentence-level file (163 sentences, 1:1 with images) over 25-word scene file
+    SCRIPT_NAMES_PRIORITY = [
+        "03b-narration-sentences.txt",
+        "03-narration-script-clean.txt",
+        "03-narration-script-clean-FINAL.txt",
+        "narration_script.txt",
+    ]
     script_file = next(
-        (f for f in items if f["name"] in (
-            "03-narration-script-clean.txt",
-            "03-narration-script-clean-FINAL.txt",
-            "narration_script.txt",
-        )), None
+        (f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY),
+        None,
     )
+    if script_file:
+        # Sort to respect priority order
+        script_file = min(
+            [f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY],
+            key=lambda f: SCRIPT_NAMES_PRIORITY.index(f["name"]),
+        )
 
     # Find audio: check root first, then Audio subfolder
     AUDIO_MIMES = ("audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav")
