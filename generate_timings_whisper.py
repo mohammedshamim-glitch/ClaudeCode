@@ -229,50 +229,28 @@ def align_scenes(scenes, whisper_words, total_duration):
                 wh_pos = wi + 1
                 break
 
-    # Interpolate None gaps using nearest valid neighbours
-    # First pass: fill forward
-    last_valid_end = 0.0
-    for i in range(len(matched_start)):
-        if matched_start[i] is not None:
-            last_valid_end = matched_end[i]
-        else:
-            # Find next matched entry
-            next_start = total_duration
-            for j in range(i + 1, len(matched_start)):
-                if matched_start[j] is not None:
-                    next_start = matched_start[j]
-                    break
-            # Place this word proportionally between last_valid_end and next_start
-            # Count how many unmatched words are in this gap
-            gap_count = sum(1 for k in range(i, len(matched_start))
-                            if matched_start[k] is None
-                            and (k == i or matched_start[k-1] is None))
-            gap_size = next_start - last_valid_end
-            # Simple: just use midpoint for now; full interpolation below
-            matched_start[i] = last_valid_end
-            matched_end[i]   = last_valid_end
-
-    # Full linear interpolation over contiguous unmatched runs
+    # Linear interpolation over contiguous None runs using nearest valid anchors
     i = 0
     while i < len(matched_start):
-        if matched_end[i] is not None and matched_end[i] > 0:
+        if matched_start[i] is not None:
             i += 1
             continue
-        # Start of a gap run
         run_start_idx = i
-        while i < len(matched_start) and (matched_end[i] is None or matched_end[i] == 0):
+        while i < len(matched_start) and matched_start[i] is None:
             i += 1
         run_end_idx = i  # exclusive
 
-        left_t  = matched_end[run_start_idx - 1] if run_start_idx > 0 and matched_end[run_start_idx - 1] else 0.0
-        right_t = matched_start[run_end_idx] if run_end_idx < len(matched_start) and matched_start[run_end_idx] else total_duration
+        left_t = (matched_end[run_start_idx - 1]
+                  if run_start_idx > 0 and matched_end[run_start_idx - 1] is not None
+                  else 0.0)
+        right_t = (matched_start[run_end_idx]
+                   if run_end_idx < len(matched_start) and matched_start[run_end_idx] is not None
+                   else total_duration)
 
         run_len = run_end_idx - run_start_idx
         for k, gi in enumerate(range(run_start_idx, run_end_idx)):
-            frac_s = (k)       / run_len
-            frac_e = (k + 1)   / run_len
-            matched_start[gi] = round(left_t + frac_s * (right_t - left_t), 3)
-            matched_end[gi]   = round(left_t + frac_e * (right_t - left_t), 3)
+            matched_start[gi] = round(left_t + (k       / run_len) * (right_t - left_t), 3)
+            matched_end[gi]   = round(left_t + ((k + 1) / run_len) * (right_t - left_t), 3)
 
     # Aggregate per scene
     scene_word_map = {}  # scene_idx -> list of (start, end)
@@ -303,13 +281,53 @@ def align_scenes(scenes, whisper_words, total_duration):
     # Final pass: ensure no scene has end <= start (protect video assembler)
     for i in range(len(timings)):
         if timings[i]["end"] <= timings[i]["start"]:
-            # Give it proportional duration based on word count
             wc  = max(1, len(normalize(scenes[i])))
             dur = round(wc / global_wps, 3)
             timings[i]["end"] = round(timings[i]["start"] + dur, 3)
-        # Clamp within audio
         timings[i]["end"] = min(timings[i]["end"], total_duration)
 
+    # ── Temporal ordering fix ────────────────────────────────────────────────
+    # A scene is "bad" if start[i] <= start[i-1] (ordering violation) OR
+    # end[i] <= start[i] (zero/negative duration). Both can happen when common
+    # words match at the same Whisper timestamp across short sentences.
+    # Detect contiguous bad runs and proportionally redistribute between anchors.
+    def _is_bad(idx):
+        if idx == 0:
+            return timings[0]["end"] <= timings[0]["start"]
+        return (timings[idx]["start"] <= timings[idx - 1]["start"] or
+                timings[idx]["end"]   <= timings[idx]["start"])
+
+    i = 1
+    while i < len(timings):
+        if _is_bad(i):
+            run_start = i
+            while i < len(timings) and _is_bad(i):
+                i += 1
+            run_end = i  # exclusive
+
+            left_time  = timings[run_start - 1]["end"]
+            right_time = (timings[run_end]["start"]
+                          if run_end < len(timings) else total_duration)
+            if right_time <= left_time:
+                right_time = left_time + sum(
+                    max(1, len(normalize(scenes[j]))) for j in range(run_start, run_end)
+                ) / global_wps
+
+            span_words = sum(max(1, len(normalize(scenes[j]))) for j in range(run_start, run_end))
+            span_time  = right_time - left_time
+
+            cumulative = 0
+            for j in range(run_start, run_end):
+                wc  = max(1, len(normalize(scenes[j])))
+                s_t = round(left_time + (cumulative / span_words) * span_time, 3)
+                cumulative += wc
+                e_t = round(left_time + (cumulative / span_words) * span_time, 3)
+                timings[j]["start"] = s_t
+                timings[j]["end"]   = min(e_t, total_duration)
+        else:
+            i += 1
+
+    timings[-1]["end"] = round(total_duration, 3)
     return timings
 
 
@@ -480,6 +498,57 @@ def main():
 
         # Self-check: catch and fix implausible timings using speech rate
         timings = validate_and_fix_timings(timings, scenes, total_duration)
+
+        # Final zero-duration cleanup: validate_and_fix can create 0.0s scenes
+        # when it expands a suspect scene right up to its right-anchor boundary,
+        # leaving start == end for the next scene. When this happens, extend the
+        # redistribution to include the collapsed scene AND the neighbouring scene
+        # that was over-expanded, redistributing all of them proportionally.
+        global_wps_final = sum(len(s.split()) for s in scenes) / total_duration
+        zero_fixed = 0
+        i = 0
+        while i < len(timings):
+            if timings[i]["end"] <= timings[i]["start"]:
+                run_s = i
+                while i < len(timings) and timings[i]["end"] <= timings[i]["start"]:
+                    i += 1
+                run_e = i  # first non-zero-duration scene after the run
+
+                # Extend left to include the preceding scene if it shares the same
+                # start boundary (i.e., validate_and_fix over-expanded it into us)
+                fix_s = run_s
+                if fix_s > 0 and timings[fix_s]["start"] == timings[fix_s - 1]["end"]:
+                    fix_s -= 1
+
+                # Use the Whisper start of the next clean scene as the right anchor.
+                # This is typically the START (not end) of scene [run_e], which is
+                # the first scene after the zero-duration run that has a Whisper match.
+                # If that start equals left_t (both collapsed to the same boundary),
+                # fall back to its end time instead.
+                fix_e = run_e  # exclusive
+                left_t = timings[fix_s - 1]["end"] if fix_s > 0 else 0.0
+                if fix_e < len(timings) and timings[fix_e]["start"] > left_t:
+                    right_t = timings[fix_e]["start"]
+                else:
+                    right_t = timings[fix_e]["end"] if fix_e < len(timings) else total_duration
+                if right_t <= left_t:
+                    right_t = left_t + sum(
+                        max(1, len(scenes[j].split())) for j in range(fix_s, fix_e)
+                    ) / global_wps_final
+                span_w = sum(max(1, len(scenes[j].split())) for j in range(fix_s, fix_e))
+                cumul  = 0
+                for j in range(fix_s, fix_e):
+                    wc = max(1, len(scenes[j].split()))
+                    timings[j]["start"] = round(left_t + (cumul / span_w) * (right_t - left_t), 3)
+                    cumul += wc
+                    timings[j]["end"] = min(round(left_t + (cumul / span_w) * (right_t - left_t), 3), total_duration)
+                    zero_fixed += 1
+                    print(f"  ✓ Zero-dur fix scene {j+1}: {fmt_time(timings[j]['start'])}→{fmt_time(timings[j]['end'])}")
+            else:
+                i += 1
+        if zero_fixed:
+            print(f"  Fixed {zero_fixed} scene(s) in zero-duration cleanup.")
+        timings[-1]["end"] = round(total_duration, 3)
 
         # Build CSV rows — narration_excerpt is the FULL scene text
         rows = []
