@@ -56,6 +56,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Thumbnail mime type**: Thumbnails may be PNG not JPEG. upload_youtube.py now reads the actual Drive mimeType and sends the correct Content-Type header. Do not hardcode `image/jpeg`.
 - **AI video clips pipeline**: `create_video_from_clips.py` replaces `create_video_kb.py` when using AI-generated video clips instead of KB-effect images. Looks for `Videos` subfolder, `audio_timings_new.csv`, and audio file. Slows clips where scene > clip duration, trims where scene < clip duration.
 - **Monkey action rule**: Every monkey scene must show the monkey mid-action with a prop (pressing button, holding umbrella, looking through binoculars, etc.). Never just standing. Enforced in VISUAL-RULES.md and SKILL.md.
+- **aeneas forced alignment**: replaces Whisper-based matching in `generate_timings_whisper.py`. Install: `apt-get install -y libespeak-dev` then `pip install setuptools==65.5.0 && python setup.py install` from extracted aeneas-1.7.3.0 source, then `pip install --upgrade setuptools`. Requires patching `wavfile.py` to replace `numpy.fromstring` with `numpy.frombuffer`. Takes 16kHz mono WAV — script converts MP3 automatically via ffmpeg. Duration range 1.48s–14.24s, zero suspects, no post-processing needed.
 - **YouTube transcript extraction**: yt-dlp and youtube-transcript-api both get 403 from this server's IP — YouTube blocks it. Use Gemini API instead: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}` with `{"file_data": {"mime_type": "video/*", "file_uri": "https://www.youtube.com/watch?v=VIDEO_ID"}}` as a part alongside the text prompt. Gemini natively reads YouTube URLs and returns full transcripts. Use model `gemini-2.5-flash` — `gemini-2.0-flash` may hit quota limits.
 - **Competitor video research**: To find a competitor video ID, use the YouTube Data API search endpoint with a refreshed `youtube_refresh_token`: `GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video` with Bearer auth. Then pass the video ID to Gemini for transcript extraction.
 - **Script style — character-driven**: Scripts perform better with named characters (e.g. Jake and Marcus) rather than abstract "you vs you" comparisons. The Wealth Logic "Real Estate vs Stocks" format (1.48M views) uses two characters to make the emotional journey concrete and followable. Adopt this structure for comparison videos.
@@ -84,7 +85,7 @@ Monkey Finance — automated YouTube video production pipeline.
 ### Key Scripts
 | Script | Purpose |
 |---|---|
-| `generate_timings_whisper.py` | Whisper word-level timestamps → `audio_timings_new.csv` |
+| `generate_timings_whisper.py` | aeneas forced alignment → `audio_timings_new.csv` (requires libespeak-dev + ffmpeg) |
 | `create_video_kb.py` | Assembles images + audio into MP4 with Ken Burns effects |
 | `upload_youtube.py` | Uploads finished video to YouTube with SEO metadata |
 | `setup_youtube_auth.py` | One-time YouTube OAuth setup |

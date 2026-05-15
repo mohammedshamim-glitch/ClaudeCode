@@ -1,23 +1,36 @@
 #!/usr/bin/env python3
 """
-Generate audio_timings_new.csv using local Whisper word-level timestamps.
+Generate audio_timings_new.csv using aeneas forced alignment.
 
 Method:
-  1. Download narration.mp3 + 03-narration-script-clean.txt from Drive
-  2. Run local Whisper (base model) with word_timestamps=True → full word list
-  3. Split script by blank lines → one paragraph = one scene
-  4. For each scene, find the LAST few words of that scene in the Whisper word list
-  5. The end_time of those last words = the scene boundary
-  6. Build CSV: scene_start = previous scene's end_time, scene_end = this scene's end_time
-  7. Upload audio_timings_new.csv to the episode Drive folder
+  1. Download narration audio + script from Drive
+  2. Convert audio to 16kHz mono WAV (required by aeneas)
+  3. Split script by blank lines → one scene per line
+  4. Run aeneas forced alignment: syncs source text directly to audio
+     using espeak + DTW on MFCC features — no re-transcription step
+  5. Build CSV with start/end times for each scene
+  6. Upload audio_timings_new.csv to the episode Drive folder
+
+Dependencies:
+  aeneas 1.7.3  (pip install from source — requires libespeak-dev)
+  ffmpeg        (for audio conversion)
 
 Usage:
     python3 generate_timings_whisper.py <episode_folder_id>
 """
 
-import csv, json, os, re, sys, tempfile, shutil, requests, time
+import csv, json, os, re, subprocess, sys, tempfile, requests
 
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
+
+SCRIPT_NAMES_PRIORITY = [
+    "03b-narration-sentences.txt",
+    "03-narration-script-clean.txt",
+    "03-narration-script-clean-FINAL.txt",
+    "narration_script.txt",
+]
+
+AUDIO_MIMES = {"audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav"}
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -54,7 +67,7 @@ def drive_list_all(token, folder_id):
     while True:
         params = {
             "q": f"'{folder_id}' in parents and trashed=false",
-            "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
+            "fields": "nextPageToken,files(id,name,mimeType,size)",
             "pageSize": 100,
         }
         if page_token:
@@ -143,312 +156,16 @@ def drive_upload_csv(token, local_path, filename, folder_id):
 
 # ── Scene splitting ───────────────────────────────────────────────────────────
 def split_scenes(raw_text):
-    """Split narration/sentence file by blank lines — each paragraph is one scene/sentence."""
+    """Split narration/sentence file by blank lines. Each paragraph = one scene."""
     paragraphs = re.split(r'\n\s*\n', raw_text.strip())
     scenes = []
     for p in paragraphs:
         p = p.strip().replace('\n', ' ')
-        if p and not re.match(r'^---', p):  # strip footer lines like "--- TOTAL: N sentences ---"
+        if p and not re.match(r'^---', p):
             scenes.append(p)
     return scenes
 
-# ── Text normalisation for matching ──────────────────────────────────────────
-def normalize(text):
-    """Lowercase, strip punctuation, return list of tokens."""
-    return re.sub(r"[^a-z0-9\s]", "", text.lower()).split()
-
-# ── Whisper transcription ─────────────────────────────────────────────────────
-def transcribe_audio(audio_path):
-    """
-    Run local Whisper (base model) on audio_path with word_timestamps=True.
-    Returns flat list of {"word": str, "start": float, "end": float}.
-    """
-    import whisper
-    print("  Loading Whisper base model from ~/.cache/whisper/base.pt ...")
-    model = whisper.load_model("base")
-    print("  Transcribing (this takes a couple of minutes)...")
-    result = model.transcribe(audio_path, word_timestamps=True)
-
-    words = []
-    for segment in result["segments"]:
-        for w in segment.get("words", []):
-            word_text = w.get("word", "").strip()
-            if word_text:
-                words.append({
-                    "word":  word_text,
-                    "start": round(float(w["start"]), 3),
-                    "end":   round(float(w["end"]),   3),
-                })
-    return words
-
-# ── Sequential word-level alignment ──────────────────────────────────────────
-def align_scenes(scenes, whisper_words, total_duration):
-    """
-    Sequential word-level alignment:
-    1. Flatten all scenes into an ordered (scene_idx, norm_word) list.
-    2. Walk through Whisper words in order, greedily matching each script word
-       with a small lookahead window. This never misidentifies sentence boundaries
-       regardless of sentence length.
-    3. Interpolate timestamps for any unmatched words using adjacent anchors.
-    4. Aggregate: sentence start = first word start, end = last word end.
-
-    Returns list of {"start": float, "end": float} — one per scene.
-    """
-    LOOKAHEAD_NORMAL = 10   # words to scan under normal conditions
-    LOOKAHEAD_RESYNC = 150  # words to scan when the aligner has drifted
-    MISS_THRESHOLD   = 10   # consecutive misses before attempting re-sync
-
-    # Build flat script word list: (scene_idx, word_position_in_scene, norm_word)
-    script_entries = []
-    for s_idx, scene in enumerate(scenes):
-        nw = normalize(scene)
-        for pos, word in enumerate(nw):
-            script_entries.append((s_idx, pos, word))
-
-    if not script_entries:
-        return [{"start": 0.0, "end": total_duration}]
-
-    # Normalise Whisper words
-    wh_norm  = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in whisper_words]
-    wh_start = [w["start"] for w in whisper_words]
-    wh_end   = [w["end"]   for w in whisper_words]
-
-    # Build a list of the next non-empty script word at each position (for 2-word anchor)
-    next_nonempty = [None] * len(script_entries)
-    last_found = None
-    for i in range(len(script_entries) - 1, -1, -1):
-        if script_entries[i][2]:
-            last_found = i
-        next_nonempty[i] = last_found
-
-    # Adaptive greedy sequential match.
-    # Normal mode: scan LOOKAHEAD_NORMAL words ahead — matches quickly without jumping.
-    # Re-sync mode: triggered after MISS_THRESHOLD consecutive misses (aligner drifted).
-    #   Scans LOOKAHEAD_RESYNC ahead but requires a TWO-WORD consecutive anchor to
-    #   accept the re-sync. Requiring two adjacent script words to match at adjacent
-    #   Whisper positions prevents common short words ("the", "and") from causing
-    #   false re-syncs that would jump too far ahead.
-    # Monotonicity: new match's start must be strictly after the previous match's start.
-    matched_start = [None] * len(script_entries)
-    matched_end   = [None] * len(script_entries)
-
-    last_matched_start = -1.0
-    consecutive_misses = 0
-    wh_pos = 0
-
-    for sc_pos, (s_idx, _, sc_word) in enumerate(script_entries):
-        if not sc_word:
-            continue
-
-        in_resync = consecutive_misses >= MISS_THRESHOLD
-        lookahead = LOOKAHEAD_RESYNC if in_resync else LOOKAHEAD_NORMAL
-
-        matched = False
-        for offset in range(lookahead):
-            wi = wh_pos + offset
-            if wi >= len(whisper_words):
-                break
-            if wh_norm[wi] != sc_word:
-                continue
-            t_start = wh_start[wi]
-            if t_start <= last_matched_start:
-                continue
-
-            if in_resync:
-                # Require the NEXT script word to also match at wi+1 or wi+2
-                # to confirm this is a genuine anchor, not a false-positive on a
-                # common word.
-                nxt = next_nonempty[sc_pos + 1] if sc_pos + 1 < len(script_entries) else None
-                if nxt is not None:
-                    nxt_word = script_entries[nxt][2]
-                    anchor_ok = (
-                        (wi + 1 < len(wh_norm) and wh_norm[wi + 1] == nxt_word) or
-                        (wi + 2 < len(wh_norm) and wh_norm[wi + 2] == nxt_word)
-                    )
-                    if not anchor_ok:
-                        continue  # skip this single-word match, keep looking
-
-            matched_start[sc_pos] = t_start
-            matched_end[sc_pos]   = wh_end[wi]
-            last_matched_start    = t_start
-            wh_pos = wi + 1
-            matched = True
-            consecutive_misses = 0
-            break
-
-        if not matched:
-            consecutive_misses += 1
-
-    # Linear interpolation over contiguous None runs using nearest valid anchors
-    i = 0
-    while i < len(matched_start):
-        if matched_start[i] is not None:
-            i += 1
-            continue
-        run_start_idx = i
-        while i < len(matched_start) and matched_start[i] is None:
-            i += 1
-        run_end_idx = i  # exclusive
-
-        left_t = (matched_end[run_start_idx - 1]
-                  if run_start_idx > 0 and matched_end[run_start_idx - 1] is not None
-                  else 0.0)
-        right_t = (matched_start[run_end_idx]
-                   if run_end_idx < len(matched_start) and matched_start[run_end_idx] is not None
-                   else total_duration)
-
-        run_len = run_end_idx - run_start_idx
-        for k, gi in enumerate(range(run_start_idx, run_end_idx)):
-            matched_start[gi] = round(left_t + (k       / run_len) * (right_t - left_t), 3)
-            matched_end[gi]   = round(left_t + ((k + 1) / run_len) * (right_t - left_t), 3)
-
-    # Aggregate per scene
-    scene_word_map = {}  # scene_idx -> list of (start, end)
-    for sc_pos, (s_idx, _, _) in enumerate(script_entries):
-        ts = matched_start[sc_pos]
-        te = matched_end[sc_pos]
-        if ts is not None and te is not None:
-            scene_word_map.setdefault(s_idx, []).append((ts, te))
-
-    timings = []
-    global_wps = len(script_entries) / total_duration
-
-    for s_idx in range(len(scenes)):
-        word_ts = scene_word_map.get(s_idx, [])
-        if word_ts:
-            start = word_ts[0][0]
-            end   = word_ts[-1][1]
-        else:
-            # Fully unmatched scene: interpolate proportionally
-            wc = len(normalize(scenes[s_idx]))
-            start = timings[-1]["end"] if timings else 0.0
-            end   = round(start + wc / global_wps, 3)
-        timings.append({"start": round(start, 3), "end": round(end, 3)})
-
-    # Ensure last scene ends exactly at audio end
-    timings[-1]["end"] = round(total_duration, 3)
-
-    # Final pass: ensure no scene has end <= start (protect video assembler)
-    for i in range(len(timings)):
-        if timings[i]["end"] <= timings[i]["start"]:
-            wc  = max(1, len(normalize(scenes[i])))
-            dur = round(wc / global_wps, 3)
-            timings[i]["end"] = round(timings[i]["start"] + dur, 3)
-        timings[i]["end"] = min(timings[i]["end"], total_duration)
-
-    # ── Temporal ordering fix ────────────────────────────────────────────────
-    # A scene is "bad" if start[i] <= start[i-1] (ordering violation) OR
-    # end[i] <= start[i] (zero/negative duration). Both can happen when common
-    # words match at the same Whisper timestamp across short sentences.
-    # Detect contiguous bad runs and proportionally redistribute between anchors.
-    def _is_bad(idx):
-        if idx == 0:
-            return timings[0]["end"] <= timings[0]["start"]
-        return (timings[idx]["start"] <= timings[idx - 1]["start"] or
-                timings[idx]["end"]   <= timings[idx]["start"])
-
-    i = 1
-    while i < len(timings):
-        if _is_bad(i):
-            run_start = i
-            while i < len(timings) and _is_bad(i):
-                i += 1
-            run_end = i  # exclusive
-
-            left_time  = timings[run_start - 1]["end"]
-            right_time = (timings[run_end]["start"]
-                          if run_end < len(timings) else total_duration)
-            if right_time <= left_time:
-                right_time = left_time + sum(
-                    max(1, len(normalize(scenes[j]))) for j in range(run_start, run_end)
-                ) / global_wps
-
-            span_words = sum(max(1, len(normalize(scenes[j]))) for j in range(run_start, run_end))
-            span_time  = right_time - left_time
-
-            cumulative = 0
-            for j in range(run_start, run_end):
-                wc  = max(1, len(normalize(scenes[j])))
-                s_t = round(left_time + (cumulative / span_words) * span_time, 3)
-                cumulative += wc
-                e_t = round(left_time + (cumulative / span_words) * span_time, 3)
-                timings[j]["start"] = s_t
-                timings[j]["end"]   = min(e_t, total_duration)
-        else:
-            i += 1
-
-    timings[-1]["end"] = round(total_duration, 3)
-    return timings
-
-
-def validate_and_fix_timings(timings, scenes, total_duration):
-    """
-    Report speech rate and flag any scenes with implausible durations.
-    With word-level alignment most scenes should be clean — this is a
-    diagnostic pass only; proportional fix is applied to remaining outliers.
-    """
-    word_counts = [len(s.split()) for s in scenes]
-    total_words = sum(word_counts)
-    global_wps  = total_words / total_duration
-    expected_wpm = global_wps * 60
-
-    print(f"\n  Speech rate check: {expected_wpm:.0f} wpm "
-          f"({total_words} words / {total_duration:.1f}s)")
-
-    suspects = set()
-    for i, t in enumerate(timings):
-        dur = t["end"] - t["start"]
-        exp = word_counts[i] / global_wps
-        ratio = dur / exp if exp > 0 else 999
-        if ratio < 0.20 or ratio > 5.0:
-            suspects.add(i)
-            print(f"  ⚠ Scene {i+1}: {dur:.1f}s vs ~{exp:.1f}s expected "
-                  f"({word_counts[i]} words, {ratio:.2f}x) — SUSPECT")
-
-    if not suspects:
-        print(f"  ✓ All {len(timings)} scenes within expected range")
-        return timings
-
-    print(f"  Proportional-interpolating {len(suspects)} suspect scene(s)...")
-    boundaries = [t["end"] for t in timings]
-
-    i = 0
-    while i < len(boundaries):
-        if i not in suspects:
-            i += 1
-            continue
-        run_start = i
-        while i < len(boundaries) and i in suspects:
-            i += 1
-        run_end = i
-
-        li = run_start - 1
-        while li > 0 and li in suspects:
-            li -= 1
-        left_time  = boundaries[li] if li >= 0 and li not in suspects else 0.0
-        right_time = boundaries[run_end] if run_end < len(boundaries) else total_duration
-
-        span_words = sum(word_counts[run_start:run_end])
-        span_time  = right_time - left_time
-        if span_words == 0:
-            continue
-
-        cumulative = 0
-        for j in range(run_start, run_end):
-            cumulative += word_counts[j]
-            boundaries[j] = round(left_time + (cumulative / span_words) * span_time, 3)
-            new_dur = boundaries[j] - (boundaries[j-1] if j > 0 else 0.0)
-            exp = word_counts[j] / global_wps
-            print(f"    Scene {j+1}: fixed → {new_dur:.1f}s (expected ~{exp:.1f}s)")
-
-    fixed = []
-    for i in range(len(boundaries)):
-        start = 0.0 if i == 0 else boundaries[i-1]
-        fixed.append({"start": round(start, 3), "end": boundaries[i]})
-    fixed[-1]["end"] = round(total_duration, 3)
-    return fixed
-
-
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def fmt_time(seconds):
     m = int(seconds) // 60
     s = seconds - m * 60
@@ -467,64 +184,53 @@ def main():
     folder_name = drive_get_name(token, folder_id)
     print(f"  ✓ Episode: {folder_name}")
 
-    print("Listing episode files...")
+    # Find script and audio files
     items = drive_list_all(token, folder_id)
 
-    # Prefer sentence-level file (163 sentences, 1:1 with images) over 25-word scene file
-    SCRIPT_NAMES_PRIORITY = [
-        "03b-narration-sentences.txt",
-        "03-narration-script-clean.txt",
-        "03-narration-script-clean-FINAL.txt",
-        "narration_script.txt",
-    ]
-    script_file = next(
-        (f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY),
-        None,
-    )
-    if script_file:
-        # Sort to respect priority order
-        script_file = min(
-            [f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY],
-            key=lambda f: SCRIPT_NAMES_PRIORITY.index(f["name"]),
-        )
+    script_file = None
+    candidates = [f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY]
+    if candidates:
+        script_file = min(candidates, key=lambda f: SCRIPT_NAMES_PRIORITY.index(f["name"]))
 
-    # Find audio: check root first, then Audio subfolder
-    AUDIO_MIMES = ("audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav")
-    audio_file = next((f for f in items if f.get("mimeType", "") in AUDIO_MIMES), None)
+    audio_file = None
+    for f in items:
+        if f.get("mimeType", "") in AUDIO_MIMES:
+            audio_file = f
+            break
+
+    # Also check Audio subfolder
     if not audio_file:
-        audio_folder = next(
-            (f for f in items if f.get("name", "").lower() == "audio" and "folder" in f["mimeType"]), None
-        )
-        if audio_folder:
-            sub_items  = drive_list_all(token, audio_folder["id"])
-            candidates = [f for f in sub_items if f.get("mimeType", "") in AUDIO_MIMES]
-            if candidates:
-                # Pick the largest file (most likely the full narration)
-                audio_file = max(candidates, key=lambda f: int(f.get("fileSize", 0)))
+        for f in items:
+            if f.get("mimeType") == "application/vnd.google-apps.folder" and f["name"] == "Audio":
+                sub_items = drive_list_all(token, f["id"])
+                candidates = [sf for sf in sub_items if sf.get("mimeType", "") in AUDIO_MIMES]
+                if candidates:
+                    audio_file = max(candidates, key=lambda f: int(f.get("size", 0)))
 
     if not script_file:
-        print("ERROR: narration_script.txt not found in episode folder")
+        print("ERROR: narration script not found in episode folder")
         sys.exit(1)
     if not audio_file:
-        print("ERROR: No audio file (mp3/wav) found in episode folder or Audio subfolder")
+        print("ERROR: no audio file (mp3/wav) found in episode folder")
         sys.exit(1)
 
     print(f"  ✓ Script: {script_file['name']}")
-    print(f"  ✓ Audio:  {audio_file['name']} ({int(audio_file.get('fileSize',0))//1024//1024}MB)")
+    print(f"  ✓ Audio:  {audio_file['name']}")
 
-    tmpdir = tempfile.mkdtemp(prefix="mf_timings_")
+    tmpdir = tempfile.mkdtemp(prefix="mf_aeneas_")
     try:
+        # Download files
         print("\nDownloading files...")
-        audio_ext  = os.path.splitext(audio_file.get("name", audio_file.get("title", "narration.mp3")))[1] or ".mp3"
+        audio_ext  = os.path.splitext(audio_file["name"])[1] or ".mp3"
         audio_path = os.path.join(tmpdir, f"narration{audio_ext}")
+        wav_path   = os.path.join(tmpdir, "narration.wav")
         drive_download(token, audio_file["id"], audio_path)
         print("  ✓ Audio downloaded")
 
         script_text = drive_download_text(token, script_file["id"])
         print("  ✓ Script downloaded")
 
-        # Get audio duration via ffprobe
-        import subprocess
+        # Get audio duration
         result = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
@@ -533,106 +239,71 @@ def main():
         total_duration = float(result.stdout.strip())
         print(f"  ✓ Audio duration: {total_duration:.2f}s ({fmt_time(total_duration)})")
 
+        # Convert to 16kHz mono WAV for aeneas
+        subprocess.run(
+            ["ffmpeg", "-i", audio_path, "-ar", "16000", "-ac", "1", wav_path, "-y"],
+            capture_output=True, check=True,
+        )
+        print(f"  ✓ Converted to 16kHz WAV")
+
         # Split script into scenes
         scenes = split_scenes(script_text)
         print(f"  ✓ {len(scenes)} scenes parsed from narration script")
 
-        # Transcribe with Whisper
-        print("\nRunning Whisper transcription...")
-        whisper_words = transcribe_audio(audio_path)
-        print(f"  ✓ {len(whisper_words)} words transcribed with timestamps")
+        # Write plain text file for aeneas (one scene per line)
+        script_path  = os.path.join(tmpdir, "script.txt")
+        json_out     = os.path.join(tmpdir, "timings.json")
+        with open(script_path, "w", encoding="utf-8") as f:
+            for scene in scenes:
+                f.write(scene + "\n")
 
-        # Align scenes to word boundaries
-        print("\nAligning scene boundaries to word end-times...")
-        timings = align_scenes(scenes, whisper_words, total_duration)
+        # Run aeneas forced alignment
+        print("\nRunning aeneas forced alignment...")
+        from aeneas.executetask import ExecuteTask
+        from aeneas.task import Task
 
-        # Self-check: catch and fix implausible timings using speech rate
-        timings = validate_and_fix_timings(timings, scenes, total_duration)
+        config = "task_language=eng|is_text_type=plain|os_task_file_format=json"
+        task = Task(config_string=config)
+        task.audio_file_path_absolute    = wav_path
+        task.text_file_path_absolute     = script_path
+        task.sync_map_file_path_absolute = json_out
+        ExecuteTask(task).execute()
+        task.output_sync_map_file()
+        print("  ✓ Alignment complete")
 
-        # Final zero-duration cleanup: validate_and_fix can create 0.0s scenes
-        # when it expands a suspect scene right up to its right-anchor boundary,
-        # leaving start == end for the next scene. When this happens, extend the
-        # redistribution to include the collapsed scene AND the neighbouring scene
-        # that was over-expanded, redistributing all of them proportionally.
-        global_wps_final = sum(len(s.split()) for s in scenes) / total_duration
-        zero_fixed = 0
-        i = 0
-        while i < len(timings):
-            if timings[i]["end"] <= timings[i]["start"]:
-                run_s = i
-                while i < len(timings) and timings[i]["end"] <= timings[i]["start"]:
-                    i += 1
-                run_e = i  # first non-zero-duration scene after the run
+        with open(json_out) as f:
+            alignment = json.load(f)
 
-                # Extend left to include the preceding scene if it shares the same
-                # start boundary (i.e., validate_and_fix over-expanded it into us)
-                fix_s = run_s
-                if fix_s > 0 and timings[fix_s]["start"] == timings[fix_s - 1]["end"]:
-                    fix_s -= 1
+        fragments = alignment["fragments"]
+        if len(fragments) != len(scenes):
+            print(f"WARNING: {len(fragments)} fragments returned for {len(scenes)} scenes")
 
-                # Use the Whisper start of the next clean scene as the right anchor.
-                # This is typically the START (not end) of scene [run_e], which is
-                # the first scene after the zero-duration run that has a Whisper match.
-                # If that start equals left_t (both collapsed to the same boundary),
-                # fall back to its end time instead.
-                fix_e = run_e  # exclusive
-                left_t = timings[fix_s - 1]["end"] if fix_s > 0 else 0.0
-                if fix_e < len(timings) and timings[fix_e]["start"] > left_t:
-                    right_t = timings[fix_e]["start"]
-                else:
-                    right_t = timings[fix_e]["end"] if fix_e < len(timings) else total_duration
-                if right_t <= left_t:
-                    right_t = left_t + sum(
-                        max(1, len(scenes[j].split())) for j in range(fix_s, fix_e)
-                    ) / global_wps_final
-                span_w = sum(max(1, len(scenes[j].split())) for j in range(fix_s, fix_e))
-                cumul  = 0
-                for j in range(fix_s, fix_e):
-                    wc = max(1, len(scenes[j].split()))
-                    timings[j]["start"] = round(left_t + (cumul / span_w) * (right_t - left_t), 3)
-                    cumul += wc
-                    timings[j]["end"] = min(round(left_t + (cumul / span_w) * (right_t - left_t), 3), total_duration)
-                    zero_fixed += 1
-                    print(f"  ✓ Zero-dur fix scene {j+1}: {fmt_time(timings[j]['start'])}→{fmt_time(timings[j]['end'])}")
-            else:
-                i += 1
-        if zero_fixed:
-            print(f"  Fixed {zero_fixed} scene(s) in zero-duration cleanup.")
-        timings[-1]["end"] = round(total_duration, 3)
-
-        # Build CSV rows — narration_excerpt is the FULL scene text
+        # Build CSV rows
         rows = []
         print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
         print("-" * 90)
-        for i, (scene, t) in enumerate(zip(scenes, timings)):
-            dur = t["end"] - t["start"]
+        for i, frag in enumerate(fragments):
+            start = round(float(frag["begin"]), 3)
+            end   = round(float(frag["end"]),   3)
+            dur   = round(end - start, 2)
+            text  = scenes[i]
             rows.append({
                 "scene":             i + 1,
-                "narration_excerpt": scene,
-                "words":             len(scene.split()),
-                "duration_seconds":  round(dur, 2),
-                "start_time":        fmt_time(t["start"]),
-                "end_time":          fmt_time(t["end"]),
-                "start_seconds":     t["start"],
-                "end_seconds":       t["end"],
+                "narration_excerpt": text,
+                "words":             len(text.split()),
+                "duration_seconds":  dur,
+                "start_time":        fmt_time(start),
+                "end_time":          fmt_time(end),
+                "start_seconds":     start,
+                "end_seconds":       end,
             })
-            preview = scene[:60] + ("…" if len(scene) > 60 else "")
-            print(f"  {i+1:>3}  {fmt_time(t['start']):>7}  {fmt_time(t['end']):>7}  {dur:>5.1f}s  {preview}")
+            preview = text[:60] + ("…" if len(text) > 60 else "")
+            print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
 
         total = sum(r["duration_seconds"] for r in rows)
         print(f"\nTotal: {total:.2f}s  Audio: {total_duration:.2f}s")
-        print(f"Duration range: {min(r['duration_seconds'] for r in rows):.2f}s – {max(r['duration_seconds'] for r in rows):.2f}s")
-
-        # Verify scene text matches narration script exactly
-        mismatches = 0
-        for row, scene in zip(rows, scenes):
-            if row["narration_excerpt"] != scene:
-                mismatches += 1
-                print(f"  MISMATCH scene {row['scene']}: '{row['narration_excerpt'][:40]}' vs '{scene[:40]}'")
-        if mismatches == 0:
-            print(f"✓ All {len(scenes)} scenes match the narration script exactly.")
-        else:
-            print(f"WARNING: {mismatches} scene text mismatches found.")
+        print(f"Duration range: {min(r['duration_seconds'] for r in rows):.2f}s"
+              f" – {max(r['duration_seconds'] for r in rows):.2f}s")
 
         # Write CSV
         csv_path = os.path.join(tmpdir, "audio_timings_new.csv")
@@ -653,7 +324,9 @@ def main():
         print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
     finally:
+        import shutil
         shutil.rmtree(tmpdir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     main()
