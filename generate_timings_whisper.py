@@ -357,7 +357,11 @@ def main():
     items = drive_list_all(token, folder_id)
 
     script_file = next(
-        (f for f in items if f["name"] in ("03-narration-script-clean.txt", "narration_script.txt")), None
+        (f for f in items if f["name"] in (
+            "03-narration-script-clean.txt",
+            "03-narration-script-clean-FINAL.txt",
+            "narration_script.txt",
+        )), None
     )
 
     # Find audio: check root first, then Audio subfolder
