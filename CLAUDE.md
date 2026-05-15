@@ -85,7 +85,7 @@ Monkey Finance — automated YouTube video production pipeline.
 ### Key Scripts
 | Script | Purpose |
 |---|---|
-| `generate_timings_whisper.py` | aeneas forced alignment → `audio_timings_new.csv` (requires libespeak-dev + ffmpeg) |
+| `generate_timings.py` | aeneas forced alignment → `audio_timings_new.csv` (requires libespeak-dev + ffmpeg) |
 | `create_video_kb.py` | Assembles images + audio into MP4 with Ken Burns effects |
 | `upload_youtube.py` | Uploads finished video to YouTube with SEO metadata |
 | `setup_youtube_auth.py` | One-time YouTube OAuth setup |
