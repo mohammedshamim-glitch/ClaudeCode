@@ -123,8 +123,10 @@ Then automatically:
 
 2. **Generate the TTS narration file** — a clean version with only the spoken words, no scene numbers, no headers, no section labels. Each 25-word block on its own line with blank line between. Save this to the same Google Drive folder as `03-narration-script-clean.txt`. This file is ready to paste directly into any TTS tool.
 
-3. Once both files are saved, confirm with the Drive links and ask:
-*"Both structured script and clean TTS file saved to Drive. Want me to punch up any section, or shall we continue to the next pipeline stage?"*
+3. **Generate the sentence narration file** — parse the full narration into individual sentences, one per line with a blank line between each. Merge any sentence under 5 words with the sentence that follows it. Save as `03b-narration-sentences.txt` in the same Drive folder. This file is used for: (a) generating sentence-level image prompts for Grok, and (b) Whisper timestamp alignment at sentence granularity.
+
+4. Once all three files are saved, confirm with the Drive links and ask:
+*"Structured script, clean TTS file, and sentence file saved to Drive. Want me to punch up any section, or shall we continue to the next pipeline stage?"*
 
 ---
 
