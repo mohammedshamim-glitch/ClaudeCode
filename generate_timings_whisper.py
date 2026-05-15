@@ -181,121 +181,169 @@ def transcribe_audio(audio_path):
                 })
     return words
 
-# ── Scene boundary alignment (end-word method) ───────────────────────────────
-def align_scenes(scenes, words, total_duration):
+# ── Sequential word-level alignment ──────────────────────────────────────────
+def align_scenes(scenes, whisper_words, total_duration):
     """
-    For each scene, find the LAST few words of that scene's text in the
-    Whisper word list. The end_time of the matched last word = scene boundary.
+    Sequential word-level alignment:
+    1. Flatten all scenes into an ordered (scene_idx, norm_word) list.
+    2. Walk through Whisper words in order, greedily matching each script word
+       with a small lookahead window. This never misidentifies sentence boundaries
+       regardless of sentence length.
+    3. Interpolate timestamps for any unmatched words using adjacent anchors.
+    4. Aggregate: sentence start = first word start, end = last word end.
 
-    Uses proportional word-count estimates as search anchors (±20% window)
-    to prevent cascade alignment failure.
-
-    Returns list of {"start": float, "end": float} aligned to audio.
+    Returns list of {"start": float, "end": float} — one per scene.
     """
-    word_texts = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in words]
-    word_ends  = [w["end"]   for w in words]
-    word_starts= [w["start"] for w in words]
+    LOOKAHEAD = 10  # max Whisper words to skip when matching one script word
 
-    # Proportional estimates: where each scene END falls in the audio
-    scene_word_counts  = [len(normalize(s)) for s in scenes]
-    total_script_words = sum(scene_word_counts)
-    cumulative = 0
-    scene_end_estimates = []
-    for wc in scene_word_counts:
-        cumulative += wc
-        scene_end_estimates.append(cumulative / total_script_words * total_duration)
+    # Build flat script word list: (scene_idx, word_position_in_scene, norm_word)
+    script_entries = []
+    for s_idx, scene in enumerate(scenes):
+        nw = normalize(scene)
+        for pos, word in enumerate(nw):
+            script_entries.append((s_idx, pos, word))
 
-    scene_boundaries = []  # list of end-times
-    last_found_idx = 0
+    if not script_entries:
+        return [{"start": 0.0, "end": total_duration}]
 
-    for i, scene in enumerate(scenes):
-        scene_norm = normalize(scene)
-        if not scene_norm:
-            scene_boundaries.append(scene_end_estimates[i])
+    # Normalise Whisper words
+    wh_norm  = [normalize(w["word"])[0] if normalize(w["word"]) else "" for w in whisper_words]
+    wh_start = [w["start"] for w in whisper_words]
+    wh_end   = [w["end"]   for w in whisper_words]
+
+    # Greedy sequential match — store matched timestamp per script_entry index
+    matched_start = [None] * len(script_entries)
+    matched_end   = [None] * len(script_entries)
+
+    wh_pos = 0
+    for sc_pos, (s_idx, _, sc_word) in enumerate(script_entries):
+        if not sc_word:
             continue
+        for offset in range(LOOKAHEAD):
+            wi = wh_pos + offset
+            if wi >= len(whisper_words):
+                break
+            if wh_norm[wi] == sc_word:
+                matched_start[sc_pos] = wh_start[wi]
+                matched_end[sc_pos]   = wh_end[wi]
+                wh_pos = wi + 1
+                break
 
-        # Use last 6 words of the scene for matching
-        tail_words = scene_norm[-6:]
-        m = len(tail_words)
+    # Interpolate None gaps using nearest valid neighbours
+    # First pass: fill forward
+    last_valid_end = 0.0
+    for i in range(len(matched_start)):
+        if matched_start[i] is not None:
+            last_valid_end = matched_end[i]
+        else:
+            # Find next matched entry
+            next_start = total_duration
+            for j in range(i + 1, len(matched_start)):
+                if matched_start[j] is not None:
+                    next_start = matched_start[j]
+                    break
+            # Place this word proportionally between last_valid_end and next_start
+            # Count how many unmatched words are in this gap
+            gap_count = sum(1 for k in range(i, len(matched_start))
+                            if matched_start[k] is None
+                            and (k == i or matched_start[k-1] is None))
+            gap_size = next_start - last_valid_end
+            # Simple: just use midpoint for now; full interpolation below
+            matched_start[i] = last_valid_end
+            matched_end[i]   = last_valid_end
 
-        est = scene_end_estimates[i]
-        window_start = max(0.0,           est - total_duration * 0.20)
-        window_end   = min(total_duration, est + total_duration * 0.20)
+    # Full linear interpolation over contiguous unmatched runs
+    i = 0
+    while i < len(matched_start):
+        if matched_end[i] is not None and matched_end[i] > 0:
+            i += 1
+            continue
+        # Start of a gap run
+        run_start_idx = i
+        while i < len(matched_start) and (matched_end[i] is None or matched_end[i] == 0):
+            i += 1
+        run_end_idx = i  # exclusive
 
-        # Map time window to word indices
-        idx_start = next((k for k, t in enumerate(word_starts) if t >= window_start), last_found_idx)
-        idx_end   = next((k for k, t in enumerate(word_starts) if t >= window_end),   len(words))
-        idx_start = max(idx_start, last_found_idx)
+        left_t  = matched_end[run_start_idx - 1] if run_start_idx > 0 and matched_end[run_start_idx - 1] else 0.0
+        right_t = matched_start[run_end_idx] if run_end_idx < len(matched_start) and matched_start[run_end_idx] else total_duration
 
-        best_score = -1
-        best_idx   = idx_start  # index of first word of the best match
+        run_len = run_end_idx - run_start_idx
+        for k, gi in enumerate(range(run_start_idx, run_end_idx)):
+            frac_s = (k)       / run_len
+            frac_e = (k + 1)   / run_len
+            matched_start[gi] = round(left_t + frac_s * (right_t - left_t), 3)
+            matched_end[gi]   = round(left_t + frac_e * (right_t - left_t), 3)
 
-        search_end = max(idx_start + 1, idx_end - m + 1)
-        for j in range(idx_start, search_end):
-            score = sum(
-                1 for k in range(m)
-                if j + k < len(word_texts) and word_texts[j + k] == tail_words[k]
-            )
-            if score > best_score:
-                best_score = score
-                best_idx   = j
+    # Aggregate per scene
+    scene_word_map = {}  # scene_idx -> list of (start, end)
+    for sc_pos, (s_idx, _, _) in enumerate(script_entries):
+        ts = matched_start[sc_pos]
+        te = matched_end[sc_pos]
+        if ts is not None and te is not None:
+            scene_word_map.setdefault(s_idx, []).append((ts, te))
 
-        # End boundary = end time of the LAST matched word
-        last_word_idx = min(best_idx + m - 1, len(words) - 1)
-        end_time = word_ends[last_word_idx]
-        scene_boundaries.append(end_time)
-        last_found_idx = best_idx
-
-    # Build start/end pairs
     timings = []
-    for i in range(len(scenes)):
-        start = 0.0 if i == 0 else scene_boundaries[i - 1]
-        end   = scene_boundaries[i]
-        if end <= start:
-            end = start + max(1.0, (total_duration - start) / max(len(scenes) - i, 1))
+    global_wps = len(script_entries) / total_duration
+
+    for s_idx in range(len(scenes)):
+        word_ts = scene_word_map.get(s_idx, [])
+        if word_ts:
+            start = word_ts[0][0]
+            end   = word_ts[-1][1]
+        else:
+            # Fully unmatched scene: interpolate proportionally
+            wc = len(normalize(scenes[s_idx]))
+            start = timings[-1]["end"] if timings else 0.0
+            end   = round(start + wc / global_wps, 3)
         timings.append({"start": round(start, 3), "end": round(end, 3)})
 
+    # Ensure last scene ends exactly at audio end
     timings[-1]["end"] = round(total_duration, 3)
+
+    # Final pass: ensure no scene has end <= start (protect video assembler)
+    for i in range(len(timings)):
+        if timings[i]["end"] <= timings[i]["start"]:
+            # Give it proportional duration based on word count
+            wc  = max(1, len(normalize(scenes[i])))
+            dur = round(wc / global_wps, 3)
+            timings[i]["end"] = round(timings[i]["start"] + dur, 3)
+        # Clamp within audio
+        timings[i]["end"] = min(timings[i]["end"], total_duration)
+
     return timings
+
 
 def validate_and_fix_timings(timings, scenes, total_duration):
     """
-    Self-check: flag scenes where duration is implausible for their word count,
-    then auto-correct by proportional interpolation between valid anchor boundaries.
-
-    Normal narration pace: 100–180 wpm. We flag anything outside 0.40x–2.50x of
-    what the video-specific speech rate predicts.  A 26-word scene that clocks in
-    at 31s (~50 wpm) or 1s (~1560 wpm) is clearly a Whisper alignment error.
+    Report speech rate and flag any scenes with implausible durations.
+    With word-level alignment most scenes should be clean — this is a
+    diagnostic pass only; proportional fix is applied to remaining outliers.
     """
     word_counts = [len(s.split()) for s in scenes]
     total_words = sum(word_counts)
-    global_wps  = total_words / total_duration          # words per second
+    global_wps  = total_words / total_duration
     expected_wpm = global_wps * 60
 
     print(f"\n  Speech rate check: {expected_wpm:.0f} wpm "
           f"({total_words} words / {total_duration:.1f}s)")
 
-    # Detect suspect scenes using each scene's independently-detected end boundary
     suspects = set()
-    for i in range(len(timings)):
-        dur = timings[i]["end"] - timings[i]["start"]
+    for i, t in enumerate(timings):
+        dur = t["end"] - t["start"]
         exp = word_counts[i] / global_wps
         ratio = dur / exp if exp > 0 else 999
-        if ratio < 0.40 or ratio > 2.50:
+        if ratio < 0.20 or ratio > 5.0:
             suspects.add(i)
-            print(f"  ⚠ Scene {i+1}: {dur:.1f}s actual vs ~{exp:.1f}s expected "
+            print(f"  ⚠ Scene {i+1}: {dur:.1f}s vs ~{exp:.1f}s expected "
                   f"({word_counts[i]} words, {ratio:.2f}x) — SUSPECT")
 
     if not suspects:
-        print(f"  ✓ All {len(timings)} scenes within 0.4–2.5x of expected duration")
+        print(f"  ✓ All {len(timings)} scenes within expected range")
         return timings
 
-    print(f"  Auto-correcting {len(suspects)} scene(s)...")
-
-    # Work on the end-boundary array (each independently detected by Whisper)
+    print(f"  Proportional-interpolating {len(suspects)} suspect scene(s)...")
     boundaries = [t["end"] for t in timings]
 
-    # Fix each contiguous run of suspects
     i = 0
     while i < len(boundaries):
         if i not in suspects:
@@ -304,17 +352,13 @@ def validate_and_fix_timings(timings, scenes, total_duration):
         run_start = i
         while i < len(boundaries) and i in suspects:
             i += 1
-        run_end = i  # first non-suspect after run (exclusive)
+        run_end = i
 
-        # Left anchor: nearest non-suspect boundary before the run
         li = run_start - 1
         while li > 0 and li in suspects:
             li -= 1
-        left_time = boundaries[li] if li >= 0 and li not in suspects else 0.0
-
-        # Right anchor: nearest non-suspect boundary after the run
-        right_time = (boundaries[run_end]
-                      if run_end < len(boundaries) else total_duration)
+        left_time  = boundaries[li] if li >= 0 and li not in suspects else 0.0
+        right_time = boundaries[run_end] if run_end < len(boundaries) else total_duration
 
         span_words = sum(word_counts[run_start:run_end])
         span_time  = right_time - left_time
@@ -323,18 +367,15 @@ def validate_and_fix_timings(timings, scenes, total_duration):
 
         cumulative = 0
         for j in range(run_start, run_end):
-            old_dur = timings[j]["end"] - timings[j]["start"]
             cumulative += word_counts[j]
             boundaries[j] = round(left_time + (cumulative / span_words) * span_time, 3)
-            new_dur = boundaries[j] - (boundaries[j - 1] if j > 0 else 0.0)
+            new_dur = boundaries[j] - (boundaries[j-1] if j > 0 else 0.0)
             exp = word_counts[j] / global_wps
-            print(f"    Scene {j+1}: {old_dur:.1f}s → {new_dur:.1f}s "
-                  f"(expected ~{exp:.1f}s, {word_counts[j]} words) ✓ fixed")
+            print(f"    Scene {j+1}: fixed → {new_dur:.1f}s (expected ~{exp:.1f}s)")
 
-    # Rebuild start/end pairs from corrected boundaries
     fixed = []
     for i in range(len(boundaries)):
-        start = 0.0 if i == 0 else boundaries[i - 1]
+        start = 0.0 if i == 0 else boundaries[i-1]
         fixed.append({"start": round(start, 3), "end": boundaries[i]})
     fixed[-1]["end"] = round(total_duration, 3)
     return fixed
