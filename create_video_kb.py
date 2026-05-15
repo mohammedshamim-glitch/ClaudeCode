@@ -154,6 +154,13 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
 KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
 
+# ── Karaoke subtitle config ───────────────────────────────────────────────────
+SUB_FONT_SIZE  = 80          # ASS font size at PlayResX=1920
+SUB_MARGIN_V   = 80          # vertical margin from bottom (pixels)
+SUB_PHRASE_LEN = 4           # words per phrase group
+SUB_BORD_NORM  = 2           # outline on non-highlighted words
+SUB_BORD_HL    = 20          # thick green border on active word (approximates box)
+
 EFFECT_NAMES = [
     "pan left → right",
     "pan right → left",
@@ -246,6 +253,124 @@ def load_kb_movements(local_path):
         text = parts[1].strip() if len(parts) > 1 else ""
         movements.append((scene_id, text))
     return movements
+
+# ── Karaoke subtitle generation ───────────────────────────────────────────────
+def seconds_to_ass(t):
+    h = int(t) // 3600
+    m = (int(t) % 3600) // 60
+    s = t - h * 3600 - m * 60
+    return f"{h}:{m:02d}:{s:05.2f}"
+
+def parse_seconds(row, start_key="start_seconds", fallback_key="start_time"):
+    """Parse a time value from CSV row — float string or MM:SS.cc format."""
+    v = row.get(start_key, "")
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        v = row.get(fallback_key, "0")
+        try:
+            parts = v.split(":")
+            return int(parts[0]) * 60 + float(parts[1])
+        except Exception:
+            return 0.0
+
+def generate_ass_karaoke(timing_rows):
+    """
+    Build an ASS subtitle file with karaoke-style word highlighting.
+    Active word gets a thick green outline (SUB_BORD_HL) — at this size it
+    fills in between letter strokes to create a solid green background box.
+    All text is uppercase; non-active words use a thin black outline.
+    """
+    header = (
+        "[Script Info]\n"
+        "ScriptType: v4.00+\n"
+        "PlayResX: 1920\n"
+        "PlayResY: 1080\n"
+        "ScaledBorderAndShadow: yes\n"
+        "\n"
+        "[V4+ Styles]\n"
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
+        "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
+        "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
+        "Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        f"Style: Sub,Arial,{SUB_FONT_SIZE},"
+        f"&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,"
+        f"1,0,0,0,100,100,0,0,1,{SUB_BORD_NORM},0,"
+        f"2,40,40,{SUB_MARGIN_V},1\n"
+        "\n"
+        "[Events]\n"
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    )
+
+    events = []
+    for row in timing_rows:
+        text = row.get("narration_excerpt", "").strip()
+        if not text:
+            continue
+
+        try:
+            start_s = float(row.get("start_seconds", 0))
+            end_s   = float(row.get("end_seconds",   0))
+        except (ValueError, TypeError):
+            start_s = parse_seconds(row, "start_seconds", "start_time")
+            end_s   = parse_seconds(row, "end_seconds",   "end_time")
+
+        dur = end_s - start_s
+        if dur <= 0:
+            continue
+
+        words = text.upper().split()
+        n = len(words)
+        if not n:
+            continue
+
+        word_dur = dur / n
+
+        for phrase_start in range(0, n, SUB_PHRASE_LEN):
+            phrase_end   = min(phrase_start + SUB_PHRASE_LEN, n)
+            phrase_words = words[phrase_start:phrase_end]
+
+            for local_i, _ in enumerate(phrase_words):
+                global_i = phrase_start + local_i
+                t_start  = start_s + global_i * word_dur
+                t_end    = start_s + (global_i + 1) * word_dur
+                if global_i == n - 1:
+                    t_end = end_s
+
+                parts = []
+                for j, w in enumerate(phrase_words):
+                    if j == local_i:
+                        # Thick green outline → solid green background effect
+                        parts.append(
+                            f"{{\\bord{SUB_BORD_HL}\\3c&H0000FF00&}}{w}"
+                            f"{{\\bord{SUB_BORD_NORM}\\3c&H00000000&}}"
+                        )
+                    else:
+                        parts.append(w)
+
+                text_field = "{\\an2}" + " ".join(parts)
+                events.append(
+                    f"Dialogue: 0,"
+                    f"{seconds_to_ass(t_start)},{seconds_to_ass(t_end)},"
+                    f"Sub,,0,0,0,,{text_field}"
+                )
+
+    return header + "\n".join(events) + "\n"
+
+def burn_subtitles(video_path, ass_path, output_path):
+    """Re-encode video with ASS subtitles burned in; copy audio unchanged."""
+    # Escape backslashes and colons in path for ffmpeg vf filter
+    safe_path = ass_path.replace("\\", "/").replace(":", "\\:")
+    result = subprocess.run([
+        "ffmpeg", "-y", "-i", video_path,
+        "-vf", f"ass={safe_path}",
+        "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
+        "-c:a", "copy",
+        output_path,
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Subtitle burn error:\n{result.stderr[-2000:]}")
+        sys.exit(1)
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 def get_audio_duration(audio_path):
@@ -355,12 +480,14 @@ def main():
     flags = [a for a in sys.argv[1:] if a.startswith("--")]
 
     if not args:
-        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename] [--no-kb]")
+        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename] [--no-kb] [--subs]")
         print("  --no-kb   Render all scenes as static (no Ken Burns effects)")
+        print("  --subs    Burn karaoke-style word-highlight subtitles into the video")
         sys.exit(1)
 
     folder_id  = args[0]
     use_kb     = "--no-kb" not in flags
+    use_subs   = "--subs" in flags
 
     print("Authenticating with Google Drive...")
     token = get_access_token()
@@ -413,7 +540,7 @@ def main():
         print(f"  ✓ Found {timings_file['name']} — will use per-scene durations")
     else:
         print(f"  ⚠ No timings CSV found — falling back to equal splits")
-        print(f"    Run generate_timings_whisper.py first for accurate scene durations")
+        print(f"    Run generate_timings.py first for accurate scene durations")
     if kb_file:
         print(f"  ✓ Found 05-kb-movements.txt — KB effects will follow the file")
     else:
@@ -436,16 +563,17 @@ def main():
             print(f"  ✓ scene_{i+1:03d}{ext}")
 
         # Load per-scene durations from CSV if available
-        durations = None
+        durations   = None
+        timing_rows = []
         if timings_file:
-            rows = drive_load_csv(token, timings_file["id"])
-            rows.sort(key=lambda r: int(r["scene"]))
-            if len(rows) == len(image_paths):
-                durations = [float(r["duration_seconds"]) for r in rows]
+            timing_rows = drive_load_csv(token, timings_file["id"])
+            timing_rows.sort(key=lambda r: int(r["scene"]))
+            if len(timing_rows) == len(image_paths):
+                durations = [float(r["duration_seconds"]) for r in timing_rows]
                 durations[-1] += LAST_SCENE_BONUS_SECONDS
                 print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
             else:
-                print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
+                print(f"  ⚠ CSV has {len(timing_rows)} rows but {len(image_paths)} images — using equal splits")
 
         # Load KB movements from file if available
         kb_movements = None
@@ -462,6 +590,25 @@ def main():
         create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations, use_kb, kb_movements)
         size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
         print(f"  ✓ Video created ({size_mb:.1f} MB)")
+
+        # Burn karaoke subtitles if requested
+        if use_subs:
+            if timings_file and timing_rows and "start_seconds" in timing_rows[0]:
+                print("\nGenerating karaoke subtitles...")
+                ass_content = generate_ass_karaoke(timing_rows)
+                ass_path = os.path.join(tmpdir, "subtitles.ass")
+                with open(ass_path, "w", encoding="utf-8") as f:
+                    f.write(ass_content)
+                print(f"  ✓ ASS file written ({len(ass_content.splitlines())} lines)")
+                sub_video = os.path.join(tmpdir, "video_with_subs.mp4")
+                print("  Burning subtitles (re-encoding)...")
+                burn_subtitles(OUTPUT_VIDEO, ass_path, sub_video)
+                os.replace(sub_video, OUTPUT_VIDEO)
+                size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
+                print(f"  ✓ Subtitles burned ({size_mb:.1f} MB)")
+            else:
+                print("\n  ⚠ --subs requested but timings CSV missing start_seconds column")
+                print("    Re-run generate_timings.py to regenerate the CSV")
 
         print(f"\nUploading {out_name} to Drive...")
         token = get_access_token()

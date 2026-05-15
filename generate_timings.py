@@ -1,16 +1,36 @@
 #!/usr/bin/env python3
 """
-Generate auto_timings.csv for a Monkey Finance episode.
-- Lists images in the /Images subfolder (sorted by filename)
-- Downloads narration_script.txt and narration.mp3
-- Distributes duration proportionally by word count, with a 6s minimum per scene
-- Outputs: scene, image, words, duration_seconds, start_time, end_time
-- Uploads auto_timings.csv back to the episode folder
+Generate audio_timings_new.csv using aeneas forced alignment.
+
+Method:
+  1. Download narration audio + script from Drive
+  2. Convert audio to 16kHz mono WAV (required by aeneas)
+  3. Split script by blank lines → one scene per line
+  4. Run aeneas forced alignment: syncs source text directly to audio
+     using espeak + DTW on MFCC features — no re-transcription step
+  5. Build CSV with start/end times for each scene
+  6. Upload audio_timings_new.csv to the episode Drive folder
+
+Dependencies:
+  aeneas 1.7.3  (pip install from source — requires libespeak-dev)
+  ffmpeg        (for audio conversion)
+
+Usage:
+    python3 generate_timings.py <episode_folder_id>
 """
 
-import csv, io, json, os, re, sys, subprocess, tempfile, shutil, requests
+import csv, json, os, re, subprocess, sys, tempfile, requests
 
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
+
+SCRIPT_NAMES_PRIORITY = [
+    "03b-narration-sentences.txt",
+    "03-narration-script-clean.txt",
+    "03-narration-script-clean-FINAL.txt",
+    "narration_script.txt",
+]
+
+AUDIO_MIMES = {"audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav"}
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -42,12 +62,12 @@ def get_access_token():
     return tokens["access_token"]
 
 # ── Drive helpers ─────────────────────────────────────────────────────────────
-def drive_list_all(token, folder_id, mime_filter=None):
+def drive_list_all(token, folder_id):
     files, page_token = [], None
     while True:
         params = {
-            "q": f"'{folder_id}' in parents" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
-            "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
+            "q": f"'{folder_id}' in parents and trashed=false",
+            "fields": "nextPageToken,files(id,name,mimeType,size)",
             "pageSize": 100,
         }
         if page_token:
@@ -81,11 +101,18 @@ def drive_download(token, file_id, local_path):
     )
     r.raise_for_status()
     with open(local_path, "wb") as f:
-        for chunk in r.iter_content(8192):
+        for chunk in r.iter_content(65536):
             f.write(chunk)
 
+def drive_download_text(token, file_id):
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r.raise_for_status()
+    return r.content.decode("utf-8")
+
 def drive_delete_existing(token, filename, folder_id):
-    """Delete any existing files with this name in the folder before uploading."""
     r = requests.get(
         "https://www.googleapis.com/drive/v3/files",
         headers={"Authorization": f"Bearer {token}"},
@@ -100,7 +127,6 @@ def drive_delete_existing(token, filename, folder_id):
             f"https://www.googleapis.com/drive/v3/files/{f['id']}",
             headers={"Authorization": f"Bearer {token}"},
         ).raise_for_status()
-        print(f"  ✓ Deleted existing {f['name']}")
 
 def drive_upload_csv(token, local_path, filename, folder_id):
     with open(local_path, "rb") as f:
@@ -117,7 +143,8 @@ def drive_upload_csv(token, local_path, filename, folder_id):
         b"--" + boundary + b"--"
     )
     r = requests.post(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink",
+        "https://www.googleapis.com/upload/drive/v3/files"
+        "?uploadType=multipart&fields=id,name,webViewLink",
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": f"multipart/related; boundary={boundary.decode()}",
@@ -127,92 +154,18 @@ def drive_upload_csv(token, local_path, filename, folder_id):
     r.raise_for_status()
     return r.json()
 
-# ── Audio ─────────────────────────────────────────────────────────────────────
-def get_audio_duration(path):
-    result = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=noprint_wrappers=1:nokey=1", path],
-        capture_output=True, text=True, check=True,
-    )
-    return float(result.stdout.strip())
+# ── Scene splitting ───────────────────────────────────────────────────────────
+def split_scenes(raw_text):
+    """Split narration/sentence file by blank lines. Each paragraph = one scene."""
+    paragraphs = re.split(r'\n\s*\n', raw_text.strip())
+    scenes = []
+    for p in paragraphs:
+        p = p.strip().replace('\n', ' ')
+        if p and not re.match(r'^---', p):
+            scenes.append(p)
+    return scenes
 
-# ── Timing logic ──────────────────────────────────────────────────────────────
-def split_into_sentences(text):
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    return [s.strip() for s in sentences if s.strip()]
-
-MIN_SCENE_DURATION = 6.0  # seconds — scenes shorter than this get a boosted floor
-
-def merge_short_scenes(chunks, total_duration, min_dur=MIN_SCENE_DURATION):
-    """
-    Distribute total_duration proportionally by word count, then bump any scene
-    below min_dur up to min_dur and redistribute the deficit proportionally
-    across the remaining scenes.
-    """
-    words = [len(c.split()) for c in chunks]
-    total_words = sum(words)
-    durations = [(w / total_words) * total_duration for w in words]
-
-    changed = True
-    while changed:
-        changed = False
-        floored = [i for i, d in enumerate(durations) if d < min_dur]
-        if not floored:
-            break
-        deficit = sum(min_dur - durations[i] for i in floored)
-        free    = [i for i in range(len(durations)) if i not in floored]
-        if not free:
-            break
-        free_total = sum(durations[i] for i in free)
-        for i in floored:
-            durations[i] = min_dur
-        for i in free:
-            durations[i] -= deficit * (durations[i] / free_total)
-        changed = True
-
-    return durations
-
-def split_narration(text, n_images):
-    """Split narration into exactly n_images chunks at sentence boundaries."""
-    sentences = split_into_sentences(text)
-    total_words = sum(len(s.split()) for s in sentences)
-    target = total_words / n_images
-
-    chunks = []
-    current, current_words = [], 0
-
-    for i, sentence in enumerate(sentences):
-        words = len(sentence.split())
-        current.append(sentence)
-        current_words += words
-
-        slots_filled   = len(chunks)
-        slots_left     = n_images - slots_filled
-        sentences_left = len(sentences) - i - 1
-
-        if current_words >= target and slots_filled < n_images - 1 and sentences_left >= slots_left - 1:
-            chunks.append(" ".join(current))
-            current, current_words = [], 0
-
-    if current:
-        chunks.append(" ".join(current))
-
-    while len(chunks) > n_images:
-        chunks[-2] = chunks[-2] + " " + chunks[-1]
-        chunks.pop()
-
-    while len(chunks) < n_images:
-        longest = max(range(len(chunks)), key=lambda i: len(chunks[i].split()))
-        sents = split_into_sentences(chunks[longest])
-        if len(sents) < 2:
-            chunks.insert(longest + 1, chunks[longest])
-        else:
-            mid = len(sents) // 2
-            chunks[longest] = " ".join(sents[:mid])
-            chunks.insert(longest + 1, " ".join(sents[mid:]))
-
-    return chunks
-
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def fmt_time(seconds):
     m = int(seconds) // 60
     s = seconds - m * 60
@@ -231,105 +184,149 @@ def main():
     folder_name = drive_get_name(token, folder_id)
     print(f"  ✓ Episode: {folder_name}")
 
-    # Find images subfolder
-    print("Finding Images subfolder...")
+    # Find script and audio files
     items = drive_list_all(token, folder_id)
-    images_folder = next(
-        (f for f in items if f["name"].lower() == "images" and "folder" in f["mimeType"]), None
-    )
-    if not images_folder:
-        print("ERROR: No Images subfolder found.")
+
+    script_file = None
+    candidates = [f for f in items if f["name"] in SCRIPT_NAMES_PRIORITY]
+    if candidates:
+        script_file = min(candidates, key=lambda f: SCRIPT_NAMES_PRIORITY.index(f["name"]))
+
+    audio_file = None
+    for f in items:
+        if f.get("mimeType", "") in AUDIO_MIMES:
+            audio_file = f
+            break
+
+    # Also check Audio subfolder
+    if not audio_file:
+        for f in items:
+            if f.get("mimeType") == "application/vnd.google-apps.folder" and f["name"] == "Audio":
+                sub_items = drive_list_all(token, f["id"])
+                candidates = [sf for sf in sub_items if sf.get("mimeType", "") in AUDIO_MIMES]
+                if candidates:
+                    audio_file = max(candidates, key=lambda f: int(f.get("size", 0)))
+
+    if not script_file:
+        print("ERROR: narration script not found in episode folder")
+        sys.exit(1)
+    if not audio_file:
+        print("ERROR: no audio file (mp3/wav) found in episode folder")
         sys.exit(1)
 
-    # List and sort images
-    print("Listing images...")
-    image_files = [f for f in drive_list_all(token, images_folder["id"]) if f["mimeType"].startswith("image/")]
-    image_files.sort(key=lambda x: x["modifiedTime"])
-    n = len(image_files)
-    print(f"  ✓ {n} images found")
+    print(f"  ✓ Script: {script_file['name']}")
+    print(f"  ✓ Audio:  {audio_file['name']}")
 
-    # Find narration files
-    narration_script = next(
-        (f for f in items if f["name"] in ("narration_script.txt", "03-narration-script-clean.txt")), None
-    )
-    narration_audio  = next((f for f in items if f["name"] == "narration.mp3"), None)
-    if not narration_script:
-        print("ERROR: narration_script.txt or 03-narration-script-clean.txt not found.")
-        sys.exit(1)
-    if not narration_audio:
-        print("ERROR: narration.mp3 not found.")
-        sys.exit(1)
-
-    tmpdir = tempfile.mkdtemp(prefix="mf_timings_")
+    tmpdir = tempfile.mkdtemp(prefix="mf_aeneas_")
     try:
-        # Download
-        print("Downloading narration files...")
-        script_path = os.path.join(tmpdir, "narration_script.txt")
-        audio_path  = os.path.join(tmpdir, "narration.mp3")
-        drive_download(token, narration_script["id"], script_path)
-        drive_download(token, narration_audio["id"],  audio_path)
+        # Download files
+        print("\nDownloading files...")
+        audio_ext  = os.path.splitext(audio_file["name"])[1] or ".mp3"
+        audio_path = os.path.join(tmpdir, f"narration{audio_ext}")
+        wav_path   = os.path.join(tmpdir, "narration.wav")
+        drive_download(token, audio_file["id"], audio_path)
+        print("  ✓ Audio downloaded")
 
-        with open(script_path, encoding="utf-8") as f:
-            script_text = f.read()
+        script_text = drive_download_text(token, script_file["id"])
+        print("  ✓ Script downloaded")
 
-        total_duration = get_audio_duration(audio_path)
-        print(f"  ✓ Audio duration: {total_duration:.2f}s")
+        # Get audio duration
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
+            capture_output=True, text=True, check=True,
+        )
+        total_duration = float(result.stdout.strip())
+        print(f"  ✓ Audio duration: {total_duration:.2f}s ({fmt_time(total_duration)})")
 
-        # Split narration into n chunks at sentence boundaries
-        chunks = split_narration(script_text, n)
-        total_words = sum(len(c.split()) for c in chunks)
-        print(f"  ✓ Narration split into {len(chunks)} chunks ({total_words} words total)")
+        # Convert to 16kHz mono WAV for aeneas
+        subprocess.run(
+            ["ffmpeg", "-i", audio_path, "-ar", "16000", "-ac", "1", wav_path, "-y"],
+            capture_output=True, check=True,
+        )
+        print("  ✓ Converted to 16kHz WAV")
 
-        # Proportional durations with 6s minimum floor
-        durations = merge_short_scenes(chunks, total_duration)
-        floored = sum(1 for d in durations if abs(d - MIN_SCENE_DURATION) < 0.01)
-        print(f"  ✓ Proportional timing with {MIN_SCENE_DURATION}s floor ({floored} scene(s) boosted)")
-        print(f"  ✓ Duration range: {min(durations):.2f}s – {max(durations):.2f}s")
+        # Split script into scenes
+        scenes = split_scenes(script_text)
+        print(f"  ✓ {len(scenes)} scenes parsed from narration script")
 
-        # Build timings
+        # Write plain text file for aeneas (one scene per line)
+        script_path = os.path.join(tmpdir, "script.txt")
+        json_out    = os.path.join(tmpdir, "timings.json")
+        with open(script_path, "w", encoding="utf-8") as f:
+            for scene in scenes:
+                f.write(scene + "\n")
+
+        # Run aeneas forced alignment
+        print("\nRunning aeneas forced alignment...")
+        from aeneas.executetask import ExecuteTask
+        from aeneas.task import Task
+
+        config = "task_language=eng|is_text_type=plain|os_task_file_format=json"
+        task = Task(config_string=config)
+        task.audio_file_path_absolute    = wav_path
+        task.text_file_path_absolute     = script_path
+        task.sync_map_file_path_absolute = json_out
+        ExecuteTask(task).execute()
+        task.output_sync_map_file()
+        print("  ✓ Alignment complete")
+
+        with open(json_out) as f:
+            alignment = json.load(f)
+
+        fragments = alignment["fragments"]
+        if len(fragments) != len(scenes):
+            print(f"WARNING: {len(fragments)} fragments returned for {len(scenes)} scenes")
+
+        # Build CSV rows
         rows = []
-        cursor = 0.0
-        for img_idx, (img, dur) in enumerate(zip(image_files, durations)):
-            chunk = chunks[img_idx]
-            start = cursor
-            end   = cursor + dur
+        print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+        print("-" * 90)
+        for i, frag in enumerate(fragments):
+            start = round(float(frag["begin"]), 3)
+            end   = round(float(frag["end"]),   3)
+            dur   = round(end - start, 2)
+            text  = scenes[i]
             rows.append({
-                "scene":             img_idx + 1,
-                "image":             img["name"],
-                "narration_excerpt": chunk[:80].replace("\n", " ") + ("…" if len(chunk) > 80 else ""),
-                "words":             len(chunk.split()),
-                "duration_seconds":  round(dur, 2),
+                "scene":             i + 1,
+                "narration_excerpt": text,
+                "words":             len(text.split()),
+                "duration_seconds":  dur,
                 "start_time":        fmt_time(start),
                 "end_time":          fmt_time(end),
+                "start_seconds":     start,
+                "end_seconds":       end,
             })
-            cursor = end
+            preview = text[:60] + ("…" if len(text) > 60 else "")
+            print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
+
+        total = sum(r["duration_seconds"] for r in rows)
+        print(f"\nTotal: {total:.2f}s  Audio: {total_duration:.2f}s")
+        print(f"Duration range: {min(r['duration_seconds'] for r in rows):.2f}s"
+              f" – {max(r['duration_seconds'] for r in rows):.2f}s")
 
         # Write CSV
-        csv_path = os.path.join(tmpdir, "auto_timings.csv")
-        fieldnames = ["scene", "image", "narration_excerpt", "words", "duration_seconds", "start_time", "end_time"]
+        csv_path = os.path.join(tmpdir, "audio_timings_new.csv")
+        fieldnames = ["scene", "narration_excerpt", "words", "duration_seconds",
+                      "start_time", "end_time", "start_seconds", "end_seconds"]
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+        print(f"\n✓ CSV written: {len(rows)} rows")
 
-        # Print preview
-        print(f"\n{'#':>5}  {'Duration':>8}  {'Start':>7}  {'End':>7}  Narration excerpt")
-        print("-" * 80)
-        for r in rows:
-            print(f"  {r['scene']:>3}  {r['duration_seconds']:>8.2f}s  {r['start_time']:>7}  {r['end_time']:>7}  {r['narration_excerpt'][:40]}")
-
-        print(f"\nTotal: {sum(r['duration_seconds'] for r in rows):.2f}s (audio: {total_duration:.2f}s)")
-
-        # Upload
-        print("\nUploading auto_timings.csv to Drive...")
+        # Upload to Drive
+        print("Uploading audio_timings_new.csv to Drive...")
         token = get_access_token()
-        drive_delete_existing(token, "auto_timings.csv", folder_id)
-        result = drive_upload_csv(token, csv_path, "auto_timings.csv", folder_id)
+        drive_delete_existing(token, "audio_timings_new.csv", folder_id)
+        result = drive_upload_csv(token, csv_path, "audio_timings_new.csv", folder_id)
         print(f"  ✓ Uploaded: {result['name']}")
         print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
     finally:
+        import shutil
         shutil.rmtree(tmpdir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     main()
