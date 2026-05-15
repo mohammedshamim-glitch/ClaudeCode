@@ -194,7 +194,9 @@ def align_scenes(scenes, whisper_words, total_duration):
 
     Returns list of {"start": float, "end": float} — one per scene.
     """
-    LOOKAHEAD = 10  # max Whisper words to skip when matching one script word
+    LOOKAHEAD_NORMAL = 10   # words to scan under normal conditions
+    LOOKAHEAD_RESYNC = 150  # words to scan when the aligner has drifted
+    MISS_THRESHOLD   = 10   # consecutive misses before attempting re-sync
 
     # Build flat script word list: (scene_idx, word_position_in_scene, norm_word)
     script_entries = []
@@ -211,23 +213,71 @@ def align_scenes(scenes, whisper_words, total_duration):
     wh_start = [w["start"] for w in whisper_words]
     wh_end   = [w["end"]   for w in whisper_words]
 
-    # Greedy sequential match — store matched timestamp per script_entry index
+    # Build a list of the next non-empty script word at each position (for 2-word anchor)
+    next_nonempty = [None] * len(script_entries)
+    last_found = None
+    for i in range(len(script_entries) - 1, -1, -1):
+        if script_entries[i][2]:
+            last_found = i
+        next_nonempty[i] = last_found
+
+    # Adaptive greedy sequential match.
+    # Normal mode: scan LOOKAHEAD_NORMAL words ahead — matches quickly without jumping.
+    # Re-sync mode: triggered after MISS_THRESHOLD consecutive misses (aligner drifted).
+    #   Scans LOOKAHEAD_RESYNC ahead but requires a TWO-WORD consecutive anchor to
+    #   accept the re-sync. Requiring two adjacent script words to match at adjacent
+    #   Whisper positions prevents common short words ("the", "and") from causing
+    #   false re-syncs that would jump too far ahead.
+    # Monotonicity: new match's start must be strictly after the previous match's start.
     matched_start = [None] * len(script_entries)
     matched_end   = [None] * len(script_entries)
 
+    last_matched_start = -1.0
+    consecutive_misses = 0
     wh_pos = 0
+
     for sc_pos, (s_idx, _, sc_word) in enumerate(script_entries):
         if not sc_word:
             continue
-        for offset in range(LOOKAHEAD):
+
+        in_resync = consecutive_misses >= MISS_THRESHOLD
+        lookahead = LOOKAHEAD_RESYNC if in_resync else LOOKAHEAD_NORMAL
+
+        matched = False
+        for offset in range(lookahead):
             wi = wh_pos + offset
             if wi >= len(whisper_words):
                 break
-            if wh_norm[wi] == sc_word:
-                matched_start[sc_pos] = wh_start[wi]
-                matched_end[sc_pos]   = wh_end[wi]
-                wh_pos = wi + 1
-                break
+            if wh_norm[wi] != sc_word:
+                continue
+            t_start = wh_start[wi]
+            if t_start <= last_matched_start:
+                continue
+
+            if in_resync:
+                # Require the NEXT script word to also match at wi+1 or wi+2
+                # to confirm this is a genuine anchor, not a false-positive on a
+                # common word.
+                nxt = next_nonempty[sc_pos + 1] if sc_pos + 1 < len(script_entries) else None
+                if nxt is not None:
+                    nxt_word = script_entries[nxt][2]
+                    anchor_ok = (
+                        (wi + 1 < len(wh_norm) and wh_norm[wi + 1] == nxt_word) or
+                        (wi + 2 < len(wh_norm) and wh_norm[wi + 2] == nxt_word)
+                    )
+                    if not anchor_ok:
+                        continue  # skip this single-word match, keep looking
+
+            matched_start[sc_pos] = t_start
+            matched_end[sc_pos]   = wh_end[wi]
+            last_matched_start    = t_start
+            wh_pos = wi + 1
+            matched = True
+            consecutive_misses = 0
+            break
+
+        if not matched:
+            consecutive_misses += 1
 
     # Linear interpolation over contiguous None runs using nearest valid anchors
     i = 0
