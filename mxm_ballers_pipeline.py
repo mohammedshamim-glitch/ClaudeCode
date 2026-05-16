@@ -164,7 +164,10 @@ def generate_seo(video_title, clip_num, total_clips):
     # Clean up filename to readable title
     clean = re.sub(r"[_\-]", " ", video_title)
     clean = re.sub(r"\.(mp4|mpeg-4|mkv|webm).*$", "", clean, flags=re.IGNORECASE).strip()
-    clean = re.sub(r"\s+", " ", clean)
+    # Strip resolution/codec noise: 1080p60, 720p, MPEG 4, MPEG-4, etc.
+    clean = re.sub(r"\b\d{3,4}p\d*\b", "", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"\bMPEG[\s\-]?4\b", "", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"\s+", " ", clean).strip()
 
     title = f"{clean} 🔥 Part {clip_num} #Shorts"
     if len(title) > 100:
@@ -188,58 +191,62 @@ def generate_seo(video_title, clip_num, total_clips):
     return title, description, tags
 
 
-# ── YouTube upload ─────────────────────────────────────────────────────────────
+# ── Drive upload ──────────────────────────────────────────────────────────────
 
-def upload_short(video_path, title, description, tags, token):
-    """Upload a video as a YouTube Short."""
-    metadata = {
-        "snippet": {
-            "title": title[:100],
-            "description": description,
-            "tags": tags,
-            "categoryId": "17",  # Sports
-            "defaultLanguage": "en-GB",
-            "defaultAudioLanguage": "en-GB",
+def get_or_create_shorts_folder(parent_id, token):
+    """Get (or create) a Shorts subfolder inside the BallerzMXM folder."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        params={
+            "q": f"'{parent_id}' in parents and mimeType='application/vnd.google-apps.folder' and name='Shorts' and trashed=false",
+            "fields": "files(id)",
         },
-        "status": {
-            "privacyStatus": "public",
-            "selfDeclaredMadeForKids": False,
-        },
-    }
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    files = r.json().get("files", [])
+    if files:
+        return files[0]["id"]
+    # Create it
+    r2 = requests.post(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={"name": "Shorts", "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]},
+    )
+    r2.raise_for_status()
+    folder_id = r2.json()["id"]
+    print(f"  ✓ Created Drive folder: Shorts ({folder_id})")
+    return folder_id
 
+
+def save_short_to_drive(video_path, filename, folder_id, token):
+    """Upload a processed Short to Drive."""
+    file_size = os.path.getsize(video_path)
     # Initiate resumable upload
     r = requests.post(
-        "https://www.googleapis.com/upload/youtube/v3/videos"
-        "?uploadType=resumable&part=snippet,status",
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable",
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "X-Upload-Content-Type": "video/mp4",
         },
-        json=metadata,
+        json={"name": filename, "parents": [folder_id]},
     )
     r.raise_for_status()
     upload_url = r.headers["Location"]
 
-    # Upload video bytes
-    file_size = os.path.getsize(video_path)
     with open(video_path, "rb") as f:
         r2 = requests.put(
             upload_url,
-            headers={
-                "Content-Type": "video/mp4",
-                "Content-Length": str(file_size),
-            },
+            headers={"Content-Type": "video/mp4", "Content-Length": str(file_size)},
             data=f,
         )
 
     if r2.status_code in (200, 201):
-        video_id = r2.json().get("id", "unknown")
-        print(f"  ✓ Uploaded: https://www.youtube.com/shorts/{video_id}")
-        print(f"    Title: {title}")
-        return video_id
+        file_id = r2.json().get("id", "unknown")
+        print(f"  ✓ Saved to Drive: {filename} (id: {file_id})")
+        return file_id
     else:
-        print(f"  ✗ Upload failed: {r2.status_code} {r2.text[:200]}")
+        print(f"  ✗ Drive save failed: {r2.status_code} {r2.text[:200]}")
         return None
 
 
@@ -253,12 +260,13 @@ def main():
     processed_dir.mkdir(exist_ok=True)
 
     print("=== mxm ballerz Shorts Pipeline ===\n")
-    drive_token   = get_drive_token()
-    youtube_token = get_youtube_token()
+    drive_token = get_drive_token()
 
     # 1. List Drive videos
     videos = list_drive_videos(drive_token)
     print(f"Found {len(videos)} video(s) in BallerzMXM folder\n")
+
+    shorts_folder_id = get_or_create_shorts_folder(DRIVE_FOLDER_ID, drive_token)
 
     for video in videos:
         vid_name = video["name"]
@@ -274,25 +282,24 @@ def main():
         clips = make_clips(raw_path, clips_dir)
         print(f"  → {len(clips)} clips created")
 
-        # 4. Process each clip (crop + watermark) + upload
+        # 4. Process each clip (crop + watermark) and save to Drive
         total = len(clips)
         for i, clip in enumerate(clips, 1):
-            out_path = processed_dir / f"{Path(vid_name).stem}_short_{i:03d}.mp4"
+            stem = re.sub(r"\.(mpeg-4|mp4|mkv|webm).*$", "", Path(vid_name).stem, flags=re.IGNORECASE)
+            out_filename = f"{stem}_short_{i:03d}.mp4"
+            out_path = processed_dir / out_filename
             if not out_path.exists():
                 process_clip(clip, out_path)
 
-            title, desc, tags = generate_seo(vid_name, i, total)
-
-            # Refresh tokens every 10 uploads
+            # Refresh token every 10 saves
             if i % 10 == 1:
-                drive_token   = get_drive_token()
-                youtube_token = get_youtube_token()
+                drive_token = get_drive_token()
 
-            upload_short(str(out_path), title, desc, tags, youtube_token)
+            save_short_to_drive(str(out_path), out_filename, shorts_folder_id, drive_token)
 
         print()
 
-    print("=== Pipeline complete ===")
+    print("=== Pipeline complete — all Shorts saved to BallerzMXM/Shorts in Drive ===")
 
 
 if __name__ == "__main__":
