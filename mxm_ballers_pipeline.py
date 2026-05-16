@@ -299,8 +299,7 @@ def main():
     processed_dir.mkdir(exist_ok=True)
 
     print("=== mxm ballerz Shorts Pipeline ===\n")
-    drive_token   = get_drive_token()
-    youtube_token = get_youtube_token()
+    drive_token = get_drive_token()
 
     # 1. List Drive videos
     videos = list_drive_videos(drive_token)
@@ -342,18 +341,15 @@ def main():
             if not out_path.exists():
                 process_clip(clip, out_path)
 
-            # Refresh tokens every 10 iterations
+            # Refresh token every 10 iterations
             if i % 10 == 1:
-                drive_token   = get_drive_token()
-                youtube_token = get_youtube_token()
+                drive_token = get_drive_token()
 
             save_short_to_drive(str(out_path), out_filename, video_folder_id, drive_token)
-            title, desc, tags = generate_seo(vid_name, i, total)
-            upload_to_youtube(str(out_path), title, desc, tags, youtube_token)
 
         print()
 
-    print("=== Pipeline complete — Shorts saved to Drive and uploaded to YouTube ===")
+    print("=== Pipeline complete — all Shorts saved to BallerzMXM/Shorts in Drive ===")
 
 
 if __name__ == "__main__":
