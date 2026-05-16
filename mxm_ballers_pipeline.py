@@ -18,22 +18,27 @@ WATERMARK   = "mxm"
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
-def get_access_token():
+def get_access_token(refresh_key="youtube_refresh_token", store_key="youtube_access_token"):
     with open(TOKEN_FILE) as f:
         t = json.load(f)
     r = requests.post("https://oauth2.googleapis.com/token", data={
         "client_id":     t["client_id"],
         "client_secret": t["client_secret"],
-        "refresh_token": t["youtube_refresh_token"],
+        "refresh_token": t[refresh_key],
         "grant_type":    "refresh_token",
     })
     r.raise_for_status()
     token = r.json()["access_token"]
-    # Update stored access token
-    t["youtube_access_token"] = token
+    t[store_key] = token
     with open(TOKEN_FILE, "w") as f:
         json.dump(t, f, indent=2)
     return token
+
+def get_drive_token():
+    return get_access_token("drive_refresh_token", "drive_access_token")
+
+def get_youtube_token():
+    return get_access_token("youtube_refresh_token", "youtube_access_token")
 
 # ── Drive ─────────────────────────────────────────────────────────────────────
 
@@ -248,10 +253,11 @@ def main():
     processed_dir.mkdir(exist_ok=True)
 
     print("=== mxm ballerz Shorts Pipeline ===\n")
-    token = get_access_token()
+    drive_token   = get_drive_token()
+    youtube_token = get_youtube_token()
 
     # 1. List Drive videos
-    videos = list_drive_videos(token)
+    videos = list_drive_videos(drive_token)
     print(f"Found {len(videos)} video(s) in BallerzMXM folder\n")
 
     for video in videos:
@@ -261,7 +267,7 @@ def main():
 
         # 2. Download from Drive
         raw_path = downloads_dir / vid_name
-        download_drive_file(vid_id, raw_path, token)
+        download_drive_file(vid_id, raw_path, drive_token)
 
         # 3. Split into clips
         clips_dir = WORK_DIR / "clips" / Path(vid_name).stem
@@ -277,11 +283,12 @@ def main():
 
             title, desc, tags = generate_seo(vid_name, i, total)
 
-            # Refresh token every 10 uploads
+            # Refresh tokens every 10 uploads
             if i % 10 == 1:
-                token = get_access_token()
+                drive_token   = get_drive_token()
+                youtube_token = get_youtube_token()
 
-            upload_short(str(out_path), title, desc, tags, token)
+            upload_short(str(out_path), title, desc, tags, youtube_token)
 
         print()
 
