@@ -6,6 +6,7 @@ Each scene gets a different effect, cycling through 6 styles.
 """
 
 import csv, io, json, os, re, sys, subprocess, tempfile, shutil, requests
+from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -155,11 +156,13 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
 KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
-SUB_FONT_SIZE  = 80          # ASS font size at PlayResX=1920
-SUB_MARGIN_V   = 80          # vertical margin from bottom (pixels)
+SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+SUB_FONT_SIZE  = 80
+SUB_MARGIN_V   = 90          # pixels from bottom to glyph baseline
 SUB_PHRASE_LEN = 4           # words per phrase group
-SUB_BORD_NORM  = 2           # outline on non-highlighted words
-SUB_BORD_HL    = 20          # thick green border on active word (approximates box)
+BOX_PAD_H      = 18          # horizontal padding inside green box
+BOX_PAD_V      = 10          # vertical padding inside green box
+BOX_RADIUS     = 8           # rounded corner radius
 
 EFFECT_NAMES = [
     "pan left → right",
@@ -254,122 +257,123 @@ def load_kb_movements(local_path):
         movements.append((scene_id, text))
     return movements
 
-# ── Karaoke subtitle generation ───────────────────────────────────────────────
-def seconds_to_ass(t):
-    h = int(t) // 3600
-    m = (int(t) % 3600) // 60
-    s = t - h * 3600 - m * 60
-    return f"{h}:{m:02d}:{s:05.2f}"
+# ── Karaoke subtitle generation (PIL) ────────────────────────────────────────
+def render_subtitle_frame(phrase_words, active_idx, font, w=RESOLUTION_W, h=RESOLUTION_H):
+    """1920×1080 RGBA frame: phrase words in white, solid green box behind active word."""
+    img  = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
 
-def parse_seconds(row, start_key="start_seconds", fallback_key="start_time"):
-    """Parse a time value from CSV row — float string or MM:SS.cc format."""
-    v = row.get(start_key, "")
-    try:
-        return float(v)
-    except (ValueError, TypeError):
-        v = row.get(fallback_key, "0")
-        try:
-            parts = v.split(":")
-            return int(parts[0]) * 60 + float(parts[1])
-        except Exception:
-            return 0.0
+    word_bboxes = [font.getbbox(word) for word in phrase_words]
+    word_widths = [bb[2] - bb[0] for bb in word_bboxes]
+    space_w     = font.getbbox(" ")[2]
+    total_w     = sum(word_widths) + space_w * (len(phrase_words) - 1)
 
-def generate_ass_karaoke(timing_rows):
-    """
-    Build an ASS subtitle file with karaoke-style word highlighting.
-    Active word gets a thick green outline (SUB_BORD_HL) — at this size it
-    fills in between letter strokes to create a solid green background box.
-    All text is uppercase; non-active words use a thin black outline.
-    """
-    header = (
-        "[Script Info]\n"
-        "ScriptType: v4.00+\n"
-        "PlayResX: 1920\n"
-        "PlayResY: 1080\n"
-        "ScaledBorderAndShadow: yes\n"
-        "\n"
-        "[V4+ Styles]\n"
-        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
-        "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
-        "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
-        "Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Sub,Arial,{SUB_FONT_SIZE},"
-        f"&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,"
-        f"1,0,0,0,100,100,0,0,1,{SUB_BORD_NORM},0,"
-        f"2,40,40,{SUB_MARGIN_V},1\n"
-        "\n"
-        "[Events]\n"
-        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    # Anchor so glyph bottom sits SUB_MARGIN_V from frame bottom
+    max_bb3 = max(bb[3] for bb in word_bboxes)
+    y_text  = h - SUB_MARGIN_V - max_bb3
+    x_start = (w - total_w) // 2
+
+    word_xs = []
+    x = x_start
+    for ww in word_widths:
+        word_xs.append(x)
+        x += ww + space_w
+
+    # Green box tightly around active word's actual glyph
+    abb = word_bboxes[active_idx]
+    ax  = word_xs[active_idx]
+    draw.rounded_rectangle(
+        [ax + abb[0] - BOX_PAD_H, y_text + abb[1] - BOX_PAD_V,
+         ax + abb[2] + BOX_PAD_H, y_text + abb[3] + BOX_PAD_V],
+        radius=BOX_RADIUS, fill=(0, 200, 0, 255),
     )
 
+    for word, wx in zip(phrase_words, word_xs):
+        draw.text((wx, y_text), word, font=font,
+                  fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0, 255))
+    return img
+
+def build_subtitle_events(timing_rows):
+    """Returns (events, font). Events: list of (t_start, t_end, phrase_words, active_idx)."""
+    font   = ImageFont.truetype(SUB_FONT_PATH, SUB_FONT_SIZE)
     events = []
     for row in timing_rows:
         text = row.get("narration_excerpt", "").strip()
         if not text:
             continue
-
         try:
-            start_s = float(row.get("start_seconds", 0))
-            end_s   = float(row.get("end_seconds",   0))
-        except (ValueError, TypeError):
-            start_s = parse_seconds(row, "start_seconds", "start_time")
-            end_s   = parse_seconds(row, "end_seconds",   "end_time")
-
+            start_s = float(row["start_seconds"])
+            end_s   = float(row["end_seconds"])
+        except (KeyError, ValueError):
+            continue
         dur = end_s - start_s
         if dur <= 0:
             continue
-
-        words = text.upper().split()
-        n = len(words)
-        if not n:
-            continue
-
+        words    = text.upper().split()
+        n        = len(words)
         word_dur = dur / n
-
         for phrase_start in range(0, n, SUB_PHRASE_LEN):
-            phrase_end   = min(phrase_start + SUB_PHRASE_LEN, n)
-            phrase_words = words[phrase_start:phrase_end]
-
-            for local_i, _ in enumerate(phrase_words):
+            phrase_words = words[phrase_start:min(phrase_start + SUB_PHRASE_LEN, n)]
+            for local_i in range(len(phrase_words)):
                 global_i = phrase_start + local_i
                 t_start  = start_s + global_i * word_dur
-                t_end    = start_s + (global_i + 1) * word_dur
-                if global_i == n - 1:
-                    t_end = end_s
+                t_end    = (end_s if global_i == n - 1
+                            else start_s + (global_i + 1) * word_dur)
+                events.append((t_start, t_end, phrase_words, local_i))
+    return events, font
 
-                parts = []
-                for j, w in enumerate(phrase_words):
-                    if j == local_i:
-                        # Thick green outline → solid green background effect
-                        parts.append(
-                            f"{{\\bord{SUB_BORD_HL}\\3c&H0000FF00&}}{w}"
-                            f"{{\\bord{SUB_BORD_NORM}\\3c&H00000000&}}"
-                        )
-                    else:
-                        parts.append(w)
+def build_subtitle_overlay(events, font, tmpdir, total_duration):
+    """Renders subtitle PNGs and returns path to a transparent RGBA MOV overlay."""
+    blank = os.path.join(tmpdir, "sub_blank.png")
+    Image.new("RGBA", (RESOLUTION_W, RESOLUTION_H), (0, 0, 0, 0)).save(blank)
 
-                text_field = "{\\an2}" + " ".join(parts)
-                events.append(
-                    f"Dialogue: 0,"
-                    f"{seconds_to_ass(t_start)},{seconds_to_ass(t_end)},"
-                    f"Sub,,0,0,0,,{text_field}"
-                )
+    cache = {}
+    def get_frame(phrase_words, active_idx):
+        key = (tuple(phrase_words), active_idx)
+        if key not in cache:
+            path = os.path.join(tmpdir, f"subf_{len(cache):05d}.png")
+            render_subtitle_frame(phrase_words, active_idx, font).save(path)
+            cache[key] = path
+        return cache[key]
 
-    return header + "\n".join(events) + "\n"
+    concat_entries = []
+    cursor = 0.0
+    for t_start, t_end, phrase_words, active_idx in events:
+        if t_start > cursor + 0.001:
+            concat_entries.append((blank, t_start - cursor))
+        concat_entries.append((get_frame(phrase_words, active_idx), t_end - t_start))
+        cursor = t_end
+    if cursor < total_duration - 0.001:
+        concat_entries.append((blank, total_duration - cursor))
 
-def burn_subtitles(video_path, ass_path, output_path):
-    """Re-encode video with ASS subtitles burned in; copy audio unchanged."""
-    # Escape backslashes and colons in path for ffmpeg vf filter
-    safe_path = ass_path.replace("\\", "/").replace(":", "\\:")
-    result = subprocess.run([
-        "ffmpeg", "-y", "-i", video_path,
-        "-vf", f"ass={safe_path}",
-        "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
-        "-c:a", "copy",
-        output_path,
+    concat_path = os.path.join(tmpdir, "sub_concat.txt")
+    with open(concat_path, "w") as f:
+        for path, dur in concat_entries:
+            f.write(f"file '{path}'\nduration {dur:.6f}\n")
+        if concat_entries:
+            f.write(f"file '{concat_entries[-1][0]}'\n")
+
+    overlay = os.path.join(tmpdir, "subtitle_overlay.mov")
+    result  = subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path,
+        "-vf", f"fps={FPS}", "-c:v", "png", "-pix_fmt", "rgba", overlay,
     ], capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"  Subtitle burn error:\n{result.stderr[-2000:]}")
+        print(f"  Subtitle overlay error:\n{result.stderr[-1500:]}")
+        sys.exit(1)
+    print(f"  ✓ Subtitle overlay: {len(cache)} unique frames, {len(concat_entries)} events")
+    return overlay
+
+def composite_subtitles(video_path, overlay_path, output_path):
+    """Overlay transparent subtitle MOV on top of main video."""
+    result = subprocess.run([
+        "ffmpeg", "-y", "-i", video_path, "-i", overlay_path,
+        "-filter_complex", "[0:v][1:v]overlay=0:0:shortest=1",
+        "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
+        "-c:a", "copy", output_path,
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Composite error:\n{result.stderr[-2000:]}")
         sys.exit(1)
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
@@ -593,19 +597,17 @@ def main():
 
         # Burn karaoke subtitles if requested
         if use_subs:
-            if timings_file and timing_rows and "start_seconds" in timing_rows[0]:
-                print("\nGenerating karaoke subtitles...")
-                ass_content = generate_ass_karaoke(timing_rows)
-                ass_path = os.path.join(tmpdir, "subtitles.ass")
-                with open(ass_path, "w", encoding="utf-8") as f:
-                    f.write(ass_content)
-                print(f"  ✓ ASS file written ({len(ass_content.splitlines())} lines)")
+            if timing_rows and "start_seconds" in timing_rows[0]:
+                audio_dur = get_audio_duration(audio_path)
+                print("\nGenerating karaoke subtitles (PIL)...")
+                events, font = build_subtitle_events(timing_rows)
+                overlay = build_subtitle_overlay(events, font, tmpdir, audio_dur + LAST_SCENE_BONUS_SECONDS)
                 sub_video = os.path.join(tmpdir, "video_with_subs.mp4")
-                print("  Burning subtitles (re-encoding)...")
-                burn_subtitles(OUTPUT_VIDEO, ass_path, sub_video)
+                print("  Compositing subtitles onto video...")
+                composite_subtitles(OUTPUT_VIDEO, overlay, sub_video)
                 os.replace(sub_video, OUTPUT_VIDEO)
                 size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
-                print(f"  ✓ Subtitles burned ({size_mb:.1f} MB)")
+                print(f"  ✓ Subtitles composited ({size_mb:.1f} MB)")
             else:
                 print("\n  ⚠ --subs requested but timings CSV missing start_seconds column")
                 print("    Re-run generate_timings.py to regenerate the CSV")
