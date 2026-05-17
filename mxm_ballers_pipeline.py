@@ -11,9 +11,9 @@ from pathlib import Path
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
 DRIVE_FOLDER_ID = "1JJOH9UiawBU_ozujd-3aeyslQRHQs1r8"
 WORK_DIR = Path("/home/user/ClaudeCode/mxm_shorts")
-CLIP_TARGET = 50        # target seconds per Short
-CLIP_MIN    = 30        # discard clips shorter than this
-CLIP_MAX    = 58        # YouTube Shorts max
+CLIP_MAX          = 55   # hard cap per Short (user requirement)
+CLIP_MIN          = 20   # discard clips shorter than this
+SCENE_THRESHOLD   = 0.35 # ffmpeg scene change sensitivity (0–1, lower = more sensitive)
 WATERMARK   = "mxm"
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
@@ -83,29 +83,65 @@ def get_duration(path):
     return float(r.stdout.strip())
 
 
+def detect_scene_changes(src_path):
+    """Return sorted list of timestamps (seconds) where scene changes occur."""
+    r = subprocess.run([
+        "ffmpeg", "-i", str(src_path),
+        "-vf", f"select='gt(scene,{SCENE_THRESHOLD})',showinfo",
+        "-vsync", "vfr", "-f", "null", "-"
+    ], capture_output=True, text=True)
+    times = [0.0]
+    for line in r.stderr.splitlines():
+        if "pts_time:" in line:
+            m = re.search(r"pts_time:([\d.]+)", line)
+            if m:
+                times.append(float(m.group(1)))
+    duration = get_duration(src_path)
+    times.append(duration)
+    return sorted(set(times))
+
+
 def make_clips(src_path, out_dir):
-    """Split video into ~50s clips at natural scene cuts."""
+    """Split video at scene changes into clips ≤55s, never mid-scene."""
     out_dir.mkdir(parents=True, exist_ok=True)
     duration = get_duration(src_path)
-    n_clips = max(1, round(duration / CLIP_TARGET))
-    clip_len = duration / n_clips
 
+    print(f"  🔍 Detecting scene changes (this takes a moment)...")
+    scene_times = detect_scene_changes(src_path)
+    print(f"  → {len(scene_times) - 2} scene changes found")
+
+    # Group scene boundaries into clips ≤ CLIP_MAX seconds
+    segments = []
+    clip_start = 0.0
+    for i in range(1, len(scene_times)):
+        t = scene_times[i]
+        if t - clip_start >= CLIP_MAX:
+            # Cut at the previous scene boundary
+            prev = scene_times[i - 1]
+            if prev > clip_start + CLIP_MIN:
+                segments.append((clip_start, prev))
+                clip_start = prev
+            else:
+                # No scene break found in time — force cut at CLIP_MAX
+                segments.append((clip_start, clip_start + CLIP_MAX))
+                clip_start = clip_start + CLIP_MAX
+    # Final segment
+    if duration - clip_start >= CLIP_MIN:
+        segments.append((clip_start, duration))
+
+    # Cut each segment
     clips = []
-    for i in range(n_clips):
-        start = i * clip_len
-        length = min(clip_len, duration - start)
-        if length < CLIP_MIN:
-            print(f"  ⚠ Clip {i+1} too short ({length:.0f}s), skipping")
-            continue
-        length = min(length, CLIP_MAX)
-        out_path = out_dir / f"clip_{i+1:03d}.mp4"
+    total = len(segments)
+    for i, (start, end) in enumerate(segments, 1):
+        length = end - start
+        out_path = out_dir / f"clip_{i:03d}.mp4"
         if not out_path.exists():
             subprocess.run([
                 "ffmpeg", "-y", "-ss", str(start), "-i", str(src_path),
                 "-t", str(length), "-c", "copy", str(out_path)
             ], capture_output=True)
         clips.append(out_path)
-        print(f"  ✂ Clip {i+1}/{n_clips}: {start:.0f}s → {start+length:.0f}s")
+        print(f"  ✂ Clip {i}/{total}: {start:.0f}s → {end:.0f}s ({length:.0f}s)")
     return clips
 
 
