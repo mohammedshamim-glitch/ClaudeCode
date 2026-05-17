@@ -166,7 +166,7 @@ BOX_RADIUS     = 8           # rounded corner radius
 
 EFFECT_NAMES = [
     "pan left → right",
-    "pan right → left",
+    "zoom in",
     "pan top → bottom",
     "pan bottom → top",
 ]
@@ -175,7 +175,7 @@ def get_kb_filter(idx, duration, w, h):
     """
     Returns a smooth Ken Burns vf filter string using scale+crop+t.
     Image is pre-scaled to KB_SCALE× output, then a time-varying crop
-    window pans across it, then rescaled to w×h.
+    window pans/zooms across it, then rescaled to w×h.
     't' is ffmpeg's built-in time variable (seconds, continuous).
     idx selects one of 4 effects.
     """
@@ -196,10 +196,12 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 1. Pan right → left
+        # 1. Zoom in — crop window shrinks toward centre; rescale to output = zoom effect
+        # At t=0: crop = full pre-scaled image (zoomed out). At t=D: crop = w×h centre (zoomed in).
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
-         f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
+         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
+         f":x='{px}*{P}/2':y='{py}*{P}/2',"
          f"scale={w}:{h},setsar=1"),
 
         # 2. Pan top → bottom

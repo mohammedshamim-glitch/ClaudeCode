@@ -150,7 +150,7 @@ def drive_upload(token, local_path, filename, folder_id):
     return r.json()
 
 # ── Ken Burns ─────────────────────────────────────────────────────────────────
-EFFECT_NAMES = ["pan left→right", "pan right→left", "pan top→bottom", "pan bottom→top"]
+EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top"]
 
 def get_kb_filter(idx, duration, w, h):
     D  = duration
@@ -162,15 +162,20 @@ def get_kb_filter(idx, duration, w, h):
     cy = py // 2
     P  = f"min(t/{D:.6f},1)"
     effects = [
+        # 0. Pan left → right
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},scale={w}:{h},setsar=1"),
+        # 1. Zoom in — crop shrinks to centre; rescale to output = zoom effect
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
-         f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},scale={w}:{h},setsar=1"),
+         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
+         f":x='{px}*{P}/2':y='{py}*{P}/2',scale={w}:{h},setsar=1"),
+        # 2. Pan top → bottom
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',scale={w}:{h},setsar=1"),
+        # 3. Pan bottom → top
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
