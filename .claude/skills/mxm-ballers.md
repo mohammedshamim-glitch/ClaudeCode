@@ -24,12 +24,13 @@ User says anything like:
 
 ## Steps
 
-1. **Check Drive folder** — list all video files in `BallerzMXM` folder
+1. **Check Drive folder** — list all video files in `BallerzMXM` (skips Shorts/Completed subfolders)
 2. **Download** — pull each video from Drive to `/home/user/ClaudeCode/mxm_shorts/downloads/`
 3. **Split** — divide each video into ~50s clips (time-based split)
 4. **Process** — for each clip: centre-crop to 9:16, scale to 1080×1920, overlay `mxm` watermark
-5. **SEO** — generate title (≤100 chars + #Shorts), description with hashtags, sports tags
-6. **Upload** — resumable upload to mxm ballers YouTube channel as public Shorts
+5. **Save to Drive** — clips go to `BallerzMXM/Shorts/{Video Title}/`
+6. **Move to Completed** — once all clips saved, source video moves to `BallerzMXM/Completed/`
+7. **STOP — confirm with user before any YouTube upload**
 
 ## Run
 
@@ -37,11 +38,22 @@ User says anything like:
 cd /home/user/ClaudeCode && python3 mxm_ballers_pipeline.py
 ```
 
+## Drive folder structure
+
+```
+BallerzMXM/
+├── Shorts/
+│   ├── {Video Title 1}/   ← processed 50s clips
+│   └── {Video Title 2}/
+├── Completed/             ← original long videos moved here after processing
+└── (new videos dropped here to be picked up)
+```
+
 ## Add new videos
 
 1. User downloads video from their @rm26hd channel (YouTube Studio app → Download)
-2. User uploads to Google Drive → `BallerzMXM` folder
-3. Run this skill — pipeline picks up any new files automatically
+2. User uploads to Google Drive → `BallerzMXM/` root (NOT into Shorts or Completed)
+3. Run this skill — pipeline picks it up, processes it, then moves it to Completed
 
 ## SEO pattern
 

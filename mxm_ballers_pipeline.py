@@ -289,6 +289,24 @@ def save_short_to_drive(video_path, filename, folder_id, token):
         return None
 
 
+def move_to_completed(file_id, completed_folder_id, token):
+    """Move a Drive file into the Completed folder."""
+    # Get current parents
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}",
+        params={"fields": "parents"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    parents = ",".join(r.json().get("parents", []))
+    # Move: add new parent, remove old
+    r2 = requests.patch(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}",
+        params={"addParents": completed_folder_id, "removeParents": parents, "fields": "id"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    return r2.ok
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -301,12 +319,15 @@ def main():
     print("=== mxm ballerz Shorts Pipeline ===\n")
     drive_token = get_drive_token()
 
-    # 1. List Drive videos
+    # 1. List Drive videos (excludes Completed and Shorts subfolders)
     videos = list_drive_videos(drive_token)
     print(f"Found {len(videos)} video(s) in BallerzMXM folder\n")
 
-    # Top-level Shorts folder
-    shorts_root_id = get_or_create_folder("Shorts", DRIVE_FOLDER_ID, drive_token)
+    # Top-level Shorts and Completed folders
+    shorts_root_id    = get_or_create_folder("Shorts",    DRIVE_FOLDER_ID, drive_token)
+    completed_root_id = get_or_create_folder("Completed", DRIVE_FOLDER_ID, drive_token)
+
+    summary = []
 
     for video in videos:
         vid_name = video["name"]
@@ -316,11 +337,11 @@ def main():
         folder_name = re.sub(r"[_\-]", " ", vid_name)
         folder_name = re.sub(r"\.(mp4|mpeg-4|mkv|webm).*$", "", folder_name, flags=re.IGNORECASE)
         folder_name = re.sub(r"\b\d{3,4}p\d*\b|\bMPEG[\s\-]?4\b", "", folder_name, flags=re.IGNORECASE)
-        folder_name = re.sub(r"\s+", " ", folder_name).strip()[:60]
+        folder_name = re.sub(r"[.\s]+$", "", re.sub(r"\s+", " ", folder_name)).strip()[:60]
 
         print(f"── {folder_name}")
 
-        # Per-video Drive subfolder
+        # Per-video Drive subfolder under Shorts
         video_folder_id = get_or_create_folder(folder_name, shorts_root_id, drive_token)
 
         # 2. Download from Drive
@@ -332,8 +353,9 @@ def main():
         clips = make_clips(raw_path, clips_dir)
         print(f"  → {len(clips)} clips created")
 
-        # 4. Process, save to Drive, upload to YouTube
+        # 4. Process and save each clip to Drive
         total = len(clips)
+        saved = []
         for i, clip in enumerate(clips, 1):
             stem = re.sub(r"\.(mpeg-4|mp4|mkv|webm).*$", "", Path(vid_name).stem, flags=re.IGNORECASE)
             out_filename = f"{stem}_short_{i:03d}.mp4"
@@ -341,15 +363,34 @@ def main():
             if not out_path.exists():
                 process_clip(clip, out_path)
 
-            # Refresh token every 10 iterations
             if i % 10 == 1:
                 drive_token = get_drive_token()
 
-            save_short_to_drive(str(out_path), out_filename, video_folder_id, drive_token)
+            file_id = save_short_to_drive(str(out_path), out_filename, video_folder_id, drive_token)
+            if file_id:
+                saved.append(file_id)
 
+        # 5. Move source video to Completed folder
+        if len(saved) == total:
+            if move_to_completed(vid_id, completed_root_id, drive_token):
+                print(f"  ✓ Source moved to Completed folder")
+            else:
+                print(f"  ⚠ Could not move source to Completed — check Drive permissions")
+
+        summary.append((folder_name, total, len(saved)))
         print()
 
-    print("=== Pipeline complete — all Shorts saved to BallerzMXM/Shorts in Drive ===")
+    print("=== Pipeline complete ===\n")
+    print("📁 Drive structure:")
+    print(f"   BallerzMXM/Shorts/")
+    for name, total, saved in summary:
+        print(f"     {name}/ — {saved}/{total} clips")
+    print(f"   BallerzMXM/Completed/ — source videos moved here")
+    print(f"\n⚠️  Nothing uploaded to YouTube — confirm with user before uploading.")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
