@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
 """
 Create a 30-second sample preview video with Ken Burns + karaoke subtitles.
-Uses the first N scenes that fill ~SAMPLE_DURATION seconds.
-Uploads as 'sample_30s.mp4' to the episode folder.
+Subtitles use PIL to render a proper solid green rectangle behind the active word.
 
 Usage:
-    python3 create_sample.py <episode_folder_id> [--crossfade]
+    python3 create_sample.py <episode_folder_id> [--crossfade] [--output=sample_30s.mp4]
 """
 
 import csv, io, json, os, re, subprocess, sys, tempfile, shutil, requests
-from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
 
-TOKEN_FILE     = "/home/user/ClaudeCode/token.json"
-SAMPLE_DURATION = 30.0   # target sample length in seconds
-OUTPUT_LOCAL   = "/home/user/ClaudeCode/sample_30s.mp4"
-RESOLUTION_W   = 1920
-RESOLUTION_H   = 1080
-FPS            = 30
-VIDEO_CRF      = 23
+TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
+SAMPLE_DURATION = 30.0
+OUTPUT_LOCAL    = "/home/user/ClaudeCode/sample_30s.mp4"
+RESOLUTION_W    = 1920
+RESOLUTION_H    = 1080
+FPS             = 30
+VIDEO_CRF       = 23
+KB_SCALE        = 1.2
+XFADE_DURATION  = 0.3
 
-KB_SCALE = 1.2
-
-# Karaoke config (matches create_video_kb.py)
-SUB_FONT_SIZE  = 80
-SUB_MARGIN_V   = 80
-SUB_PHRASE_LEN = 4
-SUB_BORD_NORM  = 2
-SUB_BORD_HL    = 20
-
-# Crossfade duration in seconds (used with --crossfade flag)
-XFADE_DURATION = 0.3
+# Subtitle config
+FONT_PATH       = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+FONT_SIZE       = 80
+PHRASE_LEN      = 4          # words per phrase group
+BOX_PAD_H       = 18         # horizontal padding inside green box
+BOX_PAD_V       = 10         # vertical padding inside green box
+BOX_RADIUS      = 8          # rounded corner radius (0 = sharp rectangle)
+SUB_MARGIN_V    = 90         # pixels from bottom of frame to text baseline
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def load_tokens():
@@ -184,32 +182,12 @@ static_vf = (
     f"pad={RESOLUTION_W}:{RESOLUTION_H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
 )
 
-# ── Subtitle generation ───────────────────────────────────────────────────────
-def seconds_to_ass(t):
-    h = int(t) // 3600
-    m = (int(t) % 3600) // 60
-    s = t - h * 3600 - m * 60
-    return f"{h}:{m:02d}:{s:05.2f}"
-
-def generate_ass_karaoke(timing_rows):
-    header = (
-        "[Script Info]\n"
-        "ScriptType: v4.00+\n"
-        "PlayResX: 1920\n"
-        "PlayResY: 1080\n"
-        "ScaledBorderAndShadow: yes\n\n"
-        "[V4+ Styles]\n"
-        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
-        "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
-        "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
-        "Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Sub,Arial,{SUB_FONT_SIZE},"
-        f"&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,"
-        f"1,0,0,0,100,100,0,0,1,{SUB_BORD_NORM},0,"
-        f"2,40,40,{SUB_MARGIN_V},1\n\n"
-        "[Events]\n"
-        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    )
+# ── PIL subtitle rendering ────────────────────────────────────────────────────
+def build_subtitle_events(timing_rows):
+    """
+    Returns list of (t_start, t_end, phrase_words, active_idx) tuples.
+    """
+    font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     events = []
     for row in timing_rows:
         text = row.get("narration_excerpt", "").strip()
@@ -223,34 +201,131 @@ def generate_ass_karaoke(timing_rows):
         dur = end_s - start_s
         if dur <= 0:
             continue
-        words = text.upper().split()
-        n = len(words)
-        if not n:
-            continue
+        words    = text.upper().split()
+        n        = len(words)
         word_dur = dur / n
-        for phrase_start in range(0, n, SUB_PHRASE_LEN):
-            phrase_words = words[phrase_start:min(phrase_start + SUB_PHRASE_LEN, n)]
-            for local_i, _ in enumerate(phrase_words):
+        for phrase_start in range(0, n, PHRASE_LEN):
+            phrase_words = words[phrase_start:min(phrase_start + PHRASE_LEN, n)]
+            for local_i in range(len(phrase_words)):
                 global_i = phrase_start + local_i
                 t_start  = start_s + global_i * word_dur
                 t_end    = start_s + (global_i + 1) * word_dur
                 if global_i == n - 1:
                     t_end = end_s
-                parts = []
-                for j, w in enumerate(phrase_words):
-                    if j == local_i:
-                        parts.append(
-                            f"{{\\bord{SUB_BORD_HL}\\3c&H0000FF00&}}{w}"
-                            f"{{\\bord{SUB_BORD_NORM}\\3c&H00000000&}}"
-                        )
-                    else:
-                        parts.append(w)
-                text_field = "{\\an2}" + " ".join(parts)
-                events.append(
-                    f"Dialogue: 0,{seconds_to_ass(t_start)},{seconds_to_ass(t_end)},"
-                    f"Sub,,0,0,0,,{text_field}"
-                )
-    return header + "\n".join(events) + "\n"
+                events.append((t_start, t_end, phrase_words, local_i))
+    return events, font
+
+def render_subtitle_frame(phrase_words, active_idx, font, w=RESOLUTION_W, h=RESOLUTION_H):
+    """
+    Render a 1920×1080 RGBA frame: all phrase words in white bold, with a
+    solid green rounded rectangle behind the currently active word.
+    """
+    img  = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Measure each word
+    word_metrics = []
+    for word in phrase_words:
+        bb = font.getbbox(word)
+        word_metrics.append((bb[2] - bb[0], bb[3] - bb[1]))   # (width, height)
+
+    space_bb  = font.getbbox(" ")
+    space_w   = space_bb[2] - space_bb[0]
+    total_w   = sum(wm[0] for wm in word_metrics) + space_w * (len(phrase_words) - 1)
+    max_h     = max(wm[1] for wm in word_metrics)
+
+    x_start   = (w - total_w) // 2
+    y_text    = h - SUB_MARGIN_V - max_h
+
+    # Calculate per-word x positions
+    word_xs = []
+    x = x_start
+    for i, (ww, wh) in enumerate(word_metrics):
+        word_xs.append(x)
+        x += ww + space_w
+
+    # Draw solid green rectangle behind active word
+    ax  = word_xs[active_idx]
+    aw  = word_metrics[active_idx][0]
+    ah  = max_h
+    x1  = ax - BOX_PAD_H
+    y1  = y_text - BOX_PAD_V
+    x2  = ax + aw + BOX_PAD_H
+    y2  = y_text + ah + BOX_PAD_V
+    if BOX_RADIUS > 0:
+        draw.rounded_rectangle([x1, y1, x2, y2], radius=BOX_RADIUS, fill=(0, 200, 0, 255))
+    else:
+        draw.rectangle([x1, y1, x2, y2], fill=(0, 200, 0, 255))
+
+    # Draw each word: black stroke outline + white fill
+    for i, (word, wx) in enumerate(zip(phrase_words, word_xs)):
+        draw.text(
+            (wx, y_text), word, font=font,
+            fill=(255, 255, 255, 255),
+            stroke_width=2,
+            stroke_fill=(0, 0, 0, 255),
+        )
+
+    return img
+
+def build_subtitle_overlay(events, font, tmpdir, total_duration):
+    """
+    Generates per-event subtitle PNGs, writes a concat file, and renders
+    a transparent MOV overlay (PNG codec, RGBA).
+    Returns path to overlay .mov file.
+    """
+    blank_path = os.path.join(tmpdir, "sub_blank.png")
+    Image.new("RGBA", (RESOLUTION_W, RESOLUTION_H), (0, 0, 0, 0)).save(blank_path)
+
+    # Cache rendered frames by (phrase, active_idx)
+    frame_cache = {}
+    def get_frame(phrase_words, active_idx):
+        key = (tuple(phrase_words), active_idx)
+        if key not in frame_cache:
+            img  = render_subtitle_frame(phrase_words, active_idx, font)
+            path = os.path.join(tmpdir, f"subf_{len(frame_cache):05d}.png")
+            img.save(path)
+            frame_cache[key] = path
+        return frame_cache[key]
+
+    # Build concat entries: blank from 0 → first event, then each event
+    concat_entries = []   # list of (path, duration)
+
+    cursor = 0.0
+    for t_start, t_end, phrase_words, active_idx in events:
+        if t_start > cursor + 0.001:
+            concat_entries.append((blank_path, t_start - cursor))
+        concat_entries.append((get_frame(phrase_words, active_idx), t_end - t_start))
+        cursor = t_end
+
+    if cursor < total_duration - 0.001:
+        concat_entries.append((blank_path, total_duration - cursor))
+
+    # Write concat file
+    concat_path = os.path.join(tmpdir, "sub_concat.txt")
+    with open(concat_path, "w") as f:
+        for path, dur in concat_entries:
+            f.write(f"file '{path}'\n")
+            f.write(f"duration {dur:.6f}\n")
+        # Repeat last entry (ffmpeg concat demuxer quirk)
+        if concat_entries:
+            f.write(f"file '{concat_entries[-1][0]}'\n")
+
+    # Render subtitle overlay video (RGBA transparent MOV)
+    overlay_path = os.path.join(tmpdir, "subtitle_overlay.mov")
+    result = subprocess.run([
+        "ffmpeg", "-y",
+        "-f", "concat", "-safe", "0", "-i", concat_path,
+        "-vf", f"fps={FPS}",
+        "-c:v", "png", "-pix_fmt", "rgba",
+        overlay_path,
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Subtitle overlay error:\n{result.stderr[-1500:]}")
+        sys.exit(1)
+
+    print(f"  ✓ Subtitle overlay: {len(frame_cache)} unique frames, {len(concat_entries)} events")
+    return overlay_path
 
 # ── Rendering ─────────────────────────────────────────────────────────────────
 def render_segment(image_path, seg_path, duration, vf):
@@ -265,12 +340,11 @@ def render_segment(image_path, seg_path, duration, vf):
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"  ffmpeg error: {result.stderr[-800:]}")
+        print(f"  ffmpeg error:\n{result.stderr[-800:]}")
         sys.exit(1)
 
 def concat_simple(segments, merged_path):
-    """Concatenate segments with stream copy (no transition)."""
-    concat_file = merged_path + ".concat.txt"
+    concat_file = merged_path + ".txt"
     with open(concat_file, "w") as f:
         for s in segments:
             f.write(f"file '{s}'\n")
@@ -282,66 +356,57 @@ def concat_simple(segments, merged_path):
     os.unlink(concat_file)
 
 def concat_crossfade(segments, durations, merged_path):
-    """
-    Concatenate segments with crossfade dissolve transitions using xfade filter.
-    Each transition overlaps by XFADE_DURATION seconds.
-    """
     if len(segments) == 1:
-        import shutil as _sh
-        _sh.copy(segments[0], merged_path)
+        shutil.copy(segments[0], merged_path)
         return
-
-    xd = XFADE_DURATION
-    # Build complex ffmpeg filter for xfade chaining
-    inputs = []
+    xd      = XFADE_DURATION
+    inputs  = []
     for s in segments:
         inputs += ["-i", s]
-
-    # Compute offset for each transition = cumulative duration - xd per transition
-    filter_parts = []
-    cumulative = 0.0
-    prev_out = "[0:v]"
+    parts   = []
+    cumul   = 0.0
+    prev    = "[0:v]"
     for i in range(1, len(segments)):
-        cumulative += durations[i - 1] - xd
-        out = f"[v{i}]" if i < len(segments) - 1 else "[vout]"
-        filter_parts.append(
-            f"{prev_out}[{i}:v]xfade=transition=dissolve:"
-            f"duration={xd}:offset={cumulative:.4f}{out}"
+        cumul += durations[i - 1] - xd
+        out    = f"[v{i}]" if i < len(segments) - 1 else "[vout]"
+        parts.append(
+            f"{prev}[{i}:v]xfade=transition=dissolve:"
+            f"duration={xd}:offset={cumul:.4f}{out}"
         )
-        prev_out = out
-
-    filter_str = ";".join(filter_parts)
+        prev = out
     cmd = (
         ["ffmpeg", "-y"] + inputs +
-        ["-filter_complex", filter_str, "-map", "[vout]",
+        ["-filter_complex", ";".join(parts), "-map", "[vout]",
          "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
          "-pix_fmt", "yuv420p", "-r", str(FPS), merged_path]
     )
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"  xfade error — falling back to simple concat:\n{result.stderr[-600:]}")
+        print(f"  xfade error — falling back to hard cuts:\n{result.stderr[-600:]}")
         concat_simple(segments, merged_path)
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     args  = [a for a in sys.argv[1:] if not a.startswith("--")]
-    flags = [a for a in sys.argv[1:] if a.startswith("--")]
+    flags = {a.lstrip("-").split("=")[0]: (a.split("=")[1] if "=" in a else True)
+             for a in sys.argv[1:] if a.startswith("--")}
 
     if not args:
-        print("Usage: python3 create_sample.py <episode_folder_id> [--crossfade]")
+        print("Usage: python3 create_sample.py <episode_folder_id> [--crossfade] [--output=filename.mp4]")
         sys.exit(1)
 
-    folder_id   = args[0]
-    use_xfade   = "--crossfade" in flags
+    folder_id  = args[0]
+    use_xfade  = "crossfade" in flags
+    out_name   = flags.get("output", "sample_30s.mp4")
+    local_out  = f"/home/user/ClaudeCode/{out_name}"
 
     print("Authenticating...")
     token = get_access_token()
     folder_name = drive_get_name(token, folder_id)
     print(f"  ✓ Episode: {folder_name}")
-    print(f"  Crossfade: {'ON (0.3s dissolve)' if use_xfade else 'OFF (hard cuts)'}")
+    print(f"  Transitions: {'crossfade 0.3s dissolve' if use_xfade else 'hard cuts'}")
 
-    # Find images subfolder
-    all_files = drive_list_files(token, folder_id)
+    all_files  = drive_list_files(token, folder_id)
     img_folder = next((f for f in all_files if f["name"].lower() == "images"
                        and "folder" in f["mimeType"]), None)
     if not img_folder:
@@ -354,32 +419,25 @@ def main():
         m = re.match(r'^(\d+)_', f["name"])
         return int(m.group(1)) if m else 9999
     image_files.sort(key=leading_num)
-    print(f"  ✓ {len(image_files)} total images in folder")
+    print(f"  ✓ {len(image_files)} total images")
 
-    # Find timings CSV and audio
     timings_file = (
         next((f for f in all_files if f["name"] == "audio_timings_new.csv"), None) or
         next((f for f in all_files if f["name"] == "auto_timings.csv"), None)
     )
     audio_file = next((f for f in all_files if f["name"] == "narration.mp3"), None)
-    if not timings_file:
-        print("ERROR: No timings CSV found (audio_timings_new.csv).")
-        sys.exit(1)
-    if not audio_file:
-        print("ERROR: narration.mp3 not found.")
+    if not timings_file or not audio_file:
+        print("ERROR: Missing audio_timings_new.csv or narration.mp3")
         sys.exit(1)
 
-    # Load timings and pick scenes up to SAMPLE_DURATION
-    print("Loading timings CSV...")
+    print("Loading timings...")
     timing_rows = drive_load_csv(token, timings_file["id"])
     timing_rows.sort(key=lambda r: int(r["scene"]))
-
-    has_seconds = "start_seconds" in timing_rows[0]
-    if not has_seconds:
-        print("ERROR: timings CSV missing start_seconds — re-run generate_timings.py first.")
+    if "start_seconds" not in timing_rows[0]:
+        print("ERROR: CSV missing start_seconds — re-run generate_timings.py")
         sys.exit(1)
 
-    # Select scenes that fit within the sample duration
+    # Pick scenes covering ~SAMPLE_DURATION seconds
     sample_rows = []
     cumulative  = 0.0
     for row in timing_rows:
@@ -389,20 +447,16 @@ def main():
         sample_rows.append(row)
         cumulative += dur
 
-    n_scenes = len(sample_rows)
+    n_scenes        = len(sample_rows)
     actual_duration = sum(float(r["duration_seconds"]) for r in sample_rows)
-    print(f"  ✓ Selected {n_scenes} scenes covering {actual_duration:.1f}s")
+    print(f"  ✓ {n_scenes} scenes, {actual_duration:.1f}s")
 
-    # Match scenes to image files (1-indexed)
-    scene_nums   = [int(r["scene"]) for r in sample_rows]
-    sample_imgs  = [f for f in image_files if leading_num(f) in scene_nums]
+    scene_nums  = {int(r["scene"]) for r in sample_rows}
+    sample_imgs = [f for f in image_files if leading_num(f) in scene_nums]
     sample_imgs.sort(key=leading_num)
-
-    if len(sample_imgs) != n_scenes:
-        print(f"  ⚠ Image count mismatch: {len(sample_imgs)} images for {n_scenes} scenes — using available")
-        n_scenes = min(len(sample_imgs), n_scenes)
-        sample_rows = sample_rows[:n_scenes]
-        sample_imgs = sample_imgs[:n_scenes]
+    n_scenes    = min(len(sample_imgs), n_scenes)
+    sample_rows = sample_rows[:n_scenes]
+    sample_imgs = sample_imgs[:n_scenes]
 
     tmpdir = tempfile.mkdtemp(prefix="mf_sample_")
     try:
@@ -416,8 +470,6 @@ def main():
 
         audio_full = os.path.join(tmpdir, "narration.mp3")
         drive_download(token, audio_file["id"], audio_full)
-
-        # Trim audio to sample length
         audio_trim = os.path.join(tmpdir, "audio_trim.mp3")
         subprocess.run(
             ["ffmpeg", "-y", "-i", audio_full,
@@ -426,27 +478,23 @@ def main():
         )
         print("  ✓ Audio trimmed")
 
-        # Render segments
-        print(f"\nRendering {n_scenes} segments...")
+        # Render KB segments
+        print(f"\nRendering {n_scenes} segments (KB_SCALE=1.2)...")
         segments  = []
         durations = []
         kb_cycle  = 0
-        w, h      = RESOLUTION_W, RESOLUTION_H
-
-        for i, (img, row) in enumerate(zip(local_imgs, sample_rows)):
+        for i, (img_path, row) in enumerate(zip(local_imgs, sample_rows)):
             dur = float(row["duration_seconds"])
             durations.append(dur)
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
-
             if i > 0 and i % 4 == 1:
-                vf    = get_kb_filter(kb_cycle % 4, dur, w, h)
+                vf    = get_kb_filter(kb_cycle % 4, dur, RESOLUTION_W, RESOLUTION_H)
                 label = EFFECT_NAMES[kb_cycle % 4]
                 kb_cycle += 1
                 print(f"  Scene {i+1}: {dur:.1f}s  KB {label}")
             else:
                 vf = static_vf
-
-            render_segment(img, seg, dur, vf)
+            render_segment(img_path, seg, dur, vf)
             segments.append(seg)
 
         # Concatenate
@@ -466,39 +514,40 @@ def main():
             capture_output=True, check=True,
         )
 
-        # Burn subtitles
-        print("Generating karaoke subtitles...")
-        ass_content = generate_ass_karaoke(sample_rows)
-        ass_path    = os.path.join(tmpdir, "subtitles.ass")
-        with open(ass_path, "w", encoding="utf-8") as f:
-            f.write(ass_content)
+        # Build PIL subtitle overlay
+        print("\nGenerating subtitle overlay (PIL solid green box)...")
+        events, font = build_subtitle_events(sample_rows)
+        overlay_path = build_subtitle_overlay(events, font, tmpdir, actual_duration)
 
-        safe_ass = ass_path.replace("\\", "/").replace(":", "\\:")
+        # Composite: main video + subtitle overlay
+        print("  Compositing subtitles onto video...")
         result = subprocess.run([
-            "ffmpeg", "-y", "-i", muxed,
-            "-vf", f"ass={safe_ass}",
+            "ffmpeg", "-y",
+            "-i", muxed,
+            "-i", overlay_path,
+            "-filter_complex", "[0:v][1:v]overlay=0:0:shortest=1",
             "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
-            "-c:a", "copy", OUTPUT_LOCAL,
+            "-c:a", "copy",
+            local_out,
         ], capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"  Subtitle error:\n{result.stderr[-1500:]}")
+            print(f"  Composite error:\n{result.stderr[-1500:]}")
             sys.exit(1)
 
-        size_mb = os.path.getsize(OUTPUT_LOCAL) / 1024 / 1024
-        print(f"  ✓ Sample created ({size_mb:.1f} MB)")
+        size_mb = os.path.getsize(local_out) / 1024 / 1024
+        print(f"  ✓ Done ({size_mb:.1f} MB)")
 
         # Upload
-        print("\nUploading sample_30s.mp4 to Drive...")
+        print(f"\nUploading {out_name} to Drive...")
         token = get_access_token()
-        drive_delete_existing(token, "sample_30s.mp4", folder_id)
-        result = drive_upload(token, OUTPUT_LOCAL, "sample_30s.mp4", folder_id)
-        print(f"  ✓ Uploaded: {result['name']}")
+        drive_delete_existing(token, out_name, folder_id)
+        result = drive_upload(token, local_out, out_name, folder_id)
+        print(f"  ✓ {result['name']}")
         print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
-        print(f"\nDone — {n_scenes} scenes, {actual_duration:.1f}s, KB + karaoke subtitles")
+        print(f"\nDone — {n_scenes} scenes, {actual_duration:.1f}s")
 
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
-
 
 if __name__ == "__main__":
     main()
