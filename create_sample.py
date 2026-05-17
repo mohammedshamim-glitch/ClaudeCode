@@ -223,42 +223,41 @@ def render_subtitle_frame(phrase_words, active_idx, font, w=RESOLUTION_W, h=RESO
     img  = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Measure each word
-    word_metrics = []
-    for word in phrase_words:
-        bb = font.getbbox(word)
-        word_metrics.append((bb[2] - bb[0], bb[3] - bb[1]))   # (width, height)
+    # Measure each word — getbbox returns (left, top, right, bottom) offsets
+    # from the draw coordinate, so actual glyph occupies y+bb[1] → y+bb[3]
+    word_bboxes = [font.getbbox(word) for word in phrase_words]
+    word_widths = [bb[2] - bb[0] for bb in word_bboxes]
 
-    space_bb  = font.getbbox(" ")
-    space_w   = space_bb[2] - space_bb[0]
-    total_w   = sum(wm[0] for wm in word_metrics) + space_w * (len(phrase_words) - 1)
-    max_h     = max(wm[1] for wm in word_metrics)
+    space_w   = font.getbbox(" ")[2]
+    total_w   = sum(word_widths) + space_w * (len(phrase_words) - 1)
+
+    # Anchor y_text so the bottom of every glyph sits SUB_MARGIN_V from bottom
+    max_bb3   = max(bb[3] for bb in word_bboxes)   # largest glyph bottom offset
+    y_text    = h - SUB_MARGIN_V - max_bb3
 
     x_start   = (w - total_w) // 2
-    y_text    = h - SUB_MARGIN_V - max_h
 
     # Calculate per-word x positions
     word_xs = []
     x = x_start
-    for i, (ww, wh) in enumerate(word_metrics):
+    for ww in word_widths:
         word_xs.append(x)
         x += ww + space_w
 
-    # Draw solid green rectangle behind active word
+    # Draw solid green rectangle tightly around the active word's actual glyph
     ax  = word_xs[active_idx]
-    aw  = word_metrics[active_idx][0]
-    ah  = max_h
-    x1  = ax - BOX_PAD_H
-    y1  = y_text - BOX_PAD_V
-    x2  = ax + aw + BOX_PAD_H
-    y2  = y_text + ah + BOX_PAD_V
+    abb = word_bboxes[active_idx]
+    x1  = ax + abb[0] - BOX_PAD_H
+    y1  = y_text + abb[1] - BOX_PAD_V
+    x2  = ax + abb[2] + BOX_PAD_H
+    y2  = y_text + abb[3] + BOX_PAD_V
     if BOX_RADIUS > 0:
         draw.rounded_rectangle([x1, y1, x2, y2], radius=BOX_RADIUS, fill=(0, 200, 0, 255))
     else:
         draw.rectangle([x1, y1, x2, y2], fill=(0, 200, 0, 255))
 
-    # Draw each word: black stroke outline + white fill
-    for i, (word, wx) in enumerate(zip(phrase_words, word_xs)):
+    # Draw each word: black stroke + white fill
+    for word, wx in zip(phrase_words, word_xs):
         draw.text(
             (wx, y_text), word, font=font,
             fill=(255, 255, 255, 255),
