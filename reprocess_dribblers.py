@@ -21,7 +21,20 @@ CLIP_MAX     = 55
 CLIP_MIN     = 30
 THRESH_MAJOR = 0.55
 THRESH_FINE  = 0.25
-TITLE_BASE   = 'Top_10_Dribblers_Football_Skills'
+TITLE_POOL = [
+    "Ankle_Breaking_Dribbles_Nobody_Saw_Coming",
+    "When_One_Player_Beats_The_Whole_Defence",
+    "Elite_Dribbling_Skills_At_Their_Finest",
+    "The_Dribble_That_Left_Defenders_Frozen",
+    "Speed_And_Skill_Unstoppable_Football_Moments",
+    "Football_Wizardry_Dribbling_Edition",
+    "Defenders_Nightmare_Insane_Close_Control",
+    "When_Dribbling_Becomes_Pure_Art",
+    "Impossible_Touches_Only_The_Best_Can_Do",
+    "Next_Level_Dribbling_You_Wont_Believe",
+    "One_V_One_And_Its_Not_Even_Close",
+    "Best_Dribble_Of_The_Season_Right_Here",
+]
 
 
 def get_drive_token():
@@ -211,9 +224,10 @@ def main():
     if CLIPS_DIR.exists():
         shutil.rmtree(CLIPS_DIR)
         print(f'  Cleared {CLIPS_DIR}')
-    for f in PROCESSED_DIR.glob(f'{TITLE_BASE}_*.mp4'):
-        f.unlink()
-        print(f'  Removed {f.name}')
+    for title in TITLE_POOL:
+        for f in PROCESSED_DIR.glob(f'{title}.mp4'):
+            f.unlink()
+            print(f'  Removed {f.name}')
     # Also remove old OCR-named files from previous run
     old_names = ['DRIBBLERS_', 'PASALIC_', 'Football_Skills_', 'KYLIAAT_', 'QATAR_',
                  'VINICIUS_', 'notordla_', 'WORLDS_', 'LUIS_']
@@ -245,12 +259,9 @@ def main():
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
-    def ts(s):
-        return f"{int(s)//60}m{int(s)%60:02d}s"
-
     for i, (start, end) in enumerate(segments, 1):
         raw_path = CLIPS_DIR / f'raw_{i:03d}.mp4'
-        out_name = f'{TITLE_BASE}_{ts(start)}-{ts(end)}.mp4'
+        out_name = f'{TITLE_POOL[(i-1) % len(TITLE_POOL)]}.mp4'
         out_path = PROCESSED_DIR / out_name
 
         print(f'\n[{i}/{len(segments)}] {start:.0f}s–{end:.0f}s ({end-start:.0f}s)')

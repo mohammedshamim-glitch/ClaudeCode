@@ -17,6 +17,40 @@ THRESH_MAJOR  = 0.55  # major chapter transitions
 THRESH_FINE   = 0.25  # fine cuts used when splitting long chapters
 WATERMARK     = "mxm"
 
+# Pool of unique football Shorts titles — drawn sequentially per batch
+TITLE_POOL = [
+    "Ankle_Breaking_Dribbles_Nobody_Saw_Coming",
+    "When_One_Player_Beats_The_Whole_Defence",
+    "Elite_Dribbling_Skills_At_Their_Finest",
+    "The_Dribble_That_Left_Defenders_Frozen",
+    "Speed_And_Skill_Unstoppable_Football_Moments",
+    "Football_Wizardry_Dribbling_Edition",
+    "Defenders_Nightmare_Insane_Close_Control",
+    "When_Dribbling_Becomes_Pure_Art",
+    "Impossible_Touches_Only_The_Best_Can_Do",
+    "Next_Level_Dribbling_You_Wont_Believe",
+    "One_V_One_And_Its_Not_Even_Close",
+    "Best_Dribble_Of_The_Season_Right_Here",
+    "Leaving_Defenders_In_The_Dust",
+    "Football_Skills_That_Break_The_Internet",
+    "You_Cant_Defend_This_Level_Of_Skill",
+    "The_Most_Outrageous_Dribble_You_Will_See",
+    "Pure_Genius_With_The_Ball",
+    "When_Skill_Meets_Pace_Nobody_Wins",
+    "Touch_Of_A_God_Football_Moments",
+    "Defenders_Just_Gave_Up_After_This",
+    "This_Is_Why_Football_Is_Beautiful",
+    "Unstoppable_Skills_Top_Football_Moments",
+    "The_Highlight_Reel_Nobody_Talks_About",
+    "Peak_Football_Watch_This",
+    "How_Is_That_Even_Legal",
+    "Built_Different_Football_Masterclass",
+    "Close_Control_At_Its_Absolute_Best",
+    "When_One_Touch_Changes_Everything",
+    "Skills_That_Made_The_Crowd_Go_Wild",
+    "Football_Magic_You_Wont_Forget",
+]
+
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
 def get_access_token(refresh_key="youtube_refresh_token", store_key="youtube_access_token"):
@@ -439,15 +473,13 @@ def main():
         # 4. Process and save each clip to Drive
         total = len(clips)
         saved = []
-        stem = re.sub(r"\.(mpeg-4|mp4|mkv|webm).*$", "", Path(vid_name).stem, flags=re.IGNORECASE)
-        stem = re.sub(r"\b\d{3,4}p\d*\b|\bMPEG[\s\-]?4\b", "", stem, flags=re.IGNORECASE)
-        stem = re.sub(r"[\s_-]+", "_", stem).strip("_")
-
-        def ts(s):
-            return f"{int(s)//60}m{int(s)%60:02d}s"
+        import random
+        pool = TITLE_POOL[:]
+        random.shuffle(pool)
 
         for i, (clip, start, end) in enumerate(clips, 1):
-            out_filename = f"{stem}_{ts(start)}-{ts(end)}.mp4"
+            title = pool[(i - 1) % len(pool)]
+            out_filename = f"{title}.mp4"
             out_path = processed_dir / out_filename
             if not out_path.exists():
                 process_clip(clip, out_path)
