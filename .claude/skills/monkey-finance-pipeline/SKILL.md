@@ -173,6 +173,19 @@ Auto-schedules for next Wednesday 4pm UK time (minimum 2 days after upload). Set
 **Pipeline complete:**
 > *"Pipeline complete. Video scheduled for [date] at 4pm UK. All stages done."*
 
+Then immediately move the episode Drive folder into the Completed folder:
+
+```python
+# Move episode folder to Completed
+requests.patch(
+    f"https://www.googleapis.com/drive/v3/files/{episode_folder_id}",
+    params={"addParents": "1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR", "removeParents": "1N0fFEokv69CVVMbSFbIi_FFDsab3kadR"},
+    headers={"Authorization": f"Bearer {drive_token}", "Content-Type": "application/json"},
+)
+```
+
+Confirm: *"Episode folder moved to Completed. ✓"*
+
 ---
 
 ### ▶ STAGE 8 — YouTube Short
