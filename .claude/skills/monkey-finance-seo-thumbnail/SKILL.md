@@ -150,7 +150,7 @@ Before delivering, verify:
 - [ ] Description first 2 lines work as a standalone hook (no "Show More" required)
 - [ ] Description naturally uses primary + secondary keywords without stuffing
 - [ ] Tags move from broad → specific → long-tail
-- [ ] **Green suit monkey is present in EVERY thumbnail prompt** — the monkey is the channel brand and must appear in every single thumbnail without exception. If the AI prompt doesn't include "green suit monkey", rewrite it before saving.
+- [ ] **Thumbnail title text is black marker** — the main headline is always bold black hand-drawn marker on the white background. Colour (red/green/yellow) is used only for stats, numbers, and one-word highlights — never for the main title. No white text, no outlines, no glows. See `references/THUMBNAIL.md` for the exact colour rules per emotional trigger. — the monkey is the channel brand and must appear in every single thumbnail without exception. If the AI prompt doesn't include "green suit monkey", rewrite it before saving.
 - [ ] Monkey has a specific expression AND a specific body action (never just standing) — both must be stated explicitly in the prompt
 - [ ] Monkey is reacting TO the content (pointing at a stat, jaw dropped at a number, looking between two options) — not posing beside it
 - [ ] Thumbnail brief and AI prompt are specific enough to produce a distinctive, clickable image
