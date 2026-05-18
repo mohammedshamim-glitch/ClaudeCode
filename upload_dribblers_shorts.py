@@ -107,7 +107,7 @@ def download_from_drive(file_id, dest, drive_token):
 def update_drive_file(file_id, path, drive_token):
     """Replace file content on Drive (keeps same ID and name)."""
     size = path.stat().st_size
-    r = requests.post(
+    r = requests.patch(
         f'https://www.googleapis.com/upload/drive/v3/files/{file_id}?uploadType=resumable',
         headers={'Authorization': f'Bearer {drive_token}', 'Content-Type': 'application/json',
                  'X-Upload-Content-Type': 'video/mp4'},
