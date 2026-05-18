@@ -124,6 +124,11 @@ Then generate tags, hashtags, and chapters per `SEO.md`. Tag list should blend c
 
 Output the complete Click Package in clean, labelled sections. Then automatically:
 
+> **Description link rule — non-negotiable:**
+> Every description must end with the Monkey See Money subscribe link:
+> `Subscribe: https://www.youtube.com/@MonkeySeeMoney`
+> Never copy subscribe links from competitor videos. Never include any external channel links. Only the Monkey See Money channel URL goes in the description.
+
 1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, thumbnail brief, and AI thumbnail prompt.
 
 2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
@@ -151,6 +156,8 @@ Before delivering, verify:
 - [ ] Thumbnail brief and AI prompt are specific enough to produce a distinctive, clickable image
 - [ ] All 3 title variants use different emotional hooks — not just word swaps
 - [ ] Everything is UK-first — no American products, platforms, or terminology
+- [ ] **Description contains `https://www.youtube.com/@MonkeySeeMoney`** — the channel subscribe link must be present in every description, no exceptions
+- [ ] **No competitor channel links** — never copy subscribe links or URLs from reference videos into the description. Strip them out before saving.
 
 ---
 
