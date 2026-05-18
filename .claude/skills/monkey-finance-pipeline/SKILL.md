@@ -26,7 +26,8 @@ Every Monkey Finance video flows through these stages in order:
 | **5** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` + `audio_timings_new.csv` |
 | **6** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` + competitor data | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
 | **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
-| **8** | Analytics review | YouTube Studio data | `07-analytics-review.md` |
+| **8** | Shorts creation (see below) | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short |
+| **9** | Analytics review | YouTube Studio data | `08-analytics-review.md` |
 
 **yt-dlp is used at Stages 1 and 6** — pulling live YouTube data during trend research and competitor tags during SEO generation.
 
@@ -174,7 +175,60 @@ Auto-schedules for next Wednesday 4pm UK time (minimum 2 days after upload). Set
 
 ---
 
-### ▶ STAGE 7 — Analytics Review (7–14 days after publish)
+### ▶ STAGE 8 — YouTube Short
+
+Run immediately after the main video is uploaded. Always save to Drive for Sham's approval before pushing to YouTube.
+
+**Goal:** 55–60s vertical Short (1080×1920) with intro + key reveal + strong closing line. Scheduled for the day before the main video drops (Tuesday if main video is Wednesday).
+
+#### Process
+
+**Step 1 — Select three segments from `audio_timings_new.csv`:**
+| Segment | What to pick | Target length |
+|---|---|---|
+| **Hook** | Opening scenes — establishes the two characters/comparison | ~13s |
+| **Reveal** | Key numbers/conclusion — the payoff the whole video builds to | ~19–22s |
+| **Closure** | A complete sentence that ends the Short naturally — check `narration_excerpt` column to find a sentence that ends with a full stop, not mid-phrase | ~21–23s |
+
+**Critical rule — closure must end on a complete sentence.** Scan the `end_seconds` values near the target endpoint and pick the one whose `narration_excerpt` ends the thought. Never cut mid-sentence.
+
+**Step 2 — Build the Short with blurred background:**
+Images are 16:9 — always use the blur-background treatment. Raw centre-crop looks bad.
+
+```bash
+ffmpeg -y \
+  -ss <hook_start>   -to <hook_end>    -i <source.mp4> \
+  -ss <reveal_start> -to <reveal_end>  -i <source.mp4> \
+  -ss <close_start>  -to <close_end>   -i <source.mp4> \
+  -filter_complex "
+    [0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[vraw][aout];
+    [vraw]split=2[bg][fg];
+    [bg]scale=-2:1920,crop=1080:1920:(iw-1080)/2:0,boxblur=25:5[blurred];
+    [fg]scale=1080:608[small];
+    [blurred][small]overlay=(W-w)/2:(H-h)/2[vout]
+  " \
+  -map "[vout]" -map "[aout]" \
+  -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 192k \
+  short_preview_v1.mp4
+```
+
+**Step 3 — Upload to Drive as `short_preview_v1.mp4`, share link with Sham for review.** Do not upload to YouTube until approved.
+
+**Step 4 — Once approved, upload to YouTube:**
+- **Title:** Curiosity-gap hook, emoji, `#Shorts` — under 60 chars. Example: *"Nobody tells landlords this about their returns 👀 #Shorts"*
+- **Description:** One teaser line + link to full video + `Subscribe: https://www.youtube.com/@MonkeySeeMoney` + relevant hashtags
+- **Schedule:** Day before the main video (Tuesday if main is Wednesday) at 4pm BST
+- **Privacy:** `private` with `publishAt` set — same as main video upload
+- **Pinned comment:** Link to full video, posted immediately after upload. Pin manually in Studio within 60 min of going live.
+
+**Approval gate:**
+> *"Short saved to Drive — [link]. 55s. Hook: [X]s / Reveal: [X]s / Closure: [X]s. Happy with this or want me to adjust any segment?"*
+
+Wait for Sham's go-ahead before uploading to YouTube.
+
+---
+
+### ▶ STAGE 9 — Analytics Review (7–14 days after publish)
 
 **When to run:** 7 days after the video goes live on YouTube. Run again at 14 days for a fuller picture.
 
@@ -282,6 +336,7 @@ Save a brief `07-analytics-review.md` to the episode Drive folder with:
 | "Build the video" | Stage 5 |
 | "Generate the SEO" | Stage 6 |
 | "Upload the video" | Stage 7 |
+| "Make a Short" / "Create a Short" | Stage 8 |
 
 ---
 
