@@ -21,7 +21,7 @@ CLIP_MAX     = 55
 CLIP_MIN     = 30
 THRESH_MAJOR = 0.55
 THRESH_FINE  = 0.25
-STEM         = 'Top-10-Dribblers'
+TITLE_BASE   = 'Top_10_Dribblers_Football_Skills'
 
 
 def get_drive_token():
@@ -211,7 +211,7 @@ def main():
     if CLIPS_DIR.exists():
         shutil.rmtree(CLIPS_DIR)
         print(f'  Cleared {CLIPS_DIR}')
-    for f in PROCESSED_DIR.glob(f'{STEM}_short_*.mp4'):
+    for f in PROCESSED_DIR.glob(f'{TITLE_BASE}_*.mp4'):
         f.unlink()
         print(f'  Removed {f.name}')
     # Also remove old OCR-named files from previous run
@@ -245,9 +245,12 @@ def main():
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
+    def ts(s):
+        return f"{int(s)//60}m{int(s)%60:02d}s"
+
     for i, (start, end) in enumerate(segments, 1):
         raw_path = CLIPS_DIR / f'raw_{i:03d}.mp4'
-        out_name = f'{STEM}_short_{i:03d}.mp4'
+        out_name = f'{TITLE_BASE}_{ts(start)}-{ts(end)}.mp4'
         out_path = PROCESSED_DIR / out_name
 
         print(f'\n[{i}/{len(segments)}] {start:.0f}s–{end:.0f}s ({end-start:.0f}s)')

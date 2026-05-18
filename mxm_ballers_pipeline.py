@@ -187,7 +187,7 @@ def make_clips(src_path, out_dir):
                 "ffmpeg", "-y", "-ss", str(start), "-i", str(src_path),
                 "-t", str(length), "-c", "copy", str(out_path)
             ], capture_output=True)
-        clips.append(out_path)
+        clips.append((out_path, start, end))
         print(f"  ✂ Clip {i}/{total}: {start:.0f}s → {end:.0f}s ({length:.0f}s)")
     return clips
 
@@ -439,9 +439,15 @@ def main():
         # 4. Process and save each clip to Drive
         total = len(clips)
         saved = []
-        for i, clip in enumerate(clips, 1):
-            stem = re.sub(r"\.(mpeg-4|mp4|mkv|webm).*$", "", Path(vid_name).stem, flags=re.IGNORECASE)
-            out_filename = f"{stem}_short_{i:03d}.mp4"
+        stem = re.sub(r"\.(mpeg-4|mp4|mkv|webm).*$", "", Path(vid_name).stem, flags=re.IGNORECASE)
+        stem = re.sub(r"\b\d{3,4}p\d*\b|\bMPEG[\s\-]?4\b", "", stem, flags=re.IGNORECASE)
+        stem = re.sub(r"[\s_-]+", "_", stem).strip("_")
+
+        def ts(s):
+            return f"{int(s)//60}m{int(s)%60:02d}s"
+
+        for i, (clip, start, end) in enumerate(clips, 1):
+            out_filename = f"{stem}_{ts(start)}-{ts(end)}.mp4"
             out_path = processed_dir / out_filename
             if not out_path.exists():
                 process_clip(clip, out_path)
@@ -449,7 +455,7 @@ def main():
             if i % 10 == 1:
                 drive_token = get_drive_token()
 
-            file_id = save_short_to_drive(str(out_path), out_filename, video_folder_id, drive_token)
+            file_id = save_short_to_drive(out_path, out_filename, video_folder_id, drive_token)
             if file_id:
                 saved.append(file_id)
 
