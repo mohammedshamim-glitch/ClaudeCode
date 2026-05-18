@@ -4,7 +4,12 @@
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__search_files",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__download_file_content",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__create_file",
-      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content"
+      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content",
+      "Bash(mkdir -p /home/user/ClaudeCode/mxm_shorts/music)",
+      "Bash(cp \"/root/.claude/uploads/400ec6b3-d727-42ae-b02d-71b5f9764b0c/a4afae4d-prettyjohn1upbeatupbeatbackgroundmusic494561.mp3\" /home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3)",
+      "Bash(cp \"/root/.claude/uploads/400ec6b3-d727-42ae-b02d-71b5f9764b0c/fb11faf7-prettyjohn1upbeat513865.mp3\" /home/user/ClaudeCode/mxm_shorts/music/upbeat_background_2.mp3)",
+      "Bash(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3)",
+      "Bash(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /home/user/ClaudeCode/mxm_shorts/music/upbeat_background_2.mp3)"
     ]
   }
 }
