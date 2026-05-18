@@ -5,7 +5,7 @@ Downloads videos from the BallerzMXM Drive folder, splits into ~50s clips,
 adds mxm watermark, crops to 9:16, and uploads to mxm ballers YouTube channel.
 """
 
-import json, os, re, subprocess, requests, math, glob, shutil
+import json, os, re, subprocess, requests, math, glob, shutil, random
 from pathlib import Path
 
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
@@ -17,39 +17,65 @@ THRESH_MAJOR  = 0.55  # major chapter transitions
 THRESH_FINE   = 0.25  # fine cuts used when splitting long chapters
 WATERMARK     = "mxm"
 
-# Pool of unique football Shorts titles — drawn sequentially per batch
-TITLE_POOL = [
-    "Ankle_Breaking_Dribbles_Nobody_Saw_Coming",
-    "When_One_Player_Beats_The_Whole_Defence",
-    "Elite_Dribbling_Skills_At_Their_Finest",
-    "The_Dribble_That_Left_Defenders_Frozen",
-    "Speed_And_Skill_Unstoppable_Football_Moments",
-    "Football_Wizardry_Dribbling_Edition",
-    "Defenders_Nightmare_Insane_Close_Control",
-    "When_Dribbling_Becomes_Pure_Art",
-    "Impossible_Touches_Only_The_Best_Can_Do",
-    "Next_Level_Dribbling_You_Wont_Believe",
-    "One_V_One_And_Its_Not_Even_Close",
-    "Best_Dribble_Of_The_Season_Right_Here",
-    "Leaving_Defenders_In_The_Dust",
-    "Football_Skills_That_Break_The_Internet",
-    "You_Cant_Defend_This_Level_Of_Skill",
-    "The_Most_Outrageous_Dribble_You_Will_See",
-    "Pure_Genius_With_The_Ball",
-    "When_Skill_Meets_Pace_Nobody_Wins",
-    "Touch_Of_A_God_Football_Moments",
-    "Defenders_Just_Gave_Up_After_This",
-    "This_Is_Why_Football_Is_Beautiful",
-    "Unstoppable_Skills_Top_Football_Moments",
-    "The_Highlight_Reel_Nobody_Talks_About",
-    "Peak_Football_Watch_This",
-    "How_Is_That_Even_Legal",
-    "Built_Different_Football_Masterclass",
-    "Close_Control_At_Its_Absolute_Best",
-    "When_One_Touch_Changes_Everything",
-    "Skills_That_Made_The_Crowd_Go_Wild",
-    "Football_Magic_You_Wont_Forget",
-]
+def generate_titles(n):
+    """Generate n unique football Short titles by combining word components."""
+    openers = [
+        "When", "Watch", "See_How", "The_Moment", "Nobody_Expected",
+        "Defenders_Couldnt_Stop", "Witness", "Remember_When",
+    ]
+    subjects = [
+        "One_Player", "A_Single_Dribble", "Elite_Skills", "Perfect_Touch",
+        "One_Move", "Close_Control", "Pure_Pace", "Raw_Talent",
+        "Football_Magic", "The_Skill", "Insane_Footwork", "The_Dribble",
+    ]
+    connectors = [
+        "Changed_The_Game", "Broke_The_Internet", "Left_Defenders_Behind",
+        "Went_Viral", "Made_The_Crowd_Erupt", "Nobody_Saw_Coming",
+        "Silenced_Everyone", "Was_Simply_Unstoppable", "Rewrote_The_Rules",
+        "Took_Over_The_Pitch", "Had_No_Answer", "Made_History",
+        "Broke_Ankles", "Was_On_Another_Level", "Cant_Be_Taught",
+    ]
+    standalones = [
+        "Elite_Football_Skills_You_Wont_Forget",
+        "Defenders_Had_No_Chance_Whatsoever",
+        "Built_Different_Football_Masterclass",
+        "Peak_Football_Right_Here",
+        "Insane_Close_Control_At_Its_Best",
+        "Football_Wizardry_Pure_And_Simple",
+        "One_V_One_And_It_Wasnt_Even_Close",
+        "Ankle_Breaking_Skills_2025",
+        "You_Cant_Defend_This_Level_Of_Skill",
+        "Speed_Skill_And_Pure_Brilliance",
+        "The_Dribble_That_Froze_The_Defender",
+        "How_Is_This_Even_Possible",
+        "Leaving_Everyone_In_The_Dust",
+        "Touch_Of_A_Genius_Football_Moment",
+        "Football_At_Its_Absolute_Finest",
+    ]
+
+    generated = set()
+    titles = []
+
+    # Build from components first (large combinatorial space)
+    combos = [f"{o}_{s}_{c}" for o in openers for s in subjects for c in connectors]
+    random.shuffle(combos)
+    for c in combos:
+        if c not in generated:
+            generated.add(c)
+            titles.append(c)
+        if len(titles) >= n:
+            return titles
+
+    # Fall back to standalones if needed (shouldn't happen for reasonable n)
+    random.shuffle(standalones)
+    for s in standalones:
+        if s not in generated:
+            generated.add(s)
+            titles.append(s)
+        if len(titles) >= n:
+            return titles
+
+    return titles
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -473,13 +499,10 @@ def main():
         # 4. Process and save each clip to Drive
         total = len(clips)
         saved = []
-        import random
-        pool = TITLE_POOL[:]
-        random.shuffle(pool)
+        titles = generate_titles(total)
 
         for i, (clip, start, end) in enumerate(clips, 1):
-            title = pool[(i - 1) % len(pool)]
-            out_filename = f"{title}.mp4"
+            out_filename = f"{titles[i-1]}.mp4"
             out_path = processed_dir / out_filename
             if not out_path.exists():
                 process_clip(clip, out_path)

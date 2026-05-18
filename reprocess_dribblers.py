@@ -6,7 +6,7 @@ Reprocess Top 10 Dribblers with simplified pipeline:
 - Name clips: Top-10-Dribblers_short_001.mp4, _002, etc.
 """
 
-import json, re, subprocess, requests, shutil
+import json, re, subprocess, requests, shutil, random
 from pathlib import Path
 
 TOKEN_FILE   = '/home/user/ClaudeCode/token.json'
@@ -21,20 +21,58 @@ CLIP_MAX     = 55
 CLIP_MIN     = 30
 THRESH_MAJOR = 0.55
 THRESH_FINE  = 0.25
-TITLE_POOL = [
-    "Ankle_Breaking_Dribbles_Nobody_Saw_Coming",
-    "When_One_Player_Beats_The_Whole_Defence",
-    "Elite_Dribbling_Skills_At_Their_Finest",
-    "The_Dribble_That_Left_Defenders_Frozen",
-    "Speed_And_Skill_Unstoppable_Football_Moments",
-    "Football_Wizardry_Dribbling_Edition",
-    "Defenders_Nightmare_Insane_Close_Control",
-    "When_Dribbling_Becomes_Pure_Art",
-    "Impossible_Touches_Only_The_Best_Can_Do",
-    "Next_Level_Dribbling_You_Wont_Believe",
-    "One_V_One_And_Its_Not_Even_Close",
-    "Best_Dribble_Of_The_Season_Right_Here",
-]
+def generate_titles(n):
+    openers = [
+        "When", "Watch", "See_How", "The_Moment", "Nobody_Expected",
+        "Defenders_Couldnt_Stop", "Witness", "Remember_When",
+    ]
+    subjects = [
+        "One_Player", "A_Single_Dribble", "Elite_Skills", "Perfect_Touch",
+        "One_Move", "Close_Control", "Pure_Pace", "Raw_Talent",
+        "Football_Magic", "The_Skill", "Insane_Footwork", "The_Dribble",
+    ]
+    connectors = [
+        "Changed_The_Game", "Broke_The_Internet", "Left_Defenders_Behind",
+        "Went_Viral", "Made_The_Crowd_Erupt", "Nobody_Saw_Coming",
+        "Silenced_Everyone", "Was_Simply_Unstoppable", "Rewrote_The_Rules",
+        "Took_Over_The_Pitch", "Had_No_Answer", "Made_History",
+        "Broke_Ankles", "Was_On_Another_Level", "Cant_Be_Taught",
+    ]
+    standalones = [
+        "Elite_Football_Skills_You_Wont_Forget",
+        "Defenders_Had_No_Chance_Whatsoever",
+        "Built_Different_Football_Masterclass",
+        "Peak_Football_Right_Here",
+        "Insane_Close_Control_At_Its_Best",
+        "Football_Wizardry_Pure_And_Simple",
+        "One_V_One_And_It_Wasnt_Even_Close",
+        "Ankle_Breaking_Skills_2025",
+        "You_Cant_Defend_This_Level_Of_Skill",
+        "Speed_Skill_And_Pure_Brilliance",
+        "The_Dribble_That_Froze_The_Defender",
+        "How_Is_This_Even_Possible",
+        "Leaving_Everyone_In_The_Dust",
+        "Touch_Of_A_Genius_Football_Moment",
+        "Football_At_Its_Absolute_Finest",
+    ]
+    generated = set()
+    titles = []
+    combos = [f"{o}_{s}_{c}" for o in openers for s in subjects for c in connectors]
+    random.shuffle(combos)
+    for c in combos:
+        if c not in generated:
+            generated.add(c)
+            titles.append(c)
+        if len(titles) >= n:
+            return titles
+    random.shuffle(standalones)
+    for s in standalones:
+        if s not in generated:
+            generated.add(s)
+            titles.append(s)
+        if len(titles) >= n:
+            return titles
+    return titles
 
 
 def get_drive_token():
@@ -259,9 +297,11 @@ def main():
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
+    titles = generate_titles(len(segments))
+
     for i, (start, end) in enumerate(segments, 1):
         raw_path = CLIPS_DIR / f'raw_{i:03d}.mp4'
-        out_name = f'{TITLE_POOL[(i-1) % len(TITLE_POOL)]}.mp4'
+        out_name = f'{titles[i-1]}.mp4'
         out_path = PROCESSED_DIR / out_name
 
         print(f'\n[{i}/{len(segments)}] {start:.0f}s–{end:.0f}s ({end-start:.0f}s)')
