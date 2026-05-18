@@ -22,7 +22,7 @@ THRESH_MAJOR  = 0.55
 THRESH_FINE   = 0.25
 
 # Set to None to process all clips, or an int to process first N only
-PROCESS_LIMIT = 3
+PROCESS_LIMIT = None
 
 SHORT_TITLES = [
     "The_Showboat_That_Made_The_Crowd_Go_Crazy",
