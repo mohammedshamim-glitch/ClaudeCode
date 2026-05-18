@@ -11,10 +11,11 @@ from pathlib import Path
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
 DRIVE_FOLDER_ID = "1JJOH9UiawBU_ozujd-3aeyslQRHQs1r8"
 WORK_DIR = Path("/home/user/ClaudeCode/mxm_shorts")
-CLIP_MAX          = 55   # hard cap per Short (user requirement)
-CLIP_MIN          = 20   # discard clips shorter than this
-SCENE_THRESHOLD   = 0.35 # ffmpeg scene change sensitivity (0–1, lower = more sensitive)
-WATERMARK   = "mxm"
+CLIP_MAX      = 55    # hard cap per Short
+CLIP_MIN      = 30    # minimum Short duration
+THRESH_MAJOR  = 0.55  # major chapter transitions
+THRESH_FINE   = 0.25  # fine cuts used when splitting long chapters
+WATERMARK     = "mxm"
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -83,11 +84,11 @@ def get_duration(path):
     return float(r.stdout.strip())
 
 
-def detect_scene_changes(src_path):
-    """Return sorted list of timestamps (seconds) where scene changes occur."""
+def detect_scenes(src_path, threshold):
+    """Return sorted list of scene-change timestamps plus 0.0 and duration."""
     r = subprocess.run([
         "ffmpeg", "-i", str(src_path),
-        "-vf", f"select='gt(scene,{SCENE_THRESHOLD})',showinfo",
+        "-vf", f"select='gt(scene,{threshold})',showinfo",
         "-vsync", "vfr", "-f", "null", "-"
     ], capture_output=True, text=True)
     times = [0.0]
@@ -98,40 +99,86 @@ def detect_scene_changes(src_path):
                 times.append(float(m.group(1)))
     duration = get_duration(src_path)
     times.append(duration)
-    return sorted(set(times))
+    return sorted(set(times)), duration
+
+
+def _build_chapters(major_times):
+    return [(major_times[i], major_times[i+1]) for i in range(len(major_times)-1)]
+
+
+def _merge_short_chapters(chapters):
+    if not chapters:
+        return chapters
+    merged = [list(chapters[0])]
+    for start, end in chapters[1:]:
+        if merged[-1][1] - merged[-1][0] < CLIP_MIN:
+            merged[-1][1] = end
+        else:
+            merged.append([start, end])
+    if len(merged) > 1 and (merged[-1][1] - merged[-1][0]) < CLIP_MIN:
+        merged[-2][1] = merged[-1][1]
+        merged.pop()
+    return [tuple(c) for c in merged]
+
+
+def _split_long_chapter(start, end, fine_times):
+    segments = []
+    seg_start = start
+    within = [t for t in fine_times if start < t < end]
+    candidates = [start] + within + [end]
+    i = 1
+    while i < len(candidates):
+        length = candidates[i] - seg_start
+        if length <= CLIP_MAX:
+            if i + 1 < len(candidates) and (candidates[i+1] - seg_start) <= CLIP_MAX:
+                i += 1
+                continue
+            if length >= CLIP_MIN:
+                segments.append((seg_start, candidates[i]))
+                seg_start = candidates[i]
+            i += 1
+        else:
+            prev = candidates[i-1]
+            if prev > seg_start + CLIP_MIN:
+                segments.append((seg_start, prev))
+                seg_start = prev
+            else:
+                segments.append((seg_start, seg_start + CLIP_MAX))
+                seg_start += CLIP_MAX
+            i += 1
+    tail = end - seg_start
+    if tail >= CLIP_MIN:
+        segments.append((seg_start, end))
+    elif segments:
+        last_s, last_e = segments[-1]
+        if end - last_s <= CLIP_MAX:
+            segments[-1] = (last_s, end)
+    return segments
 
 
 def make_clips(src_path, out_dir):
-    """Split video at scene changes into clips ≤55s, never mid-scene."""
+    """Two-pass scene detection — cut at natural boundaries, never mid-scene."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    duration = get_duration(src_path)
 
-    print(f"  🔍 Detecting scene changes (this takes a moment)...")
-    scene_times = detect_scene_changes(src_path)
-    print(f"  → {len(scene_times) - 2} scene changes found")
+    print(f"  Pass 1 — major transitions (threshold {THRESH_MAJOR})...")
+    major_times, duration = detect_scenes(src_path, THRESH_MAJOR)
+    print(f"  → {len(major_times)-2} major transitions | {duration:.0f}s ({duration/60:.1f} min)")
 
-    # Group scene boundaries into clips ≤ CLIP_MAX seconds
+    print(f"  Pass 2 — fine cuts (threshold {THRESH_FINE})...")
+    fine_times, _ = detect_scenes(src_path, THRESH_FINE)
+    print(f"  → {len(fine_times)-2} fine cuts detected")
+
+    chapters = _merge_short_chapters(_build_chapters(major_times))
     segments = []
-    clip_start = 0.0
-    for i in range(1, len(scene_times)):
-        t = scene_times[i]
-        if t - clip_start >= CLIP_MAX:
-            # Cut at the previous scene boundary
-            prev = scene_times[i - 1]
-            if prev > clip_start + CLIP_MIN:
-                segments.append((clip_start, prev))
-                clip_start = prev
-            else:
-                # No scene break found in time — force cut at CLIP_MAX
-                segments.append((clip_start, clip_start + CLIP_MAX))
-                clip_start = clip_start + CLIP_MAX
-    # Final segment
-    if duration - clip_start >= CLIP_MIN:
-        segments.append((clip_start, duration))
+    for ch_start, ch_end in chapters:
+        if ch_end - ch_start <= CLIP_MAX:
+            segments.append((ch_start, ch_end))
+        else:
+            segments.extend(_split_long_chapter(ch_start, ch_end, fine_times))
 
-    # Cut each segment
     clips = []
     total = len(segments)
+    print(f"  → {total} Shorts to create")
     for i, (start, end) in enumerate(segments, 1):
         length = end - start
         out_path = out_dir / f"clip_{i:03d}.mp4"
@@ -423,10 +470,6 @@ def main():
         print(f"     {name}/ — {saved}/{total} clips")
     print(f"   BallerzMXM/Completed/ — source videos moved here")
     print(f"\n⚠️  Nothing uploaded to YouTube — confirm with user before uploading.")
-
-
-if __name__ == "__main__":
-    main()
 
 
 if __name__ == "__main__":

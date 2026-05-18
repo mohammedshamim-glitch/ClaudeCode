@@ -16,8 +16,8 @@ User says anything like:
 |---|---|
 | Drive folder | `BallerzMXM` — ID `1JJOH9UiawBU_ozujd-3aeyslQRHQs1r8` |
 | YouTube channel | mxm ballers (authenticated via `token.json`) |
-| Clip length | ≤55s hard cap, 20s min — always cuts at scene boundaries |
-| Scene detection | ffmpeg scene change filter, threshold 0.35 |
+| Clip length | 30–55s — always cuts at natural scene boundaries, never mid-clip |
+| Scene detection | Two-pass: major threshold 0.55, fine threshold 0.25 |
 | Watermark | `mxm` — white, semi-transparent, bottom-right |
 | Format | 9:16 vertical (1080×1920), centre-crop from 16:9 source |
 | Category | Sports (ID 17) |
@@ -27,8 +27,8 @@ User says anything like:
 
 1. **Check Drive folder** — list all video files in `BallerzMXM` (skips Shorts/Completed subfolders)
 2. **Download** — pull each video from Drive to `/home/user/ClaudeCode/mxm_shorts/downloads/`
-3. **Split** — ffmpeg scene detection finds every natural cut point in the video, then groups them into clips ≤55s — never cuts mid-scene
-4. **Process** — for each clip: centre-crop to 9:16, scale to 1080×1920, overlay `mxm` watermark
+3. **Split** — two-pass scene detection (major chapters + fine cuts) groups clips into 30–55s segments, never cuts mid-scene
+4. **Process** — for each clip: centre-crop to 9:16, scale to 1080×1920, overlay `mxm` watermark (no player names, no fade out)
 5. **Save to Drive** — clips go to `BallerzMXM/Shorts/{Video Title}/`
 6. **Move to Completed** — once all clips saved, source video moves to `BallerzMXM/Completed/`
 7. **STOP — confirm with user before any YouTube upload**
