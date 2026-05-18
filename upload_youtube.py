@@ -184,6 +184,12 @@ def parse_seo_metadata(text):
     m = re.search(r'PRIMARY[^\n]*\n([^\n\[]+)', titles_block, re.IGNORECASE)
     if m:
         result["title"] = re.sub(r'\s*\[\d+ characters?\]', '', m.group(1)).strip()
+    if not result["title"]:
+        # Handle separate TITLE (PRIMARY) section format
+        for key in sections:
+            if 'TITLE' in key and 'PRIMARY' in key:
+                result["title"] = sections[key].strip().split('\n')[0].strip()
+                break
 
     desc_block = sections.get('DESCRIPTION', '')
     result["description"] = re.split(r'\n---\n|\n#[A-Z]', desc_block)[0].strip()
@@ -303,7 +309,13 @@ def main():
     video_folder = next((f for f in items if f["name"].lower() == "video" and "folder" in f["mimeType"]), None)
 
     # Look for video in episode root first, then in Video subfolder
-    video_file = next((f for f in items if f["mimeType"] == "video/mp4"), None)
+    # Prefer non-sample files; among those pick the largest (most likely the final render)
+    mp4s = [f for f in items if f["mimeType"] == "video/mp4"]
+    main_mp4s = [f for f in mp4s if not f["name"].lower().startswith("sample")]
+    if main_mp4s:
+        video_file = max(main_mp4s, key=lambda f: int(f.get("size", 0)))
+    else:
+        video_file = max(mp4s, key=lambda f: int(f.get("size", 0))) if mp4s else None
     if not video_file and video_folder:
         sub_items  = drive_list_all(drive_token, video_folder["id"])
         video_file = next((f for f in sub_items if f["mimeType"] == "video/mp4"), None)
