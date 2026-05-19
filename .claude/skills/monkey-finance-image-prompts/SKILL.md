@@ -65,7 +65,15 @@ Generate both output files simultaneously:
 1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
 2. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
 
-Format image prompts: `1.1 2D colourful whiteboard animation style...All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+Format image prompts: `1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. [scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+
+The 20% border instruction is always the **second sentence** — immediately after the opening style line, before any scene description.
+
+Example — monkey with prop:
+`1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+
+Example — stat scene (no monkey):
+`1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
 
 Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement.`
 
