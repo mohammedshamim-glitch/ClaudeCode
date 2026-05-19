@@ -153,7 +153,8 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+KB_SCALE        = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
 SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
@@ -450,6 +451,10 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
                 effect_idx = kb_cycle_idx % 4
                 label = f"{EFFECT_NAMES[effect_idx]} [cycle]"
                 kb_cycle_idx += 1
+            # Zoom-in on long scenes looks like a slow drift — swap to pan bottom→top
+            if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR:
+                effect_idx = 3
+                label = label.replace("zoom in", f"pan bottom → top [zoom skipped >{KB_ZOOM_MAX_DUR:.0f}s]")
             vf = get_kb_filter(effect_idx, dur, w, h)
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label}")
         else:

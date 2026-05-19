@@ -18,6 +18,7 @@ RESOLUTION_H    = 1080
 FPS             = 30
 VIDEO_CRF       = 23
 KB_SCALE        = 1.2
+KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 XFADE_DURATION  = 0.3
 
 # Subtitle config
@@ -502,9 +503,14 @@ def main():
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
             global_i = int(row["scene"]) - 1  # 0-based index in full video
             if global_i > 0 and global_i % 4 == 1:
-                vf    = get_kb_filter(kb_cycle % 4, dur, RESOLUTION_W, RESOLUTION_H)
-                label = EFFECT_NAMES[kb_cycle % 4]
+                effect_idx = kb_cycle % 4
                 kb_cycle += 1
+                if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR:
+                    effect_idx = 3
+                    label = f"{EFFECT_NAMES[effect_idx]} [zoom skipped >{KB_ZOOM_MAX_DUR:.0f}s]"
+                else:
+                    label = EFFECT_NAMES[effect_idx]
+                vf = get_kb_filter(effect_idx, dur, RESOLUTION_W, RESOLUTION_H)
                 print(f"  Scene {int(row['scene'])}: {dur:.1f}s  KB {label}")
             else:
                 vf = static_vf
