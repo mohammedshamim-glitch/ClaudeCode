@@ -13,7 +13,7 @@ description: >
 
 # 🎬 Monkey Finance — Full Production Pipeline
 
-One skill. Six stages. One finished video.
+One skill. Ten stages. One finished video.
 
 Every Monkey Finance video flows through these stages in order:
 
@@ -21,13 +21,14 @@ Every Monkey Finance video flows through these stages in order:
 |---|---|---|---|
 | **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.md` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
-| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` |
+| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-media-prompts.txt` |
 | **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
 | **5** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` + `audio_timings_new.csv` |
 | **6** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` + competitor data | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
 | **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
 | **8** | Shorts creation (see below) | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short |
-| **9** | Analytics review | YouTube Studio data | `08-analytics-review.md` |
+| **9** | Community post (see below) | Script + scheduled video URL | YouTube Community post drafted + published |
+| **10** | Analytics review | YouTube Studio data | `09-analytics-review.md` |
 
 **yt-dlp is used at Stages 1 and 6** — pulling live YouTube data during trend research and competitor tags during SEO generation.
 
@@ -103,10 +104,17 @@ Wait for Sham's approval (and any edits) before Stage 3.
 ### ▶ STAGE 3 — Image Prompts
 **Skill:** `monkey-finance-image-prompts`
 
-Parse the clean narration script into sub-scenes (~25 words each). Generate `04-image-prompts.txt` and `05-video-prompts.txt`. Save both to Drive.
+Parse the clean narration script into sub-scenes (~25 words each). Generate `04-image-prompts.txt` and `05-media-prompts.txt`. Save both to Drive.
+
+**Image prompt rules (non-negotiable):**
+- Opening line: `2D colourful whiteboard animation style. Clean white background.`
+- Second line: `All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges.`
+- Never specify monkey suit colour
+- Never say "cartoon monkey" — always just "monkey"
+- Every monkey scene must show the monkey mid-action with a prop — never just standing
 
 **Approval gate:**
-> *"Stage 3 complete. [X] image prompts and video prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to SEO."*
+> *"Stage 3 complete. [X] image prompts and media prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to audio."*
 
 Wait for Sham's approval before Stage 4.
 
@@ -132,20 +140,25 @@ Wait for Sham's approval before Stage 5.
 ### ▶ STAGE 5 — Video Assembly
 **Skill:** `monkey-finance-video-creator`
 
-1. Generate Whisper timing CSV:
+1. Generate aeneas forced alignment timing CSV:
 ```bash
-python3 /home/user/ClaudeCode/generate_timings_whisper.py <episode_folder_id>
+python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
 ```
+This auto-selects the highest-priority script file (`03b-narration-sentences.txt` > `03-narration-script-clean.txt` etc.) and produces exact per-image timings via aeneas forced alignment.
 
-2. Create the video:
+2. Create the video with subtitles:
 ```bash
-python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
+python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --subs
 ```
 
 This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploaded to Drive.
 
+**KB effect rules:**
+- Cosine ease-in/ease-out on all effects
+- Zoom-in only fires on scenes ≤8s — longer scenes automatically swap to pan bottom→top
+
 **Approval gate:**
-> *"Stage 5 complete. Video assembled and uploaded to Drive — [link]. Running SEO next using the Whisper timestamps."*
+> *"Stage 5 complete. Video assembled and uploaded to Drive — [link]. Running SEO next using the aeneas timestamps."*
 
 ---
 
@@ -170,21 +183,10 @@ python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id>
 
 Auto-schedules for next Wednesday 4pm UK time (minimum 2 days after upload). Sets `defaultLanguage` and `defaultAudioLanguage` to `en-GB`. Uploads thumbnail automatically if named `thumbnail` in the episode folder.
 
-**Pipeline complete:**
-> *"Pipeline complete. Video scheduled for [date] at 4pm UK. All stages done."*
+**Approval gate:**
+> *"Stage 7 complete. Video scheduled for [date] at 4pm UK. Moving to Short next."*
 
-Then immediately move the episode Drive folder into the Completed folder:
-
-```python
-# Move episode folder to Completed
-requests.patch(
-    f"https://www.googleapis.com/drive/v3/files/{episode_folder_id}",
-    params={"addParents": "1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR", "removeParents": "1N0fFEokv69CVVMbSFbIi_FFDsab3kadR"},
-    headers={"Authorization": f"Bearer {drive_token}", "Content-Type": "application/json"},
-)
-```
-
-Confirm: *"Episode folder moved to Completed. ✓"*
+**Do NOT declare the pipeline complete here — Stages 8 and 9 still follow.**
 
 ---
 
@@ -241,7 +243,71 @@ Wait for Sham's go-ahead before uploading to YouTube.
 
 ---
 
-### ▶ STAGE 9 — Analytics Review (7–14 days after publish)
+---
+
+### ▶ STAGE 9 — Community Post
+
+Run on the same day the main video goes live (Wednesday publish day).
+
+**Goal:** A short YouTube Community post on the channel that references the video topic, drives viewers to the full video, and sparks engagement.
+
+#### Format
+
+3–4 sentences maximum. No jargon. Conversational tone matching the Monkey Finance / Monkey See Money voice. End with a question to drive comments.
+
+```
+[1–2 sentence hook on the topic — something counterintuitive or surprising from the video]
+
+[1 sentence payoff or teaser — what the video reveals]
+
+Full video is live now 👇 [video URL]
+
+[Engaging question tied to the topic]
+```
+
+**Example (for "10 Bad Money Habits"):**
+```
+Most personal finance advice is wrong.
+
+Not paying off your mortgage early, ignoring the latte factor, having no monthly budget — these are all things I do. And they're all quietly building more wealth than conventional wisdom ever suggested.
+
+Full video is live now 👇 [video URL]
+
+Which of these "bad" habits surprised you the most?
+```
+
+#### Process
+
+1. Draft the post using the narration script for inspiration — pull the sharpest counterintuitive line as the hook
+2. Include the full YouTube watch URL (from the upload output)
+3. Present the draft to Sham for approval before posting
+4. Post manually in YouTube Studio → Community tab on publish day
+
+**Approval gate:**
+> *"Stage 9 complete — community post drafted. Happy with this or want any changes? Post this in Studio → Community on Wednesday when the video goes live."*
+
+---
+
+### ▶ STAGE 10 — Wrap Up
+
+Once the Short is approved and uploaded and the community post is drafted:
+
+Move the episode Drive folder into the Completed folder:
+
+```python
+requests.patch(
+    f"https://www.googleapis.com/drive/v3/files/{episode_folder_id}",
+    params={"addParents": "1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR", "removeParents": "1N0fFEokv69CVVMbSFbIi_FFDsab3kadR"},
+    headers={"Authorization": f"Bearer {drive_token}", "Content-Type": "application/json"},
+)
+```
+
+**Pipeline complete:**
+> *"Pipeline complete. Video scheduled [date], Short scheduled [date], community post ready to publish Wednesday. Episode folder moved to Completed. ✓"*
+
+---
+
+### ▶ STAGE 11 — Analytics Review (7–14 days after publish)
 
 **When to run:** 7 days after the video goes live on YouTube. Run again at 14 days for a fuller picture.
 
@@ -286,7 +352,7 @@ Ask Sham to share or check the following from YouTube Studio Analytics:
 
 #### Analytics Review Output
 
-Save a brief `07-analytics-review.md` to the episode Drive folder with:
+Save a brief `09-analytics-review.md` to the episode Drive folder with:
 
 ```markdown
 # Analytics Review — [Episode Title]
@@ -350,6 +416,8 @@ Save a brief `07-analytics-review.md` to the episode Drive folder with:
 | "Generate the SEO" | Stage 6 |
 | "Upload the video" | Stage 7 |
 | "Make a Short" / "Create a Short" | Stage 8 |
+| "Write the community post" | Stage 9 |
+| "Check the analytics" / "How did it do?" | Stage 11 |
 
 ---
 
