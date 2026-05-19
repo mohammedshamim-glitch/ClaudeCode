@@ -102,7 +102,7 @@ Monkey Finance — automated YouTube video production pipeline.
 - All secrets in `token.json` (gitignored) — never hardcode keys
 - Audio/text files from Drive always decoded as UTF-8 (`r.content.decode('utf-8')`)
 - Scene splits by blank line in narration script (one paragraph = one scene)
-- KB effects: 25% of scenes (every 4th), 4 directional pans only (pan L→R, R→L, T→B, B→T)
-- Image prompts: 20% border, content within central 60% of frame
+- KB effects: 25% of scenes (every 4th); cosine ease-in/out on all effects; zoom-in skipped on scenes >8s (swaps to pan bottom→top)
+- Image prompts: 20% border instruction goes SECOND in the prompt (immediately after "2D colourful whiteboard animation style. Clean white background."); never specify monkey suit colour
 - Development branch: `claude/general-session-8o65N`
 - Whisper model: base (139MB at `~/.cache/whisper/base.pt`)
