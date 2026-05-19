@@ -187,7 +187,8 @@ def get_kb_filter(idx, duration, w, h):
     cx  = px // 2
     cy  = py // 2
 
-    P = f"min(t/{D:.6f},1)"
+    # Ease-in/ease-out via cosine: slow start, smooth through, gentle stop
+    P = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
 
     effects = [
         # 0. Pan left → right
