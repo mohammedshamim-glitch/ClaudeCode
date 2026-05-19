@@ -6,7 +6,7 @@ description: >
   narrative-aligned prompts ready for Grok text-to-image generation (Stage 3 of the pipeline).
   Outputs both static image prompts AND video prompts with camera movements. Each prompt ties 
   directly to the script moment, extracts statistics for on-canvas visualisation, and respects 
-  strict character and style rules (green suit monkey ONLY in first and final scenes).
+  strict character and style rules (monkey appears in ~25% of scenes; never specify suit colour).
   Use this skill whenever Sham asks to generate image prompts, create scene visuals,
   turn a script into animation prompts, run Stage 3 of the pipeline, or says anything like
   "generate the image prompts", "create the scene visuals", "what does scene X look like",
@@ -58,7 +58,7 @@ Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 
 - **What emotion** this specific moment creates
 - **What visual** best represents this exact moment
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
-- **Whether a monkey** adds value — green suit (first & last only) / plain / none
+- **Whether a monkey** adds value — present / none (never specify suit colour)
 
 ### Pass 2 — Write Two Files (The Artist)
 Generate both output files simultaneously:
@@ -75,7 +75,7 @@ Read all prompts as a sequence. Check:
 - [ ] Visual variety across adjacent sub-scenes
 - [ ] Emotional arc flows naturally
 - [ ] Every stat has the number explicitly written on canvas
-- [ ] Green suit monkey ONLY in first and final scenes
+- [ ] No suit colour specified in any monkey prompt
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
@@ -103,7 +103,7 @@ Never write any of the following on the canvas in any prompt:
 - ❌ Any channel name, show name, or brand name
 - ❌ Any URL, handle, or social media reference
 
-The green suit monkey in the final scene is the brand sign-off — the visual alone is the identifier. No text branding is ever needed or permitted. If you catch yourself writing a channel name into a prompt, delete it immediately.
+The monkey in the final scene is the brand sign-off — the visual alone is the identifier. No text branding is ever needed or permitted. Never specify a suit colour in any monkey prompt — let Grok determine it. If you catch yourself writing a channel name into a prompt, delete it immediately.
 
 ---
 
@@ -121,15 +121,15 @@ Full action library is in `references/VISUAL-RULES.md`.
 
 | Scene | Rule |
 |---|---|
-| **Scene 01** | Green suit monkey ONLY — brand intro |
-| **Final scene** | Green suit monkey ONLY — brand sign-off |
+| **Scene 01** | Monkey — brand intro |
+| **Final scene** | Monkey — brand sign-off |
 | **Most scenes** | Monkey — present in ~25% of all scenes as guide, narrator, reactor |
 | **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~75% of scenes) |
 
 **Monkey threshold:** Use a monkey in approximately 25% of scenes. Reserve no-monkey treatment for scenes where a statistic or diagram is the sole centrepiece and a character would distract from the number. The monkey acts as guide, narrator, and emotional reactor throughout — not just at peak moments.
 
 **Never use:**
-- ❌ Green suit monkey in any scene except Scene 01 and the final scene
+- ❌ Any suit colour specified in a monkey prompt
 - ❌ A monkey in scenes where a stat must dominate the entire frame
 - ❌ Logos of any kind
 - ❌ A physical whiteboard object (frame, tray, eraser) — just clean white background
@@ -184,7 +184,7 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 **Video prompt rules (non-negotiable):**
 - Monkey in ~25% of scenes — facial expressions only, no mouth movement ever
 - No-monkey scenes: stat-heavy frames where a character would distract from the number
-- Green suit monkey ONLY in Scene 01 and the final scene
+- Monkey present in Scene 01 and the final scene (no suit colour specified)
 - Each prompt: one clear animation sequence — no timing specified
 - Camera variety: zoom in / zoom out / pan left-right / pan right-left / hold steady — never the same move more than twice in a row
 - Animation sequence describes what draws in, what appears, what pulses — in order
@@ -208,7 +208,7 @@ Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
 - [ ] **Sub-scene count matches narration** — ~25 words each, total 45–55 sub-scenes
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
-- [ ] **Green suit monkey** appears only in Scene 01 and the final scene
+- [ ] **No suit colour** specified in any monkey prompt
 - [ ] **Monkey** used in ~25% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
