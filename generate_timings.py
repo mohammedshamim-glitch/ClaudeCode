@@ -165,6 +165,18 @@ def split_scenes(raw_text):
             scenes.append(p)
     return scenes
 
+def split_sub_scenes(scenes, words_per_chunk=25):
+    """Split each scene into ~words_per_chunk word chunks (for sub-scene image alignment)."""
+    sub_scenes = []
+    for scene in scenes:
+        words = scene.split()
+        i = 0
+        while i < len(words):
+            chunk = words[i:i + words_per_chunk]
+            sub_scenes.append(" ".join(chunk))
+            i += words_per_chunk
+    return sub_scenes
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def fmt_time(seconds):
     m = int(seconds) // 60
@@ -174,10 +186,13 @@ def fmt_time(seconds):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 generate_timings.py <episode_folder_id>")
+        print("Usage: python3 generate_timings.py <episode_folder_id> [--sub-scenes]")
+        print("  --sub-scenes  Split each narration paragraph into ~25-word chunks")
+        print("                (use when you have more images than narration paragraphs)")
         sys.exit(1)
 
-    folder_id = sys.argv[1]
+    folder_id    = sys.argv[1]
+    use_sub_scenes = "--sub-scenes" in sys.argv
 
     print("Authenticating...")
     token = get_access_token()
@@ -249,6 +264,9 @@ def main():
         # Split script into scenes
         scenes = split_scenes(script_text)
         print(f"  ✓ {len(scenes)} scenes parsed from narration script")
+        if use_sub_scenes:
+            scenes = split_sub_scenes(scenes)
+            print(f"  ✓ Split into {len(scenes)} sub-scenes (~25 words each)")
 
         # Write plain text file for aeneas (one scene per line)
         script_path = os.path.join(tmpdir, "script.txt")

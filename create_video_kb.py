@@ -516,18 +516,23 @@ def main():
         sys.exit(1)
     print(f"  ✓ Found: {images_folder['id']}")
 
-    # List and sort images by leading number in filename (e.g. "3_03-..." → 3)
+    # List and sort images: prefer leading number in filename (e.g. "3_scene.jpg"),
+    # fall back to modifiedTime ascending for UUID-named images.
     print("Listing images...")
     image_files = drive_list_files(token, images_folder["id"], mime_filter="image/")
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
-    def leading_num(f):
+    def sort_key(f):
         m = re.match(r'^(\d+)_', f["name"])
-        return int(m.group(1)) if m else 9999
-    image_files.sort(key=leading_num)
+        if m:
+            return (0, int(m.group(1)), "")
+        return (1, 0, f.get("modifiedTime", ""))
+    image_files.sort(key=sort_key)
     if not image_files:
         print("ERROR: No images found.")
         sys.exit(1)
-    print(f"  ✓ {len(image_files)} images (sorted by leading filename number)")
+    has_leading = any(re.match(r'^\d+_', f["name"]) for f in image_files)
+    sort_method = "leading filename number" if has_leading else "modifiedTime (creation order)"
+    print(f"  ✓ {len(image_files)} images (sorted by {sort_method})")
 
     # Find narration.mp3, optional auto_timings.csv, optional 05-kb-movements.txt
     print("Finding narration.mp3...")
