@@ -309,13 +309,13 @@ def main():
     video_folder = next((f for f in items if f["name"].lower() == "video" and "folder" in f["mimeType"]), None)
 
     # Look for video in episode root first, then in Video subfolder
-    # Prefer non-sample files; among those pick the largest (most likely the final render)
+    # Exclude sample renders and short previews; among remainder pick the largest (final render)
     mp4s = [f for f in items if f["mimeType"] == "video/mp4"]
-    main_mp4s = [f for f in mp4s if not f["name"].lower().startswith("sample")]
+    main_mp4s = [f for f in mp4s if not re.match(r'^(sample|short_preview)', f["name"].lower())]
     if main_mp4s:
-        video_file = max(main_mp4s, key=lambda f: int(f.get("size", 0)))
+        video_file = max(main_mp4s, key=lambda f: int(f.get("fileSize", 0)))
     else:
-        video_file = max(mp4s, key=lambda f: int(f.get("size", 0))) if mp4s else None
+        video_file = max(mp4s, key=lambda f: int(f.get("fileSize", 0))) if mp4s else None
     if not video_file and video_folder:
         sub_items  = drive_list_all(drive_token, video_folder["id"])
         video_file = next((f for f in sub_items if f["mimeType"] == "video/mp4"), None)
