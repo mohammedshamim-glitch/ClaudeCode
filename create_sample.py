@@ -399,10 +399,11 @@ def main():
         print("Usage: python3 create_sample.py <episode_folder_id> [--crossfade] [--output=filename.mp4]")
         sys.exit(1)
 
-    folder_id  = args[0]
-    use_xfade  = "crossfade" in flags
-    out_name   = flags.get("output", "sample_30s.mp4")
-    local_out  = f"/home/user/ClaudeCode/{out_name}"
+    folder_id   = args[0]
+    use_xfade   = "crossfade" in flags
+    out_name    = flags.get("output", "sample_30s.mp4")
+    local_out   = f"/home/user/ClaudeCode/{out_name}"
+    start_scene = int(flags.get("start-scene", 1))
 
     print("Authenticating...")
     token = get_access_token()
@@ -444,7 +445,8 @@ def main():
         print("ERROR: CSV missing start_seconds — re-run generate_timings.py")
         sys.exit(1)
 
-    # Pick scenes covering ~SAMPLE_DURATION seconds
+    # Pick scenes covering ~SAMPLE_DURATION seconds from start_scene
+    timing_rows = [r for r in timing_rows if int(r["scene"]) >= start_scene]
     sample_rows = []
     cumulative  = 0.0
     for row in timing_rows:
@@ -490,15 +492,20 @@ def main():
         segments  = []
         durations = []
         kb_cycle  = 0
+        # Count how many KB effects would have fired before start_scene
+        for s in range(1, start_scene):
+            if s > 1 and (s - 1) % 4 == 1:
+                kb_cycle += 1
         for i, (img_path, row) in enumerate(zip(local_imgs, sample_rows)):
             dur = float(row["duration_seconds"])
             durations.append(dur)
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
-            if i > 0 and i % 4 == 1:
+            global_i = int(row["scene"]) - 1  # 0-based index in full video
+            if global_i > 0 and global_i % 4 == 1:
                 vf    = get_kb_filter(kb_cycle % 4, dur, RESOLUTION_W, RESOLUTION_H)
                 label = EFFECT_NAMES[kb_cycle % 4]
                 kb_cycle += 1
-                print(f"  Scene {i+1}: {dur:.1f}s  KB {label}")
+                print(f"  Scene {int(row['scene'])}: {dur:.1f}s  KB {label}")
             else:
                 vf = static_vf
             render_segment(img_path, seg, dur, vf)
