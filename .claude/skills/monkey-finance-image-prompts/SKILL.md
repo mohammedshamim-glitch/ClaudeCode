@@ -130,6 +130,7 @@ Full action library is in `references/VISUAL-RULES.md`.
 
 **Never use:**
 - ❌ Any suit colour specified in a monkey prompt
+- ❌ "cartoon monkey" — always just "monkey"
 - ❌ A monkey in scenes where a stat must dominate the entire frame
 - ❌ Logos of any kind
 - ❌ A physical whiteboard object (frame, tray, eraser) — just clean white background
