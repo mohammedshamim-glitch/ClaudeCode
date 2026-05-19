@@ -23,7 +23,7 @@ XFADE_DURATION  = 0.3
 
 # Subtitle config
 FONT_PATH       = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-FONT_SIZE       = 80
+FONT_SIZE       = 64
 PHRASE_LEN      = 4          # words per phrase group
 BOX_PAD_H       = 18         # horizontal padding inside green box
 BOX_PAD_V       = 10         # vertical padding inside green box

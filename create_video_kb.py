@@ -158,7 +158,7 @@ KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scene
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
 SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-SUB_FONT_SIZE  = 80
+SUB_FONT_SIZE  = 64
 SUB_MARGIN_V   = 90          # pixels from bottom to glyph baseline
 SUB_PHRASE_LEN = 4           # words per phrase group
 BOX_PAD_H      = 18          # horizontal padding inside green box
