@@ -65,7 +65,7 @@ def drive_list_files(token, folder_id, mime_filter=None):
         q = f"'{folder_id}' in parents"
         if mime_filter:
             q += f" and mimeType contains '{mime_filter}'"
-        params = {"q": q, "fields": "nextPageToken,files(id,name,mimeType)", "pageSize": 200}
+        params = {"q": q, "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)", "pageSize": 200}
         if page_token:
             params["pageToken"] = page_token
         r = requests.get(
@@ -419,11 +419,14 @@ def main():
 
     image_files = drive_list_files(token, img_folder["id"], mime_filter="image/")
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
-    def leading_num(f):
+    def sort_key(f):
         m = re.match(r'^(\d+)_', f["name"])
-        return int(m.group(1)) if m else 9999
-    image_files.sort(key=leading_num)
-    print(f"  ✓ {len(image_files)} total images")
+        if m:
+            return (0, int(m.group(1)), "")
+        return (1, 0, f.get("modifiedTime", ""))
+    image_files.sort(key=sort_key)
+    has_leading = any(re.match(r'^\d+_', f["name"]) for f in image_files)
+    print(f"  ✓ {len(image_files)} total images (sorted by {'filename' if has_leading else 'modifiedTime'})")
 
     timings_file = (
         next((f for f in all_files if f["name"] == "audio_timings_new.csv"), None) or
@@ -455,9 +458,9 @@ def main():
     actual_duration = sum(float(r["duration_seconds"]) for r in sample_rows)
     print(f"  ✓ {n_scenes} scenes, {actual_duration:.1f}s")
 
-    scene_nums  = {int(r["scene"]) for r in sample_rows}
-    sample_imgs = [f for f in image_files if leading_num(f) in scene_nums]
-    sample_imgs.sort(key=leading_num)
+    # Use scene number as 1-based index into the sorted image list
+    scene_idxs  = [int(r["scene"]) - 1 for r in sample_rows]
+    sample_imgs = [image_files[i] for i in scene_idxs if i < len(image_files)]
     n_scenes    = min(len(sample_imgs), n_scenes)
     sample_rows = sample_rows[:n_scenes]
     sample_imgs = sample_imgs[:n_scenes]
