@@ -584,7 +584,22 @@ def main():
                 durations[-1] += LAST_SCENE_BONUS_SECONDS
                 print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
             else:
-                print(f"  ⚠ CSV has {len(timing_rows)} rows but {len(image_paths)} images — using equal splits")
+                n_rows = len(timing_rows)
+                n_imgs = len(image_paths)
+                print(f"  ⚠ CSV has {n_rows} rows but {n_imgs} images — proportional mapping")
+                row_durs = [float(r["duration_seconds"]) for r in timing_rows]
+                durations = []
+                for img_i in range(n_imgs):
+                    row_start = img_i * n_rows / n_imgs
+                    row_end   = (img_i + 1) * n_rows / n_imgs
+                    dur = 0.0
+                    for row_j in range(n_rows):
+                        overlap = min(row_j + 1, row_end) - max(row_j, row_start)
+                        if overlap > 0:
+                            dur += overlap * row_durs[row_j]
+                    durations.append(dur)
+                durations[-1] += LAST_SCENE_BONUS_SECONDS
+                print(f"  ✓ Proportionally mapped {n_rows} timing rows → {n_imgs} image durations")
 
         # Load KB movements from file if available
         kb_movements = None
