@@ -37,7 +37,7 @@ If we're within 6 weeks of a major event — **prioritise time-sensitive content
 
 | Channel | Handle | Why they matter |
 |---|---|---|
-| **Wealth Logic** | @WealthLogic | Primary reference channel — proven topic formats, strong view velocity |
+| **Wealth Logic** | @TheWealth_Logic | Primary reference channel — proven topic formats, strong view velocity |
 
 **Secondary (run if time / if primary doesn't produce enough candidates):**
 
