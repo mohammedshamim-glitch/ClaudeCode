@@ -67,10 +67,23 @@ def get_access_token():
 
 # ── Google Drive helpers ──────────────────────────────────────────────────────
 def drive_download_text(token, file_id):
-    r = requests.get(
-        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+    # Check mimeType — Google Docs need the export endpoint
+    meta = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?fields=mimeType",
         headers={"Authorization": f"Bearer {token}"}
     )
+    meta.raise_for_status()
+    mime = meta.json().get("mimeType", "")
+    if mime == "application/vnd.google-apps.document":
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType=text/plain",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    else:
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+            headers={"Authorization": f"Bearer {token}"}
+        )
     r.raise_for_status()
     return r.content.decode("utf-8")
 
