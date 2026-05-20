@@ -156,7 +156,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
 - [ ] **Word count 1,900–2,100** — not under, not over
-- [ ] **Scene format** — every sentence is its own scene, no merging, no minimum word count
+- [ ] **Scene format** — 15–25 words per scene (target ~20); numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene
 
 ---
 
@@ -164,15 +164,18 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 **Scene format — non-negotiable:**
 
-Every sentence gets its own scene. No merging. No minimum word count. Short punchy sentences like `Covered.` or `Simple.` are intentional rhythm — leave them as individual scenes.
+Target 15–25 words per scene (aim for ~20). Merge short sentences with adjacent ones to stay within range. Never let a scene run over 25 words — split it.
+
+**Numbered-item exception:** Any sentence beginning with `One:`, `Two:`, `Three:`, `Four:`, `Five:`, `Option one:`, `Option two:`, `Option three:`, `Option four:`, `Option five:` (any case) **always starts a new scene**, regardless of the current word count.
 
 **How to apply:**
-- Split the narration at every sentence boundary (`.`, `?`, `!`)
-- Every sentence becomes its own scene — one line, blank line after
-- Scene count will typically be 200–240 scenes for a 1,900–2,100 word script
+- Write the narration naturally first
+- Then split into scenes: accumulate sentences until ~20 words, never exceeding 25
+- Apply the numbered-item exception throughout
+- Scene count will typically be 80–120 scenes for a 1,900–2,100 word script
 
 **Important — narration scenes ≠ images:**
-Narration is split at sentence level for TTS and audio alignment accuracy. The image prompt generator (Stage 3) groups multiple consecutive narration sentences into ~25-word visual sub-scenes. A short one-sentence scene does not mean a unique image — Stage 3 handles the grouping.
+Narration is split at 15–25 word scenes for TTS and audio alignment accuracy. The image prompt generator (Stage 3) groups consecutive narration scenes into ~25-word visual sub-scenes independently. One narration scene does not mean one unique image — Stage 3 handles the grouping.
 
 Then automatically:
 
