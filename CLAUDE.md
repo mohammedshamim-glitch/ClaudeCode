@@ -84,7 +84,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | S&P 500 vs Picking Your Own Stocks (53 scenes) | `1VSu4FuGUQhDxk6yC5HAjnze6YetAEecO` |
 | S&P 500 All-Time High During War (51 scenes) | `1fFJnQTbnJ6hAKmD5sXDhVFdk77U_f52U` |
 | The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
-| Property vs Stocks — The Real Math (UK) | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
+| Car Finance — Leasing vs Buying: The Real Math (UK) | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
 
 ## Project Overview
 
