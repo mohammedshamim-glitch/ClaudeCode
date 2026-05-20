@@ -50,10 +50,12 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 
 ## The Sub-Scene Method
 
-Parse the narration into sub-scenes at ~25 words each. One scene per 20-30 words of narration. Label as 1.1, 1.2, 2.1, 2.2, etc.
+**The narration script uses one-sentence-per-scene format** — short punchy sentences like "Covered." are individual scenes in the narration file. This is intentional and aids audio alignment. It does NOT mean every sentence gets its own image.
+
+Parse the narration into visual sub-scenes at ~25 words each by **grouping consecutive narration sentences** until you reach ~25 words. One image per group. Label as 1.1, 1.2, 2.1, 2.2, etc.
 
 ### Pass 1 — Parse & Map (The Director)
-Split narration paragraphs into sub-scenes. For a 100-word paragraph, create ~4 sub-scenes. For each sub-scene, identify:
+Group consecutive narration sentences into ~25-word visual sub-scenes. For each sub-scene, identify:
 - **What specific moment** is being narrated (not the whole paragraph concept)
 - **What emotion** this specific moment creates
 - **What visual** best represents this exact moment

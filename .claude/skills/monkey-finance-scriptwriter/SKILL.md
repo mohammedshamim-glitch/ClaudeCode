@@ -156,7 +156,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
 - [ ] **Word count 1,900–2,100** — not under, not over
-- [ ] **Scene format** — every scene is exactly one sentence (or one merged block where a sentence was under 5 words)
+- [ ] **Scene format** — every sentence is its own scene, no merging, no minimum word count
 
 ---
 
@@ -164,16 +164,15 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 **Scene format — non-negotiable:**
 
-Every scene is exactly one sentence. If a sentence is fewer than 5 words, merge it with the sentence that follows it. Apply this rule across the entire script before saving either file.
+Every sentence gets its own scene. No merging. No minimum word count. Short punchy sentences like `Covered.` or `Simple.` are intentional rhythm — leave them as individual scenes.
 
 **How to apply:**
 - Split the narration at every sentence boundary (`.`, `?`, `!`)
-- Count words in each sentence
-- If fewer than 5 words → append to the next sentence, forming one merged block
-- **Exception — numbered items**: if the next sentence begins with a numbered item (`One:`, `Two:`, `Three:`, `Four:`, `Five:`, `Option one:`, `Option two:`, `Option three:`, etc.), do NOT merge into it — the numbered sentence always starts a new scene
-- **Backward merge**: if a short sentence cannot merge forward (because the next sentence is a numbered item), merge it backward into the previous scene instead
-- Repeat until no block is under 5 words (except where the numbered-item exception applies)
-- Scene count will typically be 90–130 scenes for a 1,900–2,100 word script
+- Every sentence becomes its own scene — one line, blank line after
+- Scene count will typically be 200–240 scenes for a 1,900–2,100 word script
+
+**Important — narration scenes ≠ images:**
+Narration is split at sentence level for TTS and audio alignment accuracy. The image prompt generator (Stage 3) groups multiple consecutive narration sentences into ~25-word visual sub-scenes. A short one-sentence scene does not mean a unique image — Stage 3 handles the grouping.
 
 Then automatically:
 
