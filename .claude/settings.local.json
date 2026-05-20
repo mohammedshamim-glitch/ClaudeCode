@@ -4,7 +4,8 @@
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__search_files",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__download_file_content",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__create_file",
-      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content"
+      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content",
+      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__get_file_metadata"
     ]
   }
 }
