@@ -48,15 +48,15 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 
 ---
 
-## The Sub-Scene Method
+## The 1:1 Scene Method
 
-**The narration script uses 15–25 word scenes** (target ~20 words). Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. This format aids TTS and audio alignment. It does NOT mean every narration scene gets its own image.
+**One image prompt per narration scene. No grouping. No merging.**
 
-Parse the narration into visual sub-scenes at ~25 words each by **grouping consecutive narration scenes** until you reach ~25 words. One image per group. Label as 1.1, 1.2, 2.1, 2.2, etc.
+The narration script uses 15–25 word scenes (target ~20 words). Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. Every narration scene gets its own image prompt — label using the structured script's scene numbers (e.g. 0.1, 0.2, 1.1, 1.2, 3.4, etc.). A 99-scene script produces 99 image prompts and 99 video prompts.
 
 ### Pass 1 — Parse & Map (The Director)
-Group consecutive narration sentences into ~25-word visual sub-scenes. For each sub-scene, identify:
-- **What specific moment** is being narrated (not the whole paragraph concept)
+For each narration scene, identify:
+- **What specific moment** is being narrated
 - **What emotion** this specific moment creates
 - **What visual** best represents this exact moment
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
@@ -81,8 +81,8 @@ Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
-- [ ] Sub-scene count matches narration parsing (~25 words each)
-- [ ] Visual variety across adjacent sub-scenes
+- [ ] Prompt count matches narration scene count exactly (1:1)
+- [ ] Visual variety across adjacent prompts
 - [ ] Emotional arc flows naturally
 - [ ] Every stat has the number explicitly written on canvas
 - [ ] No suit colour specified in any monkey prompt
@@ -183,7 +183,7 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 ```
 1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 
-1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 ```
 
 ### Video Prompts (`05-video-prompts.txt`)
@@ -211,14 +211,14 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 - **No file title, no section headers, no dividers** — scene number and content only
 
 Save both files to Drive in the run's project folder.
-Total sub-scene count: typically 45–55 sub-scenes for a 10-15 minute script.
+Total prompt count: matches the narration scene count exactly — typically 80–120 prompts for a 15–25 word per scene script.
 
 ---
 
 ## Final Quality Check — Clear All Before Delivering
 
 **Image prompts:**
-- [ ] **Sub-scene count matches narration** — ~25 words each, total 45–55 sub-scenes
+- [ ] **Prompt count matches narration scene count exactly** — 1 prompt per scene, no grouping
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **No suit colour** specified in any monkey prompt
@@ -247,7 +247,7 @@ Always generate both files without asking. Save both to Drive in the episode fol
 - `04-image-prompts.txt`
 - `05-video-prompts.txt`
 
-Then confirm: *"Stage 3 complete — {sub_scene_count} scenes. Image prompts and video prompts saved to Drive. Ready for your review before Stage 4."*
+Then confirm: *"Stage 3 complete — {scene_count} prompts (1 per narration scene). Image prompts and video prompts saved to Drive. Ready for your review before Stage 4."*
 
 ---
 
