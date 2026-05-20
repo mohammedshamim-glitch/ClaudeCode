@@ -150,11 +150,14 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 # ── Gemini TTS ────────────────────────────────────────────────────────────────
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
+    styled_text = (
+        "Read the following aloud as a confident, conversational UK finance narrator. "
+        "Steady pace, clear diction, friendly but authoritative. "
+        "Consistent tone throughout — no dramatic pauses, no variation in delivery style.\n\n"
+        + text
+    )
     body = {
-        "systemInstruction": {
-            "parts": [{"text": "You are a confident, conversational UK finance narrator. Read at a steady, clear pace. Friendly but authoritative. Consistent tone throughout — no dramatic pauses, no variation in delivery style between sentences."}]
-        },
-        "contents": [{"parts": [{"text": text}]}],
+        "contents": [{"parts": [{"text": styled_text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -224,9 +227,15 @@ def main():
     token = get_access_token()
     print("  ✓ Authenticated")
 
-    print(f"Downloading narration from Drive (file: {file_id})...")
-    text = drive_download_text(token, file_id)
-    print(f"  ✓ {len(text.split())} words downloaded")
+    if file_id.startswith("/"):
+        print(f"Reading narration from local file: {file_id}...")
+        with open(file_id, encoding="utf-8") as f:
+            text = f.read()
+        print(f"  ✓ {len(text.split())} words read")
+    else:
+        print(f"Downloading narration from Drive (file: {file_id})...")
+        text = drive_download_text(token, file_id)
+        print(f"  ✓ {len(text.split())} words downloaded")
 
     chunks = chunk_text(text)
     total  = len(chunks)
@@ -246,7 +255,7 @@ def main():
             continue
 
         if not first_new:
-            time.sleep(8)  # inter-chunk delay to stay within rate limits
+            time.sleep(90)  # inter-chunk delay to stay within rate limits
         first_new = False
 
         print(f"\nGenerating audio chunk {i}/{total} ({len(chunk.split())} words)...")
