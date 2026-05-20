@@ -156,31 +156,31 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
 - [ ] **Word count 1,900–2,100** — not under, not over
-- [ ] **Scene word count 20–35** — every scene checked, no outliers below 20 or above 35
+- [ ] **Scene format** — every scene is exactly one sentence (or one merged block where a sentence was under 5 words)
 
 ---
 
 ## Delivery
 
-## Delivery
+**Scene format — non-negotiable:**
 
-Break the script into exactly 25-word scenes, maintaining the section structure.
+Every scene is exactly one sentence. If a sentence is fewer than 5 words, merge it with the sentence that follows it. Apply this rule across the entire script before saving either file.
 
-**Scene length — hard rules (both must pass before saving):**
-- **Minimum 20 words:** Any paragraph below 20 words must be merged with an adjacent scene.
-- **Maximum 35 words:** Any paragraph above 35 words must be split into two scenes.
-- After writing, run a word-count check across every scene. Fix any violation before outputting either file.
+**How to apply:**
+- Split the narration at every sentence boundary (`.`, `?`, `!`)
+- Count words in each sentence
+- If fewer than 5 words → append to the next sentence, forming one merged block
+- Repeat until no block is under 5 words
+- Scene count will typically be 90–130 scenes for a 1,900–2,100 word script
 
 Then automatically:
 
-1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), scene numbers (1.1, 1.2, etc.), and exactly 25 words per scene clearly marked.
+1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), and scene numbers (1.1, 1.2, etc.). Each scene = one sentence (or merged block). Blank line between each scene.
 
-2. **Generate the TTS narration file** — a clean version with only the spoken words, no scene numbers, no headers, no section labels. Each 25-word block on its own line with blank line between. Save this to the same Google Drive folder as `03-narration-script-clean.txt`. This file is ready to paste directly into any TTS tool.
+2. **Save the clean narration file** to the same Google Drive folder as `03-narration-script-clean.txt` — spoken words only, no scene numbers, no headers, no section labels. One sentence (or merged block) per line with a blank line between each. This is the file used by the TTS tool, image prompt generator, and Whisper alignment — it must be sentence-level, never multi-sentence blocks.
 
-3. **Generate the sentence narration file** — parse the full narration into individual sentences, one per line with a blank line between each. Merge any sentence under 5 words with the sentence that follows it. Save as `03b-narration-sentences.txt` in the same Drive folder. This file is used for: (a) generating sentence-level image prompts for Grok, and (b) Whisper timestamp alignment at sentence granularity.
-
-4. Once all three files are saved, confirm with the Drive links and ask:
-*"Structured script, clean TTS file, and sentence file saved to Drive. Want me to punch up any section, or shall we continue to the next pipeline stage?"*
+3. Once both files are saved, confirm with the Drive links and ask:
+*"Structured script and clean narration file saved to Drive. Want me to punch up any section, or shall we continue to the next pipeline stage?"*
 
 ---
 
