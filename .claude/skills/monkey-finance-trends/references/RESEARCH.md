@@ -33,9 +33,17 @@ If we're within 6 weeks of a major event — **prioritise time-sensitive content
 
 ### Channels to Track
 
+**Primary focus (always run first, pull full 10-video list + transcripts):**
+
 | Channel | Handle | Why they matter |
 |---|---|---|
-| **Damien Talks Money** | @DamienTalksMoney | Closest competitor — similar relatable style, overlapping audience |
+| **Wealth Logic** | @WealthLogic | Primary reference channel — proven topic formats, strong view velocity |
+
+**Secondary (run if time / if primary doesn't produce enough candidates):**
+
+| Channel | Handle | Why they matter |
+|---|---|---|
+| **Damien Talks Money** | @DamienTalksMoney | Closest UK competitor — similar relatable style, overlapping audience |
 | **James Shack** | @JamesShack | High-production investing content, strong SEO |
 | **Toby Newbatt** | @TobyNewbatt | UK FIRE/investing, consistent uploader, good search traffic |
 | **Be Clever With Your Cash** | @BeCleverWithYourCash | Deals/savings, very high search traffic |
@@ -43,7 +51,6 @@ If we're within 6 weeks of a major event — **prioritise time-sensitive content
 | **Casual Finance** | @CasualFinance | Direct niche overlap |
 | **MonkeyExplains** | @MonkeyExplains | Similar animated/explainer format |
 | **Primate Economics** | @PrimateEconomics | Possible direct competitor given name |
-| **Wealth Logic** | @WealthLogic | UK finance content |
 
 ### What to Pull
 

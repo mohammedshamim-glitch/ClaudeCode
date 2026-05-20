@@ -80,7 +80,15 @@ Search Drive first. If Sham says the folder is already there, get its ID before 
 Run the full trend sweep: Phase 0 (yt-dlp live data) + 6 phases + competitor transcript analysis. Produces scored opportunities and a full content brief with competitive differentiation note.
 
 **Approval gate:**
-> *"Stage 1 complete. Here are the top 3 opportunities with scores. My recommendation is [X] — confidence [Y/10]. Shall I run the pipeline with this topic, or do you want to pick a different one?"*
+> Present the top opportunities as numbered options, e.g.:
+> 
+> *"Stage 1 complete. Top picks from Wealth Logic + trend sweep:*
+> 
+> *1. [Topic A] — Score: [X/25] — [One-line reason]*
+> *2. [Topic B] — Score: [X/25] — [One-line reason]*
+> *3. [Topic C] — Score: [X/25] — [One-line reason]*
+> 
+> *My recommendation: Option [N] — confidence [Y/10]. Which one do you want to run with?"*
 
 Wait for Sham's go-ahead. Once topic is confirmed:
 1. **Create the Drive folder** (see Drive Folder Setup above)
