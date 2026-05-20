@@ -170,7 +170,8 @@ Every scene is exactly one sentence. If a sentence is fewer than 5 words, merge 
 - Split the narration at every sentence boundary (`.`, `?`, `!`)
 - Count words in each sentence
 - If fewer than 5 words → append to the next sentence, forming one merged block
-- Repeat until no block is under 5 words
+- **Exception**: if the next sentence begins with a numbered item (`One:`, `Two:`, `Three:`, `Four:`, `Five:`, etc.), do NOT merge into it — the numbered sentence always starts a new scene regardless of how short the preceding sentence is
+- Repeat until no block is under 5 words (except where the numbered-item exception applies)
 - Scene count will typically be 90–130 scenes for a 1,900–2,100 word script
 
 Then automatically:
