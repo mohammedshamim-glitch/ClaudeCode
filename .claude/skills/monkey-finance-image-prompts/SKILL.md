@@ -67,15 +67,15 @@ Generate both output files simultaneously:
 1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
 2. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
 
-Format image prompts: `1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. [scene description] Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+Format image prompts: `1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
 
-The 20% border instruction is always the **second sentence** — immediately after the opening style line, before any scene description.
+The 60% border + 16:9 instruction is always the **second sentence** — immediately after "Clean white background." and before any scene description. Never at the end.
 
 Example — monkey with prop:
-`1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+`1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration.`
 
 Example — stat scene (no monkey):
-`1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.`
+`1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
 
 Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement.`
 
@@ -95,11 +95,13 @@ Read all prompts as a sequence. Check:
 
 ## Mandatory Opener — Every Prompt Without Exception
 
+Every image prompt must begin with these two statements in this exact order:
+
 ```
-2D colourful whiteboard animation style. Clean white background.
+2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition.
 ```
 
-This must be the exact first line of every single prompt. No exceptions. No variations.
+Statement 1: style + background. Statement 2: composition constraints + aspect ratio. Then the scene description. Then the closing style line. No exceptions. No variations.
 
 ---
 
@@ -179,7 +181,7 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
+1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 
 1.2 2D colourful whiteboard animation style. Clean white background. [full scene description] All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. Bold colourful hand-drawn illustration, 16:9 widescreen aspect ratio, landscape composition.
 ```
@@ -205,7 +207,7 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 - Scene number at start of every line in both files
 - Image prompts: everything in one paragraph, blank line between scenes
 - Video prompts: everything in one paragraph, blank line between scenes
-- **Central 60% / 20% border instruction verbatim in every single image prompt** — never omit
+- **Central 60% / 20% border + 16:9 instruction is always the second statement** — immediately after "Clean white background." Never at the end, never omitted
 - **No file title, no section headers, no dividers** — scene number and content only
 
 Save both files to Drive in the run's project folder.

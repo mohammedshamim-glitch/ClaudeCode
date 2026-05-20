@@ -67,8 +67,10 @@ Confirm creation with: *"Drive folder created: `YYYY-MM-DD - <Episode Title>` �
 
 Store the returned folder ID — every subsequent stage saves its output files into this folder.
 
+**Immediately after creating or locating the folder, update CLAUDE.md** — add or update the episode row in the Known Drive Folder IDs table with the exact folder ID returned by Drive. Do this before saving any pipeline files. This prevents wrong-folder errors in future sessions.
+
 ### If folder already exists
-Search Drive first. If Sham says the folder is already there, get its ID before proceeding rather than creating a duplicate.
+Search Drive first. If Sham says the folder is already there, get its ID before proceeding rather than creating a duplicate. Never rely on the folder ID cached in CLAUDE.md without confirming via a Drive search — folder IDs can be wrong if CLAUDE.md was not updated when the folder was created.
 
 ---
 
