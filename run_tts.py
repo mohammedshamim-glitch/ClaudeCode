@@ -138,6 +138,9 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
     body = {
+        "systemInstruction": {
+            "parts": [{"text": "You are a confident, conversational UK finance narrator. Read at a steady, clear pace. Friendly but authoritative. Consistent tone throughout — no dramatic pauses, no variation in delivery style between sentences."}]
+        },
         "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
