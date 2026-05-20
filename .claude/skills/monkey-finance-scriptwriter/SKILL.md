@@ -42,8 +42,62 @@ Every script produced by this skill is engineered across three dimensions simult
 | Input | Action |
 |---|---|
 | **Full content brief** (from trend report) | Maximum quality mode. Use every element — hook angle, audience signals, SEO data, emotional trigger. No guessing needed. |
+| **Competitor adaptation** (brief flags a source video) | Follow the Competitor Adaptation Workflow below — extract transcript first, then adapt. Never write from scratch when a proven source exists. |
 | **Topic + bullet points** | Expand into full narrative. Identify the Grand Payoff first (the single most satisfying moment the viewer clicked to see). Confirm with Sham before writing. |
 | **Topic title only** | Research the topic. Determine the best angle, audience level, and emotional hook. State your approach and get Sham's sign-off before writing. |
+
+---
+
+## Competitor Adaptation Workflow
+
+Use this whenever the content brief references a specific competitor video to adapt (e.g. "adapt Wealth Logic's Leasing vs Buying video"). This workflow produces better scripts than writing from scratch because the structure and emotional beats are already proven.
+
+**Step 1 — Find the video ID**
+Use the YouTube Data API to search for the video:
+```
+GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video
+Authorization: Bearer {youtube_access_token}
+```
+Get the video ID from the result. If the access token is expired, refresh it using `youtube_refresh_token` from `token.json`.
+
+**Step 2 — Extract the transcript via Gemini**
+yt-dlp and youtube-transcript-api are both 403-blocked from this server. Use Gemini instead:
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}
+
+Body:
+{
+  "contents": [{
+    "parts": [
+      {"text": "Please provide a full word-for-word transcript of this YouTube video."},
+      {"file_data": {"mime_type": "video/*", "file_uri": "https://www.youtube.com/watch?v=VIDEO_ID"}}
+    ]
+  }]
+}
+```
+Gemini reads YouTube URLs natively and returns the full transcript.
+
+**Step 3 — Save the source transcript to Drive**
+Save as `00-source-transcript-[channel-name]-original.txt` in the episode folder. Prefix `00-` so it sorts to the top. Include a word count in the header.
+
+**Step 4 — Analyse before adapting**
+Read the transcript and identify:
+- Hook structure (first 60 seconds) — what makes it work?
+- Section breakdown and pacing
+- Emotional arc and key turning points
+- Analogies, examples, and characters used
+- The Grand Payoff moment — what did the viewer come to see?
+
+**Step 5 — Adapt to UK**
+Keep the proven structure and emotional beats intact. Change everything UK-specific:
+- Swap $ for £ and US figures for UK equivalents
+- Replace US products/laws with UK equivalents (ISA, SIPP, Section 24, CGT, Section 75, stamp duty, etc.)
+- Create new UK characters (never reuse Jake/Marcus — rotate pairs each episode)
+- Replace US examples and analogies with UK ones
+- Never copy sentences verbatim — rewrite in Monkey Finance voice
+
+**Step 6 — Write the script**
+Apply the 4-pass method as normal, using the analysed structure as your scaffold. The adaptation inherits the proven beats; the 4-pass ensures the voice, pacing, and UK context are right.
 
 ---
 
