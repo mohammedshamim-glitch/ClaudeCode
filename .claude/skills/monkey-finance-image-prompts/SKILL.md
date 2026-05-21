@@ -119,6 +119,19 @@ The monkey in the final scene is the brand sign-off — the visual alone is the 
 
 ---
 
+## Named Character Rule — Non-Negotiable
+
+**If a scene names a character, that character must appear in the image. The monkey never replaces a named character.**
+
+In character-driven episodes (e.g. Sarah vs David, Jake vs Marcus), if a scene's narration references a named character by name, that character must be visually present in the prompt. The monkey may also appear in that scene as a narrator or guide — but it must be *alongside* the named characters, never *instead of* them.
+
+**Examples:**
+- Scene says "Sarah signs a PCP deal. David takes a personal loan." → Sarah AND David must both appear. Monkey may be present as a small narrator figure pointing at them — but monkey does not replace Sarah.
+- Scene says "David makes his final payment." → David must appear. Monkey optional as narrator.
+- Scene has no named character references → normal monkey/no-monkey rules apply.
+
+---
+
 ## Monkey Action Rule — Non-Negotiable
 
 **The monkey must always be DOING something. Never just standing.**
@@ -224,6 +237,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **No suit colour** specified in any monkey prompt
 - [ ] **Monkey** used in ~25% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
+- [ ] **Named characters appear in scenes that reference them** — monkey never replaces a named character, only accompanies them
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
 - [ ] **No logos, no whiteboard object, no jungle** in any scene
 - [ ] **No channel name, brand name, or text branding** of any kind
