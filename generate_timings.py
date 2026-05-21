@@ -27,6 +27,9 @@ SCRIPT_NAMES_PRIORITY = [
     "03b-narration-sentences.txt",
     "03-narration-script-clean.txt",
     "03-narration-script-clean-FINAL.txt",
+    "03-narration-script-clean-v3.txt",
+    "03-narration-script-clean-v2.txt",
+    "03-narration-script-clean-v1.txt",
     "narration_script.txt",
 ]
 
