@@ -141,13 +141,37 @@ python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id>
 No SRT generation needed — YouTube auto-generates en-GB captions when `defaultAudioLanguage` is set to `en-GB` on upload (handled automatically by `upload_youtube.py`).
 
 **Approval gate:**
-> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) uploaded to Drive. Ready to move to video assembly."*
+> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) uploaded to Drive. Ready to move to Whisper timings + SEO."*
 
 Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5 — Video Assembly
+### ▶ STAGE 5a — Whisper Timings + SEO (run together, before video assembly)
+
+**Run both in parallel immediately after TTS is approved — do not wait for video assembly.**
+
+**Timings:**
+```bash
+python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
+```
+This produces `audio_timings_new.csv` — exact per-scene timestamps via aeneas forced alignment. Used for chapter markers in SEO and for video assembly.
+
+**SEO (run at the same time as timings):**
+Run `monkey-finance-seo-thumbnail` skill using the narration script. Use the exact timestamps from `audio_timings_new.csv` for chapter markers (or estimate from script structure if timings aren't ready yet — update when CSV lands).
+
+Save `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` to Drive.
+
+**Why before video assembly:** SEO and thumbnail can be generated and reviewed while Grok renders the thumbnail — nothing is blocked. This means upload day is a single step: video + metadata + thumbnail all ready together.
+
+**Approval gate:**
+> *"Stage 5a complete. Timings and SEO package saved to Drive — [links]. Generate the thumbnail in Grok using 07-thumbnail-prompt.txt and save it to Drive as 'thumbnail'. Ready to move to video assembly."*
+
+Wait for Sham's approval (and thumbnail confirmation) before Stage 5b.
+
+---
+
+### ▶ STAGE 5b — Video Assembly
 **Skill:** `monkey-finance-video-creator`
 
 1. Generate aeneas forced alignment timing CSV:
@@ -168,19 +192,26 @@ This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploade
 - Zoom-in only fires on scenes ≤8s — longer scenes automatically swap to pan bottom→top
 
 **Approval gate:**
-> *"Stage 5 complete. Video assembled and uploaded to Drive — [link]. Running SEO next using the aeneas timestamps."*
+> *"Stage 5b complete. Video assembled and uploaded to Drive — [link]. SEO and thumbnail were generated at Stage 5a — confirm thumbnail is saved to Drive as 'thumbnail' and we'll go straight to upload."*
 
 ---
 
-### ▶ STAGE 6 — SEO & Thumbnail
-**Skill:** `monkey-finance-seo-thumbnail`
+### ▶ STAGE 6 — YouTube Upload (previously SEO — now moved to Stage 5a)
 
-Generate the full Click Package: 3 title variants, description, tags (competitor-validated via yt-dlp), hashtags, chapters (from `audio_timings_new.csv`), thumbnail brief, and Grok thumbnail prompt. Save as `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` to Drive.
+SEO and thumbnail are generated at Stage 5a alongside timings. By the time video assembly completes, the metadata and thumbnail should already be ready.
+
+**Pre-upload check:**
+- [ ] `06-seo-metadata.txt` in Drive ✓ (done at Stage 5a)
+- [ ] `07-thumbnail-prompt.txt` in Drive ✓ (done at Stage 5a)
+- [ ] Thumbnail generated in Grok and saved to Drive as `thumbnail` ✓
+- [ ] Video assembled and in Drive ✓ (done at Stage 5b)
+
+If SEO wasn't done at 5a for any reason, run `monkey-finance-seo-thumbnail` now before upload.
 
 **Approval gate:**
-> *"Stage 6 complete. SEO package saved to Drive — [link]. Primary title: '[title]'. Chapters use exact Whisper timestamps. Have you saved the thumbnail to Drive as 'thumbnail'? Once ready I'll upload everything together."*
+> *"All assets confirmed in Drive. Ready to upload — video, metadata, and thumbnail go together in one shot."*
 
-Wait for Sham's approval and thumbnail confirmation before Stage 7.
+Wait for Sham's go-ahead before Stage 7.
 
 ---
 
