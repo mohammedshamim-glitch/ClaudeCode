@@ -108,10 +108,21 @@ def drive_download(token, file_id, local_path):
             f.write(chunk)
 
 def drive_download_text(token, file_id):
-    r = requests.get(
-        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+    meta = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?fields=mimeType",
         headers={"Authorization": f"Bearer {token}"},
     )
+    meta.raise_for_status()
+    if meta.json().get("mimeType") == "application/vnd.google-apps.document":
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType=text/plain",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    else:
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+            headers={"Authorization": f"Bearer {token}"},
+        )
     r.raise_for_status()
     return r.content.decode("utf-8")
 
