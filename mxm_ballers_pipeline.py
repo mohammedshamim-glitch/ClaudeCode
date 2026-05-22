@@ -232,7 +232,7 @@ def process_clip(src, out_path):
     )
 
     hook_filter = (
-        "drawtext=text='Wait for it\\.\\.\\. 👀'"
+        "drawtext=text='Wait for it\\.\\.\\.'"
         ":fontsize=56"
         ":fontcolor=white"
         ":x=(w-tw)/2"

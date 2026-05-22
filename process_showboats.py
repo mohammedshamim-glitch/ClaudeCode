@@ -145,7 +145,7 @@ def process_clip(raw_path, out_path):
         f"scale=1080:1920,"
         f"drawtext=text='mxm':fontfile={FONT}:fontsize=72"
         f":fontcolor=white@0.7:x=w-tw-40:y=h-th-40,"
-        f"drawtext=text='Wait for it\\.\\.\\. 👀':fontfile={FONT}:fontsize=56"
+        f"drawtext=text='Wait for it\\.\\.\\.':fontfile={FONT}:fontsize=56"
         f":fontcolor=white:x=(w-tw)/2:y=h*0.45"
         f":box=1:boxcolor=black@0.5:boxborderw=10"
         f":enable='between(t,15,18)'"
