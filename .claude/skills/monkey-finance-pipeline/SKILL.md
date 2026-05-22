@@ -76,16 +76,50 @@ Search Drive first. If Sham says the folder is already there, get its ID before 
 
 ## Stage-by-Stage Process
 
-### ▶ STAGE 1 — Trend Research
+### ▶ STAGE 1 — Topic Selection
+
+**Always start by asking Sham which route he wants:**
+
+> *"Two options for finding the next topic:*
+> *1. Adapt a Wealth Logic video — find their best recent video, extract the transcript via Gemini, and adapt it to UK. Proven structure, faster turnaround.*
+> *2. Full trend sweep — research what's performing across finance YouTube right now, score opportunities, and pick the best original angle.*
+> *Which do you want to go with?"*
+
+Wait for Sham's choice before doing anything else.
+
+---
+
+#### Route 1 — Wealth Logic Adaptation
+
+1. Use the YouTube Data API to find Wealth Logic's most recent or best-performing videos:
+```
+GET https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=CHANNEL_ID&order=viewCount&type=video
+Authorization: Bearer {youtube_access_token}
+```
+2. Present the top 3–5 videos with view counts and titles. Ask Sham to pick one.
+3. Extract the transcript via Gemini:
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}
+Body: {"contents": [{"parts": [{"text": "Please provide a full word-for-word transcript of this YouTube video."}, {"file_data": {"mime_type": "video/*", "file_uri": "https://www.youtube.com/watch?v=VIDEO_ID"}}]}]}
+```
+4. Save transcript to Drive as `00-source-transcript-wealth-logic-original.txt`.
+5. Analyse the transcript (hook structure, emotional arc, Grand Payoff, analogies).
+6. Propose the UK-adapted angle and get Sham's sign-off before writing.
+7. Create the Drive folder, update CLAUDE.md, then move to Stage 2.
+
+**Approval gate:**
+> *"Here are Wealth Logic's top videos: [list]. Which one do you want to adapt?"*
+> Then after transcript analysis: *"Here's the UK angle I'd take: [summary]. Happy to proceed?"*
+
+---
+
+#### Route 2 — Full Trend Sweep
 **Skill:** `monkey-finance-trends`
 
 Run the full trend sweep: Phase 0 (yt-dlp live data) + 6 phases + competitor transcript analysis. Produces scored opportunities and a full content brief with competitive differentiation note.
 
 **Approval gate:**
-> Present the top opportunities as numbered options, e.g.:
-> 
-> *"Stage 1 complete. Top picks from Wealth Logic + trend sweep:*
-> 
+> *"Stage 1 complete. Top picks:*
 > *1. [Topic A] — Score: [X/25] — [One-line reason]*
 > *2. [Topic B] — Score: [X/25] — [One-line reason]*
 > *3. [Topic C] — Score: [X/25] — [One-line reason]*
@@ -94,7 +128,7 @@ Run the full trend sweep: Phase 0 (yt-dlp live data) + 6 phases + competitor tra
 
 Wait for Sham's go-ahead. Once topic is confirmed:
 1. **Create the Drive folder** (see Drive Folder Setup above)
-2. **Save the full trend report** to the folder as `01-trend-report.md` — includes market snapshot, all scored opportunities, evergreen picks, and the winning content brief
+2. **Save the full trend report** to the folder as `01-trend-report.md`
 3. Confirm: *"Drive folder created and trend report saved — [folder link]. Moving to Stage 2."*
 
 ---
