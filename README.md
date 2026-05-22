@@ -1,6 +1,6 @@
-# Monkey Finance — Automated YouTube Production Pipeline
+# Digital Fusion — Automated YouTube Production Pipeline
 
-Automated end-to-end video production system for the [Monkey Finance](https://www.youtube.com/@MonkeyFinance) YouTube channel. Takes a topic idea from research through to a finished, uploaded video — with human approval gates at each stage.
+Automated end-to-end video production system for the [Digital Fusion](https://www.youtube.com/@TheDigital_Fusion) YouTube channel. Takes a topic idea from research through to a finished, uploaded video — with human approval gates at each stage.
 
 ---
 
