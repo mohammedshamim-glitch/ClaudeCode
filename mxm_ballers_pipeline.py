@@ -11,7 +11,7 @@ from pathlib import Path
 TOKEN_FILE = "/home/user/ClaudeCode/token.json"
 DRIVE_FOLDER_ID = "1JJOH9UiawBU_ozujd-3aeyslQRHQs1r8"
 WORK_DIR = Path("/home/user/ClaudeCode/mxm_shorts")
-CLIP_MAX      = 55    # hard cap per Short
+CLIP_MAX      = 40    # hard cap per Short
 CLIP_MIN      = 30    # minimum Short duration
 THRESH_MAJOR  = 0.55  # major chapter transitions
 THRESH_FINE   = 0.25  # fine cuts used when splitting long chapters
@@ -231,7 +231,18 @@ def process_clip(src, out_path):
         ":fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     )
 
-    vf = f"{crop_filter},{watermark_filter}"
+    hook_filter = (
+        "drawtext=text='Wait for it\\.\\.\\. 👀'"
+        ":fontsize=56"
+        ":fontcolor=white"
+        ":x=(w-tw)/2"
+        ":y=h*0.45"
+        ":box=1:boxcolor=black@0.5:boxborderw=10"
+        ":fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        ":enable='between(t,15,18)'"
+    )
+
+    vf = f"{crop_filter},{watermark_filter},{hook_filter}"
 
     subprocess.run([
         "ffmpeg", "-y", "-i", str(src),

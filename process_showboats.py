@@ -16,7 +16,7 @@ CLIPS_DIR     = Path('/home/user/ClaudeCode/mxm_shorts/clips/showboats')
 PROCESSED_DIR = Path('/home/user/ClaudeCode/mxm_shorts/processed/showboats')
 FONT          = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 
-CLIP_MAX      = 55
+CLIP_MAX      = 40
 CLIP_MIN      = 30
 THRESH_MAJOR  = 0.55
 THRESH_FINE   = 0.25
@@ -144,7 +144,11 @@ def process_clip(raw_path, out_path):
         f"crop={crop_w}:{crop_h}:{x_off}:{y_off},"
         f"scale=1080:1920,"
         f"drawtext=text='mxm':fontfile={FONT}:fontsize=72"
-        f":fontcolor=white@0.7:x=w-tw-40:y=h-th-40"
+        f":fontcolor=white@0.7:x=w-tw-40:y=h-th-40,"
+        f"drawtext=text='Wait for it\\.\\.\\. 👀':fontfile={FONT}:fontsize=56"
+        f":fontcolor=white:x=(w-tw)/2:y=h*0.45"
+        f":box=1:boxcolor=black@0.5:boxborderw=10"
+        f":enable='between(t,15,18)'"
     )
     subprocess.run([
         'ffmpeg', '-y', '-i', str(raw_path), '-vf', vf,
