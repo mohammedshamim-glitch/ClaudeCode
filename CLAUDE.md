@@ -86,6 +86,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | S&P 500 All-Time High During War (51 scenes) | `1fFJnQTbnJ6hAKmD5sXDhVFdk77U_f52U` |
 | The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
 | Car Finance — Leasing vs Buying: The Real Math (UK) | `1MFf07I2leM6_iyvB5bGXNyqRgYhv35SI` |
+| Psychology of Gen X Money Habits UK | `1ziC-h6dbPrRtaGFUXS43lzIz4m_gpzrN` |
 
 ## Project Overview
 
