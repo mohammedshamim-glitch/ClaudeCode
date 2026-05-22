@@ -39,7 +39,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Scene splitting**: Narration script scenes are separated by blank lines — never split by word count or sentence count.
 - **Whisper alignment**: Use end-word boundary method (last 6 words of scene → `word["end"]`). Add `validate_and_fix_timings()` pass after alignment to catch speech-rate outliers (flag if duration < 0.4× or > 2.5× expected at the video's measured wpm).
 - **KB every-4th**: `i > 0 and i % 4 == 1` in the render loop = 25% KB, skipping scene 0 (the opening hook). Never apply KB to the first scene.
-- **SEO parser**: `06-seo-metadata.txt` uses `━━━` separator lines — requires a line-by-line state machine parser, not regex on separator chars.
+- **SEO file format**: `06-seo-metadata.txt` must use `TITLES` as the section name (not `TITLE VARIANTS`), with `Primary:` on its own line and the title on the next line. The parser (`upload_youtube.py`) looks for `sections.get('TITLES')` and regex `PRIMARY[^\n]*\n([^\n\[]+)`. Wrong format = upload failure.
 - **YouTube API**: Must be enabled in Google Cloud Console before first upload (project 452685133802). YouTube uses a separate refresh token (`youtube_refresh_token`) from Drive.
 - **Audio subfolder**: For the S&P 500 war episode, audio is in an `Audio` subfolder as `.wav`, not `narration.mp3` in the root.
 - **File location default**: All assets (images, audio, scripts, CSVs, videos) are always in Google Drive. Never assume local. Never search locally first. Always go to Drive.
