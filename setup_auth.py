@@ -63,12 +63,21 @@ def main():
         print(f"ERROR: {resp.text}")
         sys.exit(1)
 
-    tokens = resp.json()
-    tokens["client_id"] = client_id
-    tokens["client_secret"] = client_secret
+    # Merge into existing token.json to preserve keys like gemini_api_key, youtube_refresh_token
+    existing = {}
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE) as f:
+            try:
+                existing = json.load(f)
+            except Exception:
+                existing = {}
+
+    existing.update(resp.json())
+    existing["client_id"] = client_id
+    existing["client_secret"] = client_secret
 
     with open(TOKEN_FILE, "w") as f:
-        json.dump(tokens, f, indent=2)
+        json.dump(existing, f, indent=2)
 
     print(f"\n✓ Auth complete! Token saved to {TOKEN_FILE}")
     print("You can now run run_tts.py fully automatically.\n")
