@@ -381,11 +381,24 @@ def main():
             thumb_ext  = ".png" if "png" in thumb_file.get("mimeType", "") else ".jpg"
             thumb_path = os.path.join(tmpdir, f"thumbnail{thumb_ext}")
             drive_download(drive_token, thumb_file["id"], thumb_path)
-            thumb_mime = thumb_file.get("mimeType", "image/jpeg")
+            # Compress to JPEG under 2MB (YouTube limit)
+            try:
+                from PIL import Image
+                import io as _io
+                img = Image.open(thumb_path).convert("RGB")
+                img = img.resize((1280, 720), Image.LANCZOS)
+                buf = _io.BytesIO()
+                img.save(buf, format="JPEG", quality=85, optimize=True)
+                thumb_data = buf.getvalue()
+                thumb_mime = "image/jpeg"
+                print(f"  ✓ Compressed to {len(thumb_data)/1024:.0f}KB")
+            except Exception:
+                thumb_data = open(thumb_path, "rb").read()
+                thumb_mime = thumb_file.get("mimeType", "image/jpeg")
             r = requests.post(
                 f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}&uploadType=media",
                 headers={"Authorization": f"Bearer {yt_token}", "Content-Type": thumb_mime},
-                data=open(thumb_path, "rb").read(),
+                data=thumb_data,
             )
             if r.ok:
                 print(f"  ✓ Thumbnail uploaded")
