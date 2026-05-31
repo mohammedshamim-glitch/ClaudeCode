@@ -1,0 +1,51 @@
+name: LinkedIn Post
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Post message'
+        required: true
+        type: string
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to LinkedIn
+        env:
+          LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_MEMBER: ${{ secrets.LINKEDIN_MEMBER_ID }}
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          python3 - << 'PYEOF'
+          import requests, json, os
+          token  = os.environ['LINKEDIN_TOKEN']
+          member = os.environ['LINKEDIN_MEMBER']
+          msg    = os.environ['MESSAGE']
+          r = requests.post(
+            'https://api.linkedin.com/v2/ugcPosts',
+            headers={
+              'Authorization': f'Bearer {token}',
+              'Content-Type': 'application/json',
+              'X-Restli-Protocol-Version': '2.0.0'
+            },
+            json={
+              'author': f'urn:li:person:{member}',
+              'lifecycleState': 'PUBLISHED',
+              'specificContent': {
+                'com.linkedin.ugc.ShareContent': {
+                  'shareCommentary': {'text': msg},
+                  'shareMediaCategory': 'NONE'
+                }
+              },
+              'visibility': {'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'}
+            }
+          )
+          print('Status:', r.status_code)
+          print('Response:', r.text)
+          if r.status_code == 201:
+            print('SUCCESS: Post created!')
+          else:
+            exit(1)
+          PYEOF
