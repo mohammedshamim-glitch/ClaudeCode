@@ -11,6 +11,11 @@ on:
         description: 'Result tag'
         required: true
         type: string
+      image_url:
+        description: 'Optional image URL to attach'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -28,6 +33,7 @@ jobs:
           LINKEDIN_MEMBER: ${{ secrets.LINKEDIN_MEMBER_ID }}
           MESSAGE: ${{ inputs.message }}
           TAG: ${{ inputs.tag }}
+          IMAGE_URL: ${{ inputs.image_url }}
         run: python3 scripts/li_post.py
       - name: Commit result
         run: |
