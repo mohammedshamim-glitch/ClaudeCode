@@ -63,6 +63,38 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 
 ## Known Drive Folder IDs
 
+### Digital Fusion
+| Location | Folder ID |
+|---|---|
+| **Digital Fusion (root)** | `1MFA1Ooo-KElIRffQRC-TJmTnOytyc-SZ` |
+| Processed (episode subfolders) | `1q80MPi_hAfcCLeKsYCBOB-_vrBJCV26z` |
+| The Military-Grade AI Gap | `13781WAsBW1Ndg6GuqOw9SB_yW3kL_BQZ` |
+| The NFT Bubble | `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH` |
+
+#### Digital Fusion Key Info
+- YouTube Channel ID: `UCQ5XUCyx0FExP8bh8sj_qkA`
+- Google Cloud Project: `claude-494714`
+- LinkedIn: `linkedin.com/company/the-digital-fusion`
+- LinkedIn member ID: `sNl-wm5Lu7` (Shamim Ali)
+- Zapier webhook (LinkedIn posts): `https://hooks.zapier.com/hooks/catch/27389018/4bhsov8/`
+- Schedule: every Thursday 6pm BST
+- token.json keys: `digital_fusion_refresh_token`, `digital_fusion_access_token`, `linkedin_access_token`
+- **Network policy**: Must use unrestricted network — Zapier/LinkedIn blocked on restricted environments
+
+#### Digital Fusion Scripts
+| Script | Purpose |
+|---|---|
+| `digital_fusion_upload.py` | Download from Drive, add logo, upload to YouTube |
+| `digital_fusion_thumbnail.py` | Extract frame, generate thumbnail, upload to YouTube + Drive |
+| `digital_fusion_linkedin.py` | Post to LinkedIn via Zapier webhook |
+
+#### Digital Fusion Thumbnail Style
+- Background: video frame at ~30% through video, brightness 0.75
+- Line 1: white, 110px bold — left aligned at x=60
+- Line 2: red (#DC1E1E), 110px bold
+- Left red accent bar (8px wide)
+- "Digital Fusion" branding top-left black box
+
 ### Monkey Finance / Monkey See Money
 | Location | Folder ID |
 |---|---|
