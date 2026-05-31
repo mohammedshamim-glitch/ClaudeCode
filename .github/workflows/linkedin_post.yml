@@ -7,22 +7,32 @@ on:
         description: 'Post message'
         required: true
         type: string
+      tag:
+        description: 'Result tag'
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   post:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Post to LinkedIn
         env:
           LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_MEMBER: ${{ secrets.LINKEDIN_MEMBER_ID }}
           MESSAGE: ${{ inputs.message }}
+          TAG: ${{ inputs.tag }}
         run: |
           python3 - << 'PYEOF'
-          import requests, json, os
+          import requests, os, json
           token  = os.environ['LINKEDIN_TOKEN']
           member = os.environ['LINKEDIN_MEMBER']
           msg    = os.environ['MESSAGE']
+          tag    = os.environ['TAG']
           r = requests.post(
             'https://api.linkedin.com/v2/ugcPosts',
             headers={
@@ -42,10 +52,22 @@ jobs:
               'visibility': {'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'}
             }
           )
-          print('Status:', r.status_code)
-          print('Response:', r.text)
-          if r.status_code == 201:
-            print('SUCCESS: Post created!')
-          else:
-            exit(1)
+          os.makedirs('linkedin_results', exist_ok=True)
+          post_id = r.headers.get('x-restli-id', '')
+          out = {
+            'status': r.status_code,
+            'post_id': post_id,
+            'post_url': f'https://www.linkedin.com/feed/update/{post_id}' if post_id else '',
+            'body': r.text[:1000]
+          }
+          with open(f'linkedin_results/{tag}.json', 'w') as f:
+            json.dump(out, f, indent=2)
+          print(json.dumps(out, indent=2))
           PYEOF
+      - name: Commit result
+        run: |
+          git config user.name 'github-actions'
+          git config user.email 'actions@github.com'
+          git add linkedin_results/
+          git commit -m "LinkedIn post result: ${{ inputs.tag }}" || echo "no changes"
+          git push
