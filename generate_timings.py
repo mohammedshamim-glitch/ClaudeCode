@@ -259,20 +259,53 @@ def main():
         script_text = drive_download_text(token, script_file["id"])
         print("  ✓ Script downloaded")
 
-        # Get audio duration
-        result = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
-            capture_output=True, text=True, check=True,
-        )
-        total_duration = float(result.stdout.strip())
+        # Get audio duration — prefer ffprobe, fall back to wave module
+        import shutil as _shutil, wave as _wave
+        _ffprobe_ok = bool(_shutil.which("ffprobe")) and subprocess.run(["ffprobe", "-version"], capture_output=True).returncode == 0
+        if _ffprobe_ok:
+            result = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", audio_path],
+                capture_output=True, text=True, check=True,
+            )
+            total_duration = float(result.stdout.strip())
+        else:
+            # ffprobe unavailable — read duration from local WAV if present
+            local_wav = "/home/user/ClaudeCode/narration.wav"
+            if os.path.exists(local_wav):
+                with _wave.open(local_wav, 'rb') as wf:
+                    total_duration = wf.getnframes() / wf.getframerate()
+            else:
+                raise RuntimeError("ffprobe unavailable and no local narration.wav found")
         print(f"  ✓ Audio duration: {total_duration:.2f}s ({fmt_time(total_duration)})")
 
-        # Convert to 16kHz mono WAV for aeneas
-        subprocess.run(
-            ["ffmpeg", "-i", audio_path, "-ar", "16000", "-ac", "1", wav_path, "-y"],
-            capture_output=True, check=True,
-        )
+        # Convert to 16kHz mono WAV for aeneas — prefer ffmpeg, fall back to scipy+resampling
+        _ffmpeg_ok = bool(_shutil.which("ffmpeg")) and subprocess.run(["ffmpeg", "-version"], capture_output=True).returncode == 0
+        if _ffmpeg_ok:
+            subprocess.run(
+                ["ffmpeg", "-i", audio_path, "-ar", "16000", "-ac", "1", wav_path, "-y"],
+                capture_output=True, check=True,
+            )
+        else:
+            # ffmpeg unavailable — use local WAV and resample with scipy
+            import numpy as np
+            local_wav = "/home/user/ClaudeCode/narration.wav"
+            with _wave.open(local_wav, 'rb') as wf:
+                n_ch, sampw, rate, n_frames = wf.getnchannels(), wf.getsampwidth(), wf.getframerate(), wf.getnframes()
+                raw = wf.readframes(n_frames)
+            samples = np.frombuffer(raw, dtype=np.int16)
+            if n_ch > 1:
+                samples = samples.reshape(-1, n_ch).mean(axis=1).astype(np.int16)
+            if rate != 16000:
+                from scipy.signal import resample_poly
+                from math import gcd
+                g = gcd(16000, rate)
+                samples = resample_poly(samples, 16000 // g, rate // g).astype(np.int16)
+            with _wave.open(wav_path, 'wb') as out:
+                out.setnchannels(1)
+                out.setsampwidth(2)
+                out.setframerate(16000)
+                out.writeframes(samples.tobytes())
         print("  ✓ Converted to 16kHz WAV")
 
         # Split script into scenes
@@ -289,48 +322,107 @@ def main():
             for scene in scenes:
                 f.write(scene + "\n")
 
-        # Run aeneas forced alignment
-        print("\nRunning aeneas forced alignment...")
-        from aeneas.executetask import ExecuteTask
-        from aeneas.task import Task
+        # Run forced alignment — prefer aeneas, fall back to Whisper word-level alignment
+        try:
+            from aeneas.executetask import ExecuteTask
+            from aeneas.task import Task
+            _use_aeneas = True
+        except ImportError:
+            _use_aeneas = False
 
-        config = "task_language=eng|is_text_type=plain|os_task_file_format=json"
-        task = Task(config_string=config)
-        task.audio_file_path_absolute    = wav_path
-        task.text_file_path_absolute     = script_path
-        task.sync_map_file_path_absolute = json_out
-        ExecuteTask(task).execute()
-        task.output_sync_map_file()
-        print("  ✓ Alignment complete")
-
-        with open(json_out) as f:
-            alignment = json.load(f)
-
-        fragments = alignment["fragments"]
-        if len(fragments) != len(scenes):
-            print(f"WARNING: {len(fragments)} fragments returned for {len(scenes)} scenes")
-
-        # Build CSV rows
         rows = []
-        print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
-        print("-" * 90)
-        for i, frag in enumerate(fragments):
-            start = round(float(frag["begin"]), 3)
-            end   = round(float(frag["end"]),   3)
-            dur   = round(end - start, 2)
-            text  = scenes[i]
-            rows.append({
-                "scene":             i + 1,
-                "narration_excerpt": text,
-                "words":             len(text.split()),
-                "duration_seconds":  dur,
-                "start_time":        fmt_time(start),
-                "end_time":          fmt_time(end),
-                "start_seconds":     start,
-                "end_seconds":       end,
-            })
-            preview = text[:60] + ("…" if len(text) > 60 else "")
-            print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
+        if _use_aeneas:
+            print("\nRunning aeneas forced alignment...")
+            config = "task_language=eng|is_text_type=plain|os_task_file_format=json"
+            task = Task(config_string=config)
+            task.audio_file_path_absolute    = wav_path
+            task.text_file_path_absolute     = script_path
+            task.sync_map_file_path_absolute = json_out
+            ExecuteTask(task).execute()
+            task.output_sync_map_file()
+            print("  ✓ Alignment complete")
+
+            with open(json_out) as f:
+                alignment = json.load(f)
+
+            fragments = alignment["fragments"]
+            if len(fragments) != len(scenes):
+                print(f"WARNING: {len(fragments)} fragments returned for {len(scenes)} scenes")
+
+            print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+            print("-" * 90)
+            for i, frag in enumerate(fragments):
+                start = round(float(frag["begin"]), 3)
+                end   = round(float(frag["end"]),   3)
+                dur   = round(end - start, 2)
+                text  = scenes[i]
+                rows.append({
+                    "scene":             i + 1,
+                    "narration_excerpt": text,
+                    "words":             len(text.split()),
+                    "duration_seconds":  dur,
+                    "start_time":        fmt_time(start),
+                    "end_time":          fmt_time(end),
+                    "start_seconds":     start,
+                    "end_seconds":       end,
+                })
+                preview = text[:60] + ("…" if len(text) > 60 else "")
+                print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
+        else:
+            # Whisper word-level alignment fallback
+            print("\nRunning Whisper word-level alignment (aeneas unavailable)...")
+            import whisper, numpy as np
+            model = whisper.load_model("base")
+            result = model.transcribe(wav_path, word_timestamps=True, language="en")
+            # Flatten all words with timestamps
+            all_words = []
+            for seg in result.get("segments", []):
+                for w in seg.get("words", []):
+                    all_words.append({"word": w["word"].strip().lower(), "start": w["start"], "end": w["end"]})
+            print(f"  ✓ Whisper transcribed {len(all_words)} words")
+
+            # Match scenes to word boundaries: find the end timestamp of the last word in each scene
+            word_idx = 0
+            scene_boundaries = []
+            for scene_text in scenes:
+                scene_words = [w.lower().strip(".,!?;:\"'") for w in scene_text.split()]
+                n = len(scene_words)
+                # Advance word_idx by n words (approximately)
+                target = min(word_idx + n, len(all_words) - 1)
+                scene_boundaries.append((word_idx, target))
+                word_idx = target
+
+            print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+            print("-" * 90)
+            prev_end = 0.0
+            for i, (wi_start, wi_end) in enumerate(scene_boundaries):
+                if wi_start < len(all_words):
+                    start = round(all_words[wi_start]["start"], 3)
+                else:
+                    start = prev_end
+                if wi_end < len(all_words):
+                    end = round(all_words[wi_end]["end"], 3)
+                else:
+                    end = total_duration
+                # Clamp start to previous end to avoid overlap
+                start = max(start, prev_end)
+                end   = max(end, start + 0.5)
+                dur   = round(end - start, 2)
+                text  = scenes[i]
+                rows.append({
+                    "scene":             i + 1,
+                    "narration_excerpt": text,
+                    "words":             len(text.split()),
+                    "duration_seconds":  dur,
+                    "start_time":        fmt_time(start),
+                    "end_time":          fmt_time(end),
+                    "start_seconds":     start,
+                    "end_seconds":       end,
+                })
+                preview = text[:60] + ("…" if len(text) > 60 else "")
+                print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
+                prev_end = end
+            print("  ✓ Whisper alignment complete")
 
         total = sum(r["duration_seconds"] for r in rows)
         print(f"\nTotal: {total:.2f}s  Audio: {total_duration:.2f}s")
