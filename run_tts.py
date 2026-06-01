@@ -195,11 +195,28 @@ def merge_wavs_from_files(chunk_paths, output_path):
         out.writeframes(frames)
 
 def wav_to_mp3(wav_path, mp3_path, bitrate="128k"):
-    import subprocess
-    subprocess.run(
-        ["ffmpeg", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", bitrate, mp3_path, "-y"],
-        check=True, capture_output=True
-    )
+    import subprocess, shutil
+    if shutil.which("ffmpeg"):
+        subprocess.run(
+            ["ffmpeg", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", bitrate, mp3_path, "-y"],
+            check=True, capture_output=True
+        )
+    else:
+        # ffmpeg not available — fall back to pymp3
+        import wave, mp3 as pymp3
+        with wave.open(wav_path, 'rb') as wf:
+            n_ch, rate, frames = wf.getnchannels(), wf.getframerate(), wf.getnframes()
+            raw = wf.readframes(frames)
+        mode = pymp3.MODE_SINGLE_CHANNEL if n_ch == 1 else pymp3.MODE_JOINT_STEREO
+        enc = pymp3.Encoder(open(mp3_path, 'wb'))
+        enc.set_channels(n_ch)
+        enc.set_sample_rate(rate)
+        enc.set_quality(2)
+        enc.set_mode(mode)
+        chunk = 4096 * n_ch * 2
+        for i in range(0, len(raw), chunk):
+            enc.write(raw[i:i+chunk])
+        enc.flush()
 
 # ── Chunk file helpers ────────────────────────────────────────────────────────
 def chunk_path(run_id, i, total):
