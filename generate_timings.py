@@ -369,60 +369,71 @@ def main():
                 preview = text[:60] + ("…" if len(text) > 60 else "")
                 print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
         else:
-            # Whisper word-level alignment fallback
+            # Whisper word-level alignment fallback (with proportional fallback if model unavailable)
             print("\nRunning Whisper word-level alignment (aeneas unavailable)...")
-            import whisper, numpy as np
-            model = whisper.load_model("base")
-            result = model.transcribe(wav_path, word_timestamps=True, language="en")
-            # Flatten all words with timestamps
-            all_words = []
-            for seg in result.get("segments", []):
-                for w in seg.get("words", []):
-                    all_words.append({"word": w["word"].strip().lower(), "start": w["start"], "end": w["end"]})
-            print(f"  ✓ Whisper transcribed {len(all_words)} words")
-
-            # Match scenes to word boundaries: find the end timestamp of the last word in each scene
-            word_idx = 0
-            scene_boundaries = []
-            for scene_text in scenes:
-                scene_words = [w.lower().strip(".,!?;:\"'") for w in scene_text.split()]
-                n = len(scene_words)
-                # Advance word_idx by n words (approximately)
-                target = min(word_idx + n, len(all_words) - 1)
-                scene_boundaries.append((word_idx, target))
-                word_idx = target
-
-            print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
-            print("-" * 90)
-            prev_end = 0.0
-            for i, (wi_start, wi_end) in enumerate(scene_boundaries):
-                if wi_start < len(all_words):
-                    start = round(all_words[wi_start]["start"], 3)
-                else:
-                    start = prev_end
-                if wi_end < len(all_words):
-                    end = round(all_words[wi_end]["end"], 3)
-                else:
-                    end = total_duration
-                # Clamp start to previous end to avoid overlap
-                start = max(start, prev_end)
-                end   = max(end, start + 0.5)
-                dur   = round(end - start, 2)
-                text  = scenes[i]
-                rows.append({
-                    "scene":             i + 1,
-                    "narration_excerpt": text,
-                    "words":             len(text.split()),
-                    "duration_seconds":  dur,
-                    "start_time":        fmt_time(start),
-                    "end_time":          fmt_time(end),
-                    "start_seconds":     start,
-                    "end_seconds":       end,
-                })
-                preview = text[:60] + ("…" if len(text) > 60 else "")
-                print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
-                prev_end = end
-            print("  ✓ Whisper alignment complete")
+            try:
+                import whisper as _whisper
+                model = _whisper.load_model("base")
+                _use_whisper = True
+            except Exception as _we:
+                print(f"  Whisper unavailable ({_we}) — falling back to proportional alignment")
+                _use_whisper = False
+            if not _use_whisper:
+                # Pure proportional alignment: distribute total_duration by word count
+                total_words = sum(len(s.split()) for s in scenes)
+                cursor = 0.0
+                print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+                print("-" * 90)
+                for i, scene_text in enumerate(scenes):
+                    n_words = len(scene_text.split())
+                    dur = round((n_words / total_words) * total_duration, 3)
+                    start = round(cursor, 3)
+                    end   = round(cursor + dur, 3)
+                    rows.append({
+                        "scene":             i + 1,
+                        "narration_excerpt": scene_text,
+                        "words":             n_words,
+                        "duration_seconds":  round(dur, 2),
+                        "start_time":        fmt_time(start),
+                        "end_time":          fmt_time(end),
+                        "start_seconds":     start,
+                        "end_seconds":       end,
+                    })
+                    preview = scene_text[:60] + ("…" if len(scene_text) > 60 else "")
+                    print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {round(dur,1):>5.1f}s  {preview}")
+                    cursor = end
+                print("  ✓ Proportional alignment complete")
+            if _use_whisper:
+                result = model.transcribe(wav_path, word_timestamps=True, language="en")
+                all_words = []
+                for seg in result.get("segments", []):
+                    for w in seg.get("words", []):
+                        all_words.append({"word": w["word"].strip().lower(), "start": w["start"], "end": w["end"]})
+                print(f"  ✓ Whisper transcribed {len(all_words)} words")
+                word_idx = 0
+                scene_boundaries = []
+                for scene_text in scenes:
+                    n = len(scene_text.split())
+                    target = min(word_idx + n, len(all_words) - 1)
+                    scene_boundaries.append((word_idx, target))
+                    word_idx = target
+                print(f"\n{'#':>3}  {'Start':>7}  {'End':>7}  {'Dur':>6}  Narration")
+                print("-" * 90)
+                prev_end = 0.0
+                for i, (wi_start, wi_end) in enumerate(scene_boundaries):
+                    start = round(all_words[wi_start]["start"], 3) if wi_start < len(all_words) else prev_end
+                    end   = round(all_words[wi_end]["end"],   3) if wi_end   < len(all_words) else total_duration
+                    start = max(start, prev_end)
+                    end   = max(end, start + 0.5)
+                    dur   = round(end - start, 2)
+                    text  = scenes[i]
+                    rows.append({"scene": i+1, "narration_excerpt": text, "words": len(text.split()),
+                                 "duration_seconds": dur, "start_time": fmt_time(start),
+                                 "end_time": fmt_time(end), "start_seconds": start, "end_seconds": end})
+                    preview = text[:60] + ("…" if len(text) > 60 else "")
+                    print(f"  {i+1:>3}  {fmt_time(start):>7}  {fmt_time(end):>7}  {dur:>5.1f}s  {preview}")
+                    prev_end = end
+                print("  ✓ Whisper alignment complete")
 
         total = sum(r["duration_seconds"] for r in rows)
         print(f"\nTotal: {total:.2f}s  Audio: {total_duration:.2f}s")
