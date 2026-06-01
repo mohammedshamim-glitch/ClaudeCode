@@ -35,9 +35,10 @@ def save_tokens(tokens):
         json.dump(tokens, f, indent=2)
 
 def get_gemini_api_key():
-    key = load_tokens().get("gemini_api_key", "")
+    tokens = load_tokens()
+    key = tokens.get("gemini_tts_api_key") or tokens.get("gemini_api_key", "")
     if not key:
-        print("ERROR: gemini_api_key is not set in token.json")
+        print("ERROR: gemini_tts_api_key / gemini_api_key is not set in token.json")
         sys.exit(1)
     return key
 
