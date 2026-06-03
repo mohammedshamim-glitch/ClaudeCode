@@ -169,8 +169,13 @@ def pick_segments_proportional(mp4_path, target_total=57.0):
     )
     total_dur = float(result.stdout.strip())
 
-    hook_start  = 0.0
-    hook_end    = min(15.0, total_dur * 0.04)
+    # For very short videos (< 90s), just use the whole thing — it's basically already a Short
+    if total_dur < 90:
+        print(f"  Source is {total_dur:.0f}s — using as-is (no segment splitting)")
+        return 0.0, total_dur - 0.5, None, None, None, None  # signal: use full video
+
+    hook_start   = 0.0
+    hook_end     = min(15.0, max(10.0, total_dur * 0.06))
     reveal_start = total_dur * 0.55
     reveal_end   = reveal_start + 19.0
     closure_start = total_dur * 0.82
@@ -189,22 +194,38 @@ def pick_segments_proportional(mp4_path, target_total=57.0):
 
 def build_short(mp4_path, hook_start, hook_end, reveal_start, reveal_end,
                 closure_start, closure_end, out_path):
-    cmd = [
-        "ffmpeg", "-y",
-        "-ss", str(hook_start),    "-to", str(hook_end),    "-i", mp4_path,
-        "-ss", str(reveal_start),  "-to", str(reveal_end),  "-i", mp4_path,
-        "-ss", str(closure_start), "-to", str(closure_end), "-i", mp4_path,
-        "-filter_complex",
-        "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[vraw][aout];"
-        "[vraw]split=2[bg][fg];"
-        "[bg]scale=-2:1920,crop=1080:1920:(iw-1080)/2:0,boxblur=25:5[blurred];"
-        "[fg]scale=1080:608[small];"
-        "[blurred][small]overlay=(W-w)/2:(H-h)/2[vout]",
-        "-map", "[vout]", "-map", "[aout]",
-        "-c:v", "libx264", "-crf", "23", "-preset", "fast",
-        "-c:a", "aac", "-b:a", "192k",
-        out_path,
-    ]
+    if reveal_start is None:
+        # Full-video mode: just reformat to vertical (video < 90s)
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", str(hook_start), "-to", str(hook_end), "-i", mp4_path,
+            "-filter_complex",
+            "[0:v]split=2[bg][fg];"
+            "[bg]scale=-2:1920,crop=1080:1920:(iw-1080)/2:0,boxblur=25:5[blurred];"
+            "[fg]scale=1080:608[small];"
+            "[blurred][small]overlay=(W-w)/2:(H-h)/2[vout]",
+            "-map", "[vout]", "-map", "0:a",
+            "-c:v", "libx264", "-crf", "23", "-preset", "fast",
+            "-c:a", "aac", "-b:a", "192k",
+            out_path,
+        ]
+    else:
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", str(hook_start),    "-to", str(hook_end),    "-i", mp4_path,
+            "-ss", str(reveal_start),  "-to", str(reveal_end),  "-i", mp4_path,
+            "-ss", str(closure_start), "-to", str(closure_end), "-i", mp4_path,
+            "-filter_complex",
+            "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[vraw][aout];"
+            "[vraw]split=2[bg][fg];"
+            "[bg]scale=-2:1920,crop=1080:1920:(iw-1080)/2:0,boxblur=25:5[blurred];"
+            "[fg]scale=1080:608[small];"
+            "[blurred][small]overlay=(W-w)/2:(H-h)/2[vout]",
+            "-map", "[vout]", "-map", "[aout]",
+            "-c:v", "libx264", "-crf", "23", "-preset", "fast",
+            "-c:a", "aac", "-b:a", "192k",
+            out_path,
+        ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg failed:\n{result.stderr[-500:]}")
@@ -307,9 +328,16 @@ def main():
         segs = None
         if csv_file:
             print(f"  Using CSV: {csv_file['name']}")
-            r = requests.get(
-                f"https://www.googleapis.com/drive/v3/files/{csv_file['id']}?alt=media",
-                headers=drive_headers)
+            # Google Sheets files need export endpoint; plain CSV uses alt=media
+            csv_mime = csv_file.get("mimeType", "")
+            if "spreadsheet" in csv_mime or "google-apps" in csv_mime:
+                r = requests.get(
+                    f"https://www.googleapis.com/drive/v3/files/{csv_file['id']}/export",
+                    params={"mimeType": "text/csv"}, headers=drive_headers)
+            else:
+                r = requests.get(
+                    f"https://www.googleapis.com/drive/v3/files/{csv_file['id']}?alt=media",
+                    headers=drive_headers)
             csv_text = r.content.decode("utf-8")
             # Validate CSV has proper timestamps and matches video
             try:
