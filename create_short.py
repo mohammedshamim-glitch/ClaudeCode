@@ -303,11 +303,14 @@ def main():
 
     # Find MP4 and CSV in folder
     files = list_folder(args.folder_id, drive_headers)
-    mp4_file = next((f for f in files if "video/" in f["mimeType"]), None)
+    # Exclude short_preview files — always use the source video
+    mp4_file = next((f for f in files
+                     if "video/" in f["mimeType"]
+                     and "short" not in f["name"].lower()), None)
     csv_file = next((f for f in files if "timings" in f["name"]), None)
 
     if not mp4_file:
-        print("ERROR: No MP4 found in folder. Skipping.")
+        print("ERROR: No source MP4 found in folder (short_preview files excluded). Skipping.")
         sys.exit(1)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -359,19 +362,23 @@ def main():
 
         hook_s, hook_e, rev_s, rev_e, clo_s, clo_e = segs
 
-        # Hard-cap all segments to actual video duration
-        hook_e  = min(hook_e,  actual_duration - 0.5)
-        rev_s   = min(rev_s,   actual_duration - 5.0)
-        rev_e   = min(rev_e,   actual_duration - 0.5)
-        clo_s   = min(clo_s,   actual_duration - 5.0)
-        clo_e   = min(clo_e,   actual_duration - 0.5)
+        # Hard-cap all segments to actual video duration (skip if full-video mode)
+        hook_e = min(hook_e, actual_duration - 0.5)
+        if rev_s is not None:
+            rev_s  = min(rev_s,  actual_duration - 5.0)
+            rev_e  = min(rev_e,  actual_duration - 0.5)
+            clo_s  = min(clo_s,  actual_duration - 5.0)
+            clo_e  = min(clo_e,  actual_duration - 0.5)
 
-        total_short = (hook_e - hook_s) + (rev_e - rev_s) + (clo_e - clo_s)
-        print(f"\n  Final segments (capped to {actual_duration:.1f}s source):")
-        print(f"  Hook:    {hook_s:.1f}→{hook_e:.1f}  ({hook_e-hook_s:.1f}s)")
-        print(f"  Reveal:  {rev_s:.1f}→{rev_e:.1f}  ({rev_e-rev_s:.1f}s)")
-        print(f"  Closure: {clo_s:.1f}→{clo_e:.1f}  ({clo_e-clo_s:.1f}s)")
-        print(f"  → Short total: {total_short:.1f}s")
+        if rev_s is not None:
+            total_short = (hook_e - hook_s) + (rev_e - rev_s) + (clo_e - clo_s)
+            print(f"\n  Final segments (capped to {actual_duration:.1f}s source):")
+            print(f"  Hook:    {hook_s:.1f}→{hook_e:.1f}  ({hook_e-hook_s:.1f}s)")
+            print(f"  Reveal:  {rev_s:.1f}→{rev_e:.1f}  ({rev_e-rev_s:.1f}s)")
+            print(f"  Closure: {clo_s:.1f}→{clo_e:.1f}  ({clo_e-clo_s:.1f}s)")
+            print(f"  → Short total: {total_short:.1f}s")
+        else:
+            print(f"\n  Full-video mode: 0.0→{hook_e:.1f}s ({hook_e:.1f}s)")
 
         if args.dry_run:
             print("\n[DRY RUN] — no files built or uploaded.")
