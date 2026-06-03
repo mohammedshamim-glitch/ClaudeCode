@@ -1,5 +1,17 @@
 # Claude Code — Project Instructions
 
+## Fix the Root Cause First — Non-Negotiable
+
+**Always try hard to fix the actual problem before reaching for any workaround, fallback, or alternative tool.** This is the top priority rule — it overrides convenience.
+
+- **Never accept "it's broken" at face value.** When a command fails, investigate the real cause before doing anything else. For apt failures, run `apt-cache policy <pkg>` to check for alternate versions; for a 404 on one version, pin to a working one (e.g. `apt-get install libcaca0=0.99.beta20-4build2`). For Python errors, read the traceback and patch the actual line.
+- **Fallbacks are a last resort, not a first move.** Whisper/proportional alignment, Python ffmpeg substitutes, etc. are only acceptable AFTER a genuine attempt to fix the primary tool has failed. The correct tool (e.g. aeneas for forced alignment) must always be the goal.
+- **Don't blindly trust a prior "broken" note in this file.** Learnings can become stale. If a note says something is unfixable, re-investigate before accepting it — the earlier session may have given up too soon.
+- **A workaround that produces lower-quality output is a failure, not a success.** Proportional timing instead of true forced alignment is worse output. Surface the trade-off explicitly and fix the real tool instead.
+- **If genuinely blocked after real effort, say so clearly** — explain exactly what was tried, what the blocker is, and what's needed to unblock. Don't silently downgrade.
+
+---
+
 ## Proactive Improvement — Non-Negotiable
 
 These rules apply on every task, every session, without being asked:
