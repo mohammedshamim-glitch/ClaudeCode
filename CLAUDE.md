@@ -92,6 +92,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **`create_sample.py`**: New script for 30-second preview renders. Flags: `--crossfade` (0.3s dissolve between scenes), `--output=filename.mp4`. Picks scenes from the start of the episode up to ~30s. Use this before committing to a full render to validate KB motion, subtitle style, and transitions.
 - **Preferred transition**: Crossfade 0.3s dissolve (`--crossfade`) is the preferred style — smoother than hard cuts without slowing the pace. Hard cuts are the fallback if render time is a concern.
 - **generate_timings.py rename bug**: The git rename commit (`eae9490`) deleted the aeneas version and left the old proportional code in place because `generate_timings.py` already existed. Always verify file content after a git rename — don't trust the commit message alone.
+- **Shorts — mandatory after every upload**: Every long-form video must have a companion Short. Run `create_short.py` after `upload_youtube.py` for every episode. Schedule the Short for the day after the main video uploads (Thursday if main is Wednesday at 4pm). Script auto-picks hook/reveal/closure from `audio_timings_new.csv`; falls back to proportional if no CSV. Always validate Short duration is 54–62s before uploading to YouTube. The closure extension loop must cap at `closure_start + closure_target + 5s` — never grow the window dynamically.
+- **Shorts segment validation**: Before building a Short, always ffprobe the source MP4 duration and cap all segment endpoints to `actual_duration - 0.5s`. If CSV end_seconds > 1.5× video duration, the CSV belongs to a different episode — discard and use proportional timing.
 
 ## Known Drive Folder IDs
 
@@ -105,6 +107,9 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | Car Finance — Leasing vs Buying: The Real Math (UK) | `1MFf07I2leM6_iyvB5bGXNyqRgYhv35SI` |
 | Psychology of Gen X Money Habits UK | `1ziC-h6dbPrRtaGFUXS43lzIz4m_gpzrN` |
 | The One Financial Mistake Every Generation Repeats (UK) | `1JemV1boJxO_IIDDw5cGfcj5txp8jICzI` |
+| Completed episodes (archive) | `1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR` |
+| 10 Bad Money Habits | `1r4Ay0qa-Z8eBSioyXlwurUd_rt839EZj` |
+| Property vs Stocks — The Real Math | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
 
 ## Project Overview
 
@@ -118,6 +123,7 @@ Monkey Finance — automated YouTube video production pipeline.
 | `upload_youtube.py` | Uploads finished video to YouTube with SEO metadata |
 | `setup_youtube_auth.py` | One-time YouTube OAuth setup |
 | `run_tts.py` | Text-to-speech narration generation |
+| `create_short.py` | Build + upload YouTube Short from episode folder. Args: `<folder_id> <yt_video_id> "<episode_title>" "<short_title>" --schedule YYYY-MM-DDTHH:MM:SSZ` |
 
 ### Key Conventions
 - All secrets in `token.json` (gitignored) — never hardcode keys
