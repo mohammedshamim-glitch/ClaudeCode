@@ -1,5 +1,11 @@
 # Claude Code — Project Instructions
 
+## Scheduling Rule — Non-Negotiable
+
+**Never publish a video immediately.** All YouTube uploads (Shorts and long-form) must be scheduled with `privacyStatus: private` and a `publishAt` time that is **at least 2 days from now**. Never set `privacyStatus: public` at upload time. If unsure of the target date, ask before uploading.
+
+---
+
 ## Proactive Improvement — Non-Negotiable
 
 These rules apply on every task, every session, without being asked:
