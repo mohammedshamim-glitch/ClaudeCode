@@ -12,7 +12,10 @@ TOKEN_FILE   = '/home/user/ClaudeCode/token.json'
 FONT         = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 RAW_DIR      = Path('/home/user/ClaudeCode/mxm_shorts/clips/dribblers_clean')
 HOOK_DIR     = Path('/home/user/ClaudeCode/mxm_shorts/processed/dribblers_hook')
-MUSIC_FILE   = Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3')
+MUSIC_FILES  = [
+    Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3'),
+    Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_2.mp3'),
+]
 
 # 7 clips being re-processed: raw clip → (video_id, publish_at_utc, title_stem, emoji)
 TARGETS = [
@@ -43,7 +46,7 @@ def get_youtube_token():
     return token
 
 
-def process_clip_with_hook(raw_path, out_path):
+def process_clip_with_hook(raw_path, out_path, music_path):
     """Crop → 9:16, watermark, mid-clip hook, replace audio with royalty-free music."""
     r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
         '-show_entries', 'stream=width,height', '-of', 'csv=p=0', str(raw_path)],
@@ -69,7 +72,7 @@ def process_clip_with_hook(raw_path, out_path):
     subprocess.run([
         'ffmpeg', '-y',
         '-i', str(raw_path),
-        '-stream_loop', '-1', '-i', str(MUSIC_FILE),
+        '-stream_loop', '-1', '-i', str(music_path),
         '-vf', vf,
         '-map', '0:v', '-map', '1:a',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
@@ -149,7 +152,8 @@ def main():
     print('=== Adding mid-clip hook to 7 scheduled Dribblers ===\n')
     token = get_youtube_token()
 
-    for raw_name, old_vid_id, publish_at, stem, emoji in TARGETS:
+    for idx, (raw_name, old_vid_id, publish_at, stem, emoji) in enumerate(TARGETS):
+        music    = MUSIC_FILES[idx % len(MUSIC_FILES)]
         raw_path = RAW_DIR / raw_name
         out_path = HOOK_DIR / f'{stem}.mp4'
         title    = f"{stem.replace('_', ' ')} {emoji} #Shorts #Football"
@@ -158,7 +162,7 @@ def main():
 
         # Step 1 — re-process with hook
         if not out_path.exists():
-            process_clip_with_hook(raw_path, out_path)
+            process_clip_with_hook(raw_path, out_path, music)
             print(f'  ✓ Encoded with hook')
         else:
             print(f'  ↩ Already encoded')

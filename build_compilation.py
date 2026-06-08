@@ -36,7 +36,7 @@ TAGS = [
 REMUSICED  = Path('/home/user/ClaudeCode/mxm_shorts/remusiced')
 HOOK_DIR   = Path('/home/user/ClaudeCode/mxm_shorts/processed/dribblers_hook')
 MESSI_DIR  = Path('/home/user/ClaudeCode/mxm_shorts/processed/messi')
-MUSIC      = Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3')
+MUSIC      = Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_2.mp3')
 
 # Curated selection — 6 dribblers + 4 showboats + 6 messi ≈ 10 min
 CLIPS = [

@@ -10,7 +10,10 @@ COMPLETED_ID  = '1GjBbF-WlYtMHw0K4LTqY_tplvN_-4d9A'
 DRIVE_FILE_ID = '1VjFiUan-7oJFXy4XKBCCCJ1XzlQRIVjS'
 FOLDER_NAME   = 'Lionel Messi - Top 30 Goals'
 FONT          = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
-MUSIC         = Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3')
+MUSIC_FILES   = [
+    Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_1.mp3'),
+    Path('/home/user/ClaudeCode/mxm_shorts/music/upbeat_background_2.mp3'),
+]
 SRC           = Path('/home/user/ClaudeCode/mxm_shorts/downloads/Lionel_Messi_Top_30_Goals.mp4')
 CLIPS_DIR     = Path('/home/user/ClaudeCode/mxm_shorts/clips/messi')
 PROCESSED_DIR = Path('/home/user/ClaudeCode/mxm_shorts/processed/messi')
@@ -131,7 +134,7 @@ def build_segments(major_times, fine_times):
     return segments
 
 
-def process_clip(raw_path, out_path, hook_text):
+def process_clip(raw_path, out_path, hook_text, music_path=None):
     r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
         '-show_entries', 'stream=width,height', '-of', 'csv=p=0', str(raw_path)],
         capture_output=True, text=True)
@@ -149,7 +152,7 @@ def process_clip(raw_path, out_path, hook_text):
     )
     subprocess.run([
         'ffmpeg', '-y', '-i', str(raw_path),
-        '-stream_loop', '-1', '-i', str(MUSIC),
+        '-stream_loop', '-1', '-i', str(music_path or MUSIC_FILES[0]),
         '-vf', vf, '-map', '0:v', '-map', '1:a',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
         '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart',
@@ -230,7 +233,8 @@ def main():
     print(f'\nDrive folder ready\n')
 
     for i, (start, end) in enumerate(segments, 1):
-        hook = HOOKS[(i - 1) % len(HOOKS)]
+        hook  = HOOKS[(i - 1) % len(HOOKS)]
+        music = MUSIC_FILES[(i - 1) % len(MUSIC_FILES)]
         raw_path = CLIPS_DIR / f'raw_{i:03d}.mp4'
         out_name = f'{SHORT_TITLES[i-1]}.mp4' if i <= len(SHORT_TITLES) else f'Messi_Goal_{i}.mp4'
         out_path = PROCESSED_DIR / out_name
@@ -241,7 +245,7 @@ def main():
             continue
         subprocess.run(['ffmpeg', '-y', '-ss', str(start), '-i', str(SRC),
             '-t', str(end - start), '-c', 'copy', str(raw_path)], capture_output=True)
-        process_clip(raw_path, out_path, hook)
+        process_clip(raw_path, out_path, hook, music)
 
         fid = save_to_drive(out_path, out_name, folder_id, token)
         print(f'  ✓ Saved to Drive' if fid else f'  ✗ Drive save failed')
