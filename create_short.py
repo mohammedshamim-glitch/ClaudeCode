@@ -421,8 +421,12 @@ def main():
         video_id = youtube_upload_short(short_path, args.short_title, description,
                                          tags, args.schedule, yt_headers)
         print(f"  ✓ YouTube: https://www.youtube.com/watch?v={video_id}")
-        print(f"\n✅ Done! Pin comment after going live:")
-        print(f'   "Full video here 👉 https://www.youtube.com/watch?v={args.youtube_video_id}"')
+        print(f"\n✅ Done!")
+        print(f"\n  📌 Pin comment after going live:")
+        print(f'     "Full video here 👉 https://www.youtube.com/watch?v={args.youtube_video_id}"')
+        print(f"\n  🔗 Set Related Video in Studio after going live:")
+        print(f"     Studio → Edit Short → Customisation → Related video")
+        print(f"     Link to: https://www.youtube.com/watch?v={args.youtube_video_id}")
 
 if __name__ == "__main__":
     main()

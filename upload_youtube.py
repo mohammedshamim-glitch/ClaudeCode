@@ -148,35 +148,50 @@ def is_separator(line):
     return len(stripped) >= 5 and all(c in '━═─' for c in stripped)
 
 def parse_seo_metadata(text):
-    """Parse 06-seo-metadata.txt — structure is ━━━\nSECTION\n━━━\ncontent."""
+    """Parse 06-seo-metadata.txt — handles both ━━━\\nSECTION\\n━━━ and [SECTION] formats."""
     lines = text.split('\n')
     sections = {}
     current_section = None
     content_lines = []
     i = 0
 
-    while i < len(lines):
-        line = lines[i]
-        if is_separator(line):
-            j = i + 1
-            while j < len(lines) and lines[j].strip() == '':
-                j += 1
-            if j < len(lines) and not is_separator(lines[j]):
-                name_line = lines[j].strip().upper()
-                k = j + 1
-                if k < len(lines) and is_separator(lines[k]):
-                    if current_section and content_lines:
-                        sections[current_section] = '\n'.join(content_lines).strip()
-                    current_section = name_line
-                    content_lines = []
-                    i = k + 1
-                    continue
-        if current_section is not None:
-            content_lines.append(line)
-        i += 1
+    # Detect format: [SECTION] bracket style vs ━━━ separator style
+    bracket_format = any(re.match(r'^\[([A-Z][A-Z\s]+)\]$', l.strip()) for l in lines)
 
-    if current_section and content_lines:
-        sections[current_section] = '\n'.join(content_lines).strip()
+    if bracket_format:
+        for line in lines:
+            m = re.match(r'^\[([A-Z][A-Z0-9\s]+)\]$', line.strip())
+            if m:
+                if current_section and content_lines:
+                    sections[current_section] = '\n'.join(content_lines).strip()
+                current_section = m.group(1).strip().upper()
+                content_lines = []
+            elif current_section is not None:
+                content_lines.append(line)
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
+    else:
+        while i < len(lines):
+            line = lines[i]
+            if is_separator(line):
+                j = i + 1
+                while j < len(lines) and lines[j].strip() == '':
+                    j += 1
+                if j < len(lines) and not is_separator(lines[j]):
+                    name_line = lines[j].strip().upper()
+                    k = j + 1
+                    if k < len(lines) and is_separator(lines[k]):
+                        if current_section and content_lines:
+                            sections[current_section] = '\n'.join(content_lines).strip()
+                        current_section = name_line
+                        content_lines = []
+                        i = k + 1
+                        continue
+            if current_section is not None:
+                content_lines.append(line)
+            i += 1
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
 
     result = {"title": "", "description": "", "tags": []}
 
