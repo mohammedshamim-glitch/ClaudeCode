@@ -1,5 +1,11 @@
 # Claude Code — Project Instructions
 
+## Shorts Cutting Rule — Non-Negotiable
+
+**Always cut Shorts at scene transition boundaries.** Never use a fixed time window. Every Short must start AND end at a detected scene cut so no clip ends mid-action. Use `build_segments()` or equivalent scene-boundary logic — find the nearest scene transition for both the start and end of every clip.
+
+---
+
 ## Scheduling Rule — Non-Negotiable
 
 **Never publish a video immediately.** All YouTube uploads (Shorts and long-form) must be scheduled with `privacyStatus: private` and a `publishAt` time that is **at least 2 days from now**. Never set `privacyStatus: public` at upload time. If unsure of the target date, ask before uploading.
