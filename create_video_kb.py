@@ -533,17 +533,16 @@ def main():
         m = re.search(r'_(\d+)\.[^.]+$', name)
         if m:
             return (0, int(m.group(1)), "")
-        # Number before first underscore: e.g. "7_scene.png" → 7
-        m = re.match(r'^(\d+)_', name)
+        # Leading number before underscore or hyphen: e.g. "7_scene.png" or "7-scene.png" → 7
+        m = re.match(r'^(\d+)[_-]', name)
         if m:
             return (0, int(m.group(1)), "")
         return (1, 0, f.get("modifiedTime", ""))
     image_files.sort(key=sort_key)
-    image_files.sort(key=sort_key)
     if not image_files:
         print("ERROR: No images found.")
         sys.exit(1)
-    has_leading = any(re.search(r'_\d+\.[^.]+$', f["name"]) or re.match(r'^\d+_', f["name"]) for f in image_files)
+    has_leading = any(re.search(r'_\d+\.[^.]+$', f["name"]) or re.match(r'^(\d+)[_-]', f["name"]) for f in image_files)
     sort_method = "scene number in filename" if has_leading else "modifiedTime (creation order)"
     print(f"  ✓ {len(image_files)} images (sorted by {sort_method})")
 
