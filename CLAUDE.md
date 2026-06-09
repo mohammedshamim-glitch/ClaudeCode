@@ -10,6 +10,8 @@
 
 **Never publish a video immediately.** All YouTube uploads (Shorts and long-form) must be scheduled with `privacyStatus: private` and a `publishAt` time that is **at least 2 days from now**. Never set `privacyStatus: public` at upload time. If unsure of the target date, ask before uploading.
 
+**Two Shorts per day target.** All new Shorts must be scheduled at **13:00 BST (12:00 UTC)**. Existing Shorts already run at 18:00 BST. Together these fill two slots per day. When scheduling a new Short, find the next date that doesn't already have a 13:00 BST Short and use that.
+
 ---
 
 ## Proactive Improvement — Non-Negotiable
