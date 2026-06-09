@@ -522,22 +522,29 @@ def main():
         sys.exit(1)
     print(f"  ✓ Found: {images_folder['id']}")
 
-    # List and sort images: prefer leading number in filename (e.g. "3_scene.jpg"),
-    # fall back to modifiedTime ascending for UUID-named images.
+    # List and sort images: extract scene number after underscore (e.g. "image_3.jpg" → 3),
+    # or before underscore (e.g. "3_scene.jpg" → 3), fall back to modifiedTime.
     print("Listing images...")
     image_files = drive_list_files(token, images_folder["id"], mime_filter="image/")
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
     def sort_key(f):
-        m = re.match(r'^(\d+)_', f["name"])
+        name = f["name"]
+        # Number after last underscore: e.g. "grok_scene_7.png" → 7
+        m = re.search(r'_(\d+)\.[^.]+$', name)
+        if m:
+            return (0, int(m.group(1)), "")
+        # Number before first underscore: e.g. "7_scene.png" → 7
+        m = re.match(r'^(\d+)_', name)
         if m:
             return (0, int(m.group(1)), "")
         return (1, 0, f.get("modifiedTime", ""))
     image_files.sort(key=sort_key)
+    image_files.sort(key=sort_key)
     if not image_files:
         print("ERROR: No images found.")
         sys.exit(1)
-    has_leading = any(re.match(r'^\d+_', f["name"]) for f in image_files)
-    sort_method = "leading filename number" if has_leading else "modifiedTime (creation order)"
+    has_leading = any(re.search(r'_\d+\.[^.]+$', f["name"]) or re.match(r'^\d+_', f["name"]) for f in image_files)
+    sort_method = "scene number in filename" if has_leading else "modifiedTime (creation order)"
     print(f"  ✓ {len(image_files)} images (sorted by {sort_method})")
 
     # Find narration.mp3, optional auto_timings.csv, optional 05-kb-movements.txt
