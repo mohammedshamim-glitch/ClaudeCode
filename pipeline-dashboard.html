@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monkey See Money — Production Pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header .logo {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: #94a3b8;
+    margin-top: 6px;
+    font-size: 0.95rem;
+  }
+
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto 48px;
+  }
+
+  .stage {
+    background: #1e2330;
+    border: 1px solid #2d3448;
+    border-radius: 14px;
+    padding: 22px;
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .stage:hover {
+    border-color: #4f6ef7;
+    transform: translateY(-2px);
+  }
+
+  .stage-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .stage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .stage-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .stage-subtitle {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .badge-auto    { background: #1a3a2a; color: #4ade80; }
+  .badge-manual  { background: #3a2a1a; color: #fb923c; }
+  .badge-grok    { background: #2a1a3a; color: #c084fc; }
+  .badge-review  { background: #1a2a3a; color: #60a5fa; }
+
+  .steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .steps li {
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+
+  .steps li::before {
+    content: '→';
+    color: #4f6ef7;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .command {
+    background: #0d1117;
+    border: 1px solid #2d3448;
+    border-radius: 7px;
+    padding: 8px 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.72rem;
+    color: #7dd3fc;
+    margin-top: 10px;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+
+  .output-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: #1a2540;
+    color: #93c5fd;
+    border: 1px solid #2d3f6e;
+  }
+
+  .warning-box {
+    background: #2a1f0e;
+    border: 1px solid #78350f;
+    border-radius: 8px;
+    padding: 10px 13px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: #fbbf24;
+    line-height: 1.5;
+  }
+
+  .warning-box strong { color: #f59e0b; }
+
+  /* Stage colour themes */
+  .s1 .stage-number { background: #1e3a5f; color: #60a5fa; }
+  .s2 .stage-number { background: #1e3a5f; color: #60a5fa; }
+  .s3 .stage-number { background: #2d1e5f; color: #c084fc; }
+  .s4 .stage-number { background: #1e3a2a; color: #4ade80; }
+  .s5 .stage-number { background: #1e3a2a; color: #4ade80; }
+  .s6 .stage-number { background: #2d1e5f; color: #c084fc; }
+  .s7 .stage-number { background: #1e3a2a; color: #4ade80; }
+  .s8 .stage-number { background: #1e3a2a; color: #4ade80; }
+  .s9 .stage-number { background: #1e3a2a; color: #4ade80; }
+  .s10 .stage-number { background: #3a1e1e; color: #f87171; }
+  .s11 .stage-number { background: #3a1e1e; color: #f87171; }
+  .s12 .stage-number { background: #1e2e1e; color: #86efac; }
+
+  /* Flow arrow connector between stages */
+  .flow-arrow {
+    text-align: center;
+    color: #2d3448;
+    font-size: 1.4rem;
+    grid-column: 1 / -1;
+    margin: -10px 0;
+    letter-spacing: 12px;
+  }
+
+  /* Section dividers */
+  .section-label {
+    grid-column: 1 / -1;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4f6ef7;
+    padding: 4px 0 2px;
+    border-bottom: 1px solid #2d3448;
+    margin-bottom: 4px;
+  }
+
+  /* Rules panel */
+  .rules-panel {
+    max-width: 1400px;
+    margin: 0 auto 48px;
+    background: #1e2330;
+    border: 1px solid #2d3448;
+    border-radius: 14px;
+    padding: 24px 28px;
+  }
+
+  .rules-panel h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  .rule-card {
+    background: #151b27;
+    border: 1px solid #2d3448;
+    border-radius: 9px;
+    padding: 13px 15px;
+  }
+
+  .rule-card h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rule-card p {
+    font-size: 0.77rem;
+    color: #94a3b8;
+    line-height: 1.55;
+  }
+
+  .rule-card p code {
+    background: #0d1117;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #7dd3fc;
+  }
+
+  footer {
+    text-align: center;
+    color: #475569;
+    font-size: 0.78rem;
+    padding-top: 16px;
+    border-top: 1px solid #1e2330;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🐒</div>
+  <h1>Monkey See Money — Production Pipeline</h1>
+  <p>End-to-end workflow for every episode, from idea to published video</p>
+</header>
+
+<div class="pipeline">
+
+  <!-- PRE-PRODUCTION -->
+  <div class="section-label">Pre-Production</div>
+
+  <div class="stage s1">
+    <div class="stage-header">
+      <div class="stage-number">1</div>
+      <div class="stage-title">Trend Research</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Find the best topic using live YouTube data and keyword scoring.</p>
+    <ul class="steps">
+      <li>Run <code>/monkey-finance-trends</code> skill</li>
+      <li>yt-dlp pulls competitor data live</li>
+      <li>Scores topics 1–25 across 5 dimensions</li>
+      <li>Produces scored opportunities + content brief</li>
+      <li>Approve topic before moving on</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">01-trend-report.md</span>
+      <span class="pill">Content brief</span>
+    </div>
+  </div>
+
+  <div class="stage s2">
+    <div class="stage-header">
+      <div class="stage-number">2</div>
+      <div class="stage-title">Script Writing</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">1,900–2,100 word narration script broken into 25-word scenes.</p>
+    <ul class="steps">
+      <li>Run <code>/monkey-finance-scriptwriter</code> skill</li>
+      <li>4-pass method: Artist → Architect → Writer → Wizard</li>
+      <li>UK-first, no jargon, retention-engineered</li>
+      <li>Named characters for comparison episodes</li>
+      <li>Review & approve before Stage 3</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">02-narration-script-structured.txt</span>
+      <span class="pill">03-narration-script-clean.txt</span>
+    </div>
+  </div>
+
+  <div class="stage s3">
+    <div class="stage-header">
+      <div class="stage-number">3</div>
+      <div class="stage-title">Image Prompts</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">One image prompt per narration scene — ready for Grok.</p>
+    <ul class="steps">
+      <li>Run <code>/monkey-finance-image-prompts</code> skill</li>
+      <li>1 prompt per scene (1:1 mapping — no grouping)</li>
+      <li>Monkey in ~25% of scenes, always mid-action</li>
+      <li>Stats must be written on canvas in every relevant scene</li>
+      <li>Named characters must appear in their scenes</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">04-image-prompts.txt</span>
+      <span class="pill">05-video-prompts.txt</span>
+    </div>
+  </div>
+
+  <div class="stage s4">
+    <div class="stage-header">
+      <div class="stage-number">4</div>
+      <div class="stage-title">Generate Images (Grok)</div>
+    </div>
+    <div class="badge badge-grok">Grok / Manual</div>
+    <p class="stage-subtitle">Generate all scene images using Grok text-to-image.</p>
+    <ul class="steps">
+      <li>Paste each prompt from <code>04-image-prompts.txt</code> into Grok</li>
+      <li>Name files sequentially: <code>1-description.jpg</code>, <code>2-description.jpg</code>…</li>
+      <li>Number = scene number (flat, never section-based)</li>
+      <li>Upload all to <code>Images/</code> subfolder in Drive episode folder</li>
+      <li>Also generate thumbnail image (save as <code>thumbnail</code>)</li>
+    </ul>
+    <div class="warning-box">
+      <strong>⚠ Critical naming rule:</strong> Use flat sequential numbers only (1, 2, 3… 94). Never use section-based names like <code>21</code> for scene 2.1 — they break sort order.
+    </div>
+  </div>
+
+  <!-- PRODUCTION -->
+  <div class="section-label">Production</div>
+
+  <div class="stage s5">
+    <div class="stage-header">
+      <div class="stage-number">5</div>
+      <div class="stage-title">Audio Generation (TTS)</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Convert clean narration script to MP3 audio via Gemini TTS.</p>
+    <div class="command">python3 run_tts.py &lt;narration_file_id&gt; &lt;folder_id&gt; narration.mp3</div>
+    <ul class="steps" style="margin-top:10px">
+      <li>Uses <code>gemini_tts_api_key</code> (separate paid key)</li>
+      <li>Chunks saved locally — resumes if quota hit</li>
+      <li>Daily quota ~2,000 words — resets 8am UK</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">narration.mp3</span>
+    </div>
+  </div>
+
+  <div class="stage s6">
+    <div class="stage-header">
+      <div class="stage-number">6</div>
+      <div class="stage-title">Forced Alignment (aeneas)</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Map each narration scene to its exact timestamp in the audio.</p>
+    <div class="command">python3 generate_timings.py &lt;folder_id&gt;</div>
+    <ul class="steps" style="margin-top:10px">
+      <li>Uses aeneas forced alignment — mandatory, no fallbacks</li>
+      <li>Requires: libespeak-dev, patched wavfile.py</li>
+      <li>Output used for chapter timestamps AND video assembly</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">audio_timings_new.csv</span>
+    </div>
+  </div>
+
+  <div class="stage s7">
+    <div class="stage-header">
+      <div class="stage-number">7</div>
+      <div class="stage-title">SEO & Thumbnail Brief</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Full click-optimisation package — titles, description, tags, chapters, thumbnail.</p>
+    <ul class="steps">
+      <li>Run <code>/monkey-finance-seo-thumbnail</code> skill</li>
+      <li>3 title variants (A/B testable)</li>
+      <li>Chapters use exact aeneas timestamps from CSV</li>
+      <li>yt-dlp validates tags against competitor videos</li>
+      <li>Save thumbnail from Grok as <code>thumbnail</code> in Drive</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">06-seo-metadata.txt</span>
+      <span class="pill">07-thumbnail-prompt.txt</span>
+      <span class="pill">thumbnail</span>
+    </div>
+  </div>
+
+  <div class="stage s8">
+    <div class="stage-header">
+      <div class="stage-number">8</div>
+      <div class="stage-title">Video Assembly</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Render Ken Burns video with karaoke subtitles from Drive images + audio.</p>
+    <div class="command">python3 create_video_kb.py &lt;folder_id&gt; --subs</div>
+    <ul class="steps" style="margin-top:10px">
+      <li>Images sorted by leading number in filename</li>
+      <li>Ken Burns effect on every 4th scene (25%)</li>
+      <li>Karaoke subtitles: green active-word box, 5 words/phrase</li>
+      <li>Review on Drive before uploading</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">episode-title.mp4 (Drive)</span>
+    </div>
+  </div>
+
+  <!-- POST-PRODUCTION -->
+  <div class="section-label">Post-Production</div>
+
+  <div class="stage s9">
+    <div class="stage-header">
+      <div class="stage-number">9</div>
+      <div class="stage-title">YouTube Upload</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">Upload video, thumbnail, and all SEO metadata to YouTube.</p>
+    <div class="command">python3 upload_youtube.py &lt;folder_id&gt;</div>
+    <ul class="steps" style="margin-top:10px">
+      <li>Channel check: must confirm "Monkey See Money" before upload</li>
+      <li>Auto-schedules next Wednesday 4pm BST</li>
+      <li>Sets en-GB language (YouTube auto-captions)</li>
+      <li>Uploads thumbnail automatically if named <code>thumbnail</code></li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">YouTube Video ID</span>
+      <span class="pill">Scheduled date</span>
+    </div>
+  </div>
+
+  <div class="stage s10">
+    <div class="stage-header">
+      <div class="stage-number">10</div>
+      <div class="stage-title">YouTube Short</div>
+    </div>
+    <div class="badge badge-auto">Automated</div>
+    <p class="stage-subtitle">~50s vertical Short built from hook + reveal + closure segments.</p>
+    <div class="command">python3 create_short.py &lt;folder_id&gt; &lt;yt_video_id&gt; "&lt;episode title&gt;" "&lt;short title&gt;" --schedule YYYY-MM-DDTHH:MM:SSZ</div>
+    <ul class="steps" style="margin-top:10px">
+      <li>Segments selected from <code>audio_timings_new.csv</code></li>
+      <li>Blur background treatment (16:9 → 9:16)</li>
+      <li>Scheduled day before main video (Tuesday)</li>
+      <li>Saved to Drive for review before YouTube upload</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">short_preview_v1.mp4</span>
+      <span class="pill">Short YouTube ID</span>
+    </div>
+  </div>
+
+  <div class="stage s11">
+    <div class="stage-header">
+      <div class="stage-number">11</div>
+      <div class="stage-title">Post-Live Actions</div>
+    </div>
+    <div class="badge badge-manual">Manual</div>
+    <p class="stage-subtitle">Do these within 60 minutes of each video going live.</p>
+    <ul class="steps">
+      <li>Pin comment on Short: <em>"Full video here 👉 [link]"</em></li>
+      <li>Set Related Video on Short: Studio → Edit → Customisation → Related video</li>
+      <li>Check A/B title test is running in YouTube Studio</li>
+      <li>Monitor CTR and retention in first 48 hours</li>
+    </ul>
+  </div>
+
+  <div class="stage s12">
+    <div class="stage-header">
+      <div class="stage-number">12</div>
+      <div class="stage-title">Archive & Analytics</div>
+    </div>
+    <div class="badge badge-auto">Automated + Review</div>
+    <p class="stage-subtitle">Archive the episode and review performance at 7 and 14 days.</p>
+    <ul class="steps">
+      <li>Move episode folder to Completed in Drive</li>
+      <li>At 7 days: run analytics review via pipeline skill</li>
+      <li>Feed learnings into next trend report</li>
+      <li>Track: CTR, avg view duration, traffic source, A/B winner</li>
+    </ul>
+    <div class="output-pills">
+      <span class="pill">08-analytics-review.md</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- CRITICAL RULES -->
+<div class="rules-panel">
+  <h2>⚠️ Critical Rules</h2>
+  <div class="rules-grid">
+
+    <div class="rule-card">
+      <h3>🖼️ Image Naming</h3>
+      <p>Files must be named <code>N-description.jpg</code> where N is the flat scene number (1, 2, 3…). Never use section-based names like <code>21</code> for scene 2.1 — they break sort order and put images in the wrong order.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>⏱️ Timings — aeneas Only</h3>
+      <p>Forced alignment via aeneas is mandatory. Proportional and Whisper fallbacks are banned for final output — they can drift up to 6 seconds. If aeneas fails, fix the environment. Never silently downgrade.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>📺 Channel Check</h3>
+      <p>Before every upload, verify the authenticated channel returns "Monkey See Money". If it returns anything else (Digital Fusion, personal account), stop and re-authenticate with <code>setup_youtube_auth.py</code>.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>🔑 TTS API Key</h3>
+      <p>The <code>gemini_tts_api_key</code> is used for TTS only — never for other Gemini API calls. Other Gemini calls use <code>gemini_api_key</code>.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>🗂️ SEO File Format</h3>
+      <p>The <code>06-seo-metadata.txt</code> section name must be <code>TITLES</code> with <code>Primary:</code> on its own line and the title on the next. Wrong format causes upload failure.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>🐒 Monkey Rules</h3>
+      <p>Monkey appears in ~25% of scenes. Must always be mid-action with a prop — never just standing. Never specify suit colour. Never replace a named character — monkey accompanies, not substitutes.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>📌 Pinned Comment Timing</h3>
+      <p>Scheduled videos can't receive pinned comments via API until live. Post manually in Studio within 60 minutes of going live, then pin (3 dots → Pin).</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>📁 Drive Files</h3>
+      <p>All assets live in Google Drive — never local. Use known folder IDs directly. Name thumbnail <code>thumbnail</code> so <code>upload_youtube.py</code> finds it automatically.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Monkey See Money · Production Pipeline · Auto-generated from CLAUDE.md
+</footer>
+
+</body>
+</html>
