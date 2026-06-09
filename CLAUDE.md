@@ -106,7 +106,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | The Savings Tax Trap | `1lfFqd3FuqEXJx5DNMKP1YqnXTK1_W2dc` |
 | Car Finance — Leasing vs Buying: The Real Math (UK) | `1MFf07I2leM6_iyvB5bGXNyqRgYhv35SI` |
 | Psychology of Gen X Money Habits UK | `1ziC-h6dbPrRtaGFUXS43lzIz4m_gpzrN` |
-| The One Financial Mistake Every Generation Repeats (UK) | `1JemV1boJxO_IIDDw5cGfcj5txp8jICzI` |
+| The One Financial Mistake Every Generation Repeats (UK) | `1JemV1boJxO_IIDDw5cGfcj5txp8jICzI` | YT: `Xg-m1V6I5sE` |
 | Completed episodes (archive) | `1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR` |
 | 10 Bad Money Habits | `1r4Ay0qa-Z8eBSioyXlwurUd_rt839EZj` |
 | Property vs Stocks — The Real Math | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
