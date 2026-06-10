@@ -165,16 +165,13 @@ This applies Ken Burns effects (zoom/pan) to every 4th scene (25% of scenes), wi
 ## Stage 8 — YouTube Upload
 
 **Pre-upload channel check — mandatory every time:**
-```bash
-# Verify you're uploading to Monkey See Money, not another channel
-# upload_youtube.py does this check automatically
-```
 
 ```bash
 python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id>
 ```
 
 This will:
+- Verify the authenticated channel is Monkey See Money before proceeding
 - Parse `06-seo-metadata.txt` for title, description, tags, chapters
 - Upload the MP4 via resumable upload
 - Upload the `thumbnail` file from Drive
@@ -225,9 +222,9 @@ Schedule the Short for **Tuesday at 4pm** (the day before the main video).
 
 ## 7-Day Analytics Review
 
-Run 7 days after publish (and again at 14 days):
+Run 7 days after publish (and again at 14 days).
 
-Invoke `/monkey-finance-trends` → analytics mode, or check YouTube Studio manually:
+Check YouTube Studio manually:
 
 | Metric | Target |
 |---|---|
