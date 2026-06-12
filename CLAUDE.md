@@ -76,7 +76,24 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Script style — character-driven**: Scripts perform better with named characters (e.g. Jake and Marcus) rather than abstract "you vs you" comparisons. The Wealth Logic "Real Estate vs Stocks" format (1.48M views) uses two characters to make the emotional journey concrete and followable. Adopt this structure for comparison videos.
 - **Script adaptation workflow**: Find the top-performing competitor video on a topic → extract transcript via Gemini → adapt to UK (swap $ for £, add ISA/CGT/Section 24/stamp duty, change characters/scenarios) → keep the proven emotional beats and structure intact.
 
+## Intro Clip Rule — Non-Negotiable
+
+**Always prepend the MXM Ballerz intro to long-form videos.** Do NOT add it to Shorts (would push them over 60s limit).
+
+- **Intro file:** `Intro.mp4` — Drive ID `173LFP9ESylyl0VHFHgiCTHurMehU4MCD` (Logo and Branding folder: `1OHODnVe4imuIebUqW3020KaUcdF_bSKY`)
+- **Intro specs:** 752×416, 24fps, ~6s — must be upscaled to match main video resolution/fps before concat
+- **ffmpeg approach:** Use filter_complex concat — scale intro to target resolution with `scale=W:H:force_original_aspect_ratio=decrease,pad=W:H:-1:-1`, match fps, then `concat=n=2:v=1:a=1`
+- **Local cache:** Save downloaded intro to `mxm_shorts/intro.mp4` to avoid re-downloading
+
+---
+
 ## Known Drive Folder IDs
+
+### MXM Ballerz Branding
+| Location | File/Folder ID |
+|---|---|
+| **Logo and Branding folder** | `1OHODnVe4imuIebUqW3020KaUcdF_bSKY` |
+| **Intro.mp4** (6s branded intro) | `173LFP9ESylyl0VHFHgiCTHurMehU4MCD` |
 
 ### Monkey Finance / Monkey See Money
 | Location | Folder ID |
