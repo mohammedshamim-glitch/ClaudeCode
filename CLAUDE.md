@@ -110,6 +110,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | Completed episodes (archive) | `1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR` |
 | 10 Bad Money Habits | `1r4Ay0qa-Z8eBSioyXlwurUd_rt839EZj` |
 | Property vs Stocks — The Real Math | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
+| ISA vs Pension — Which One Will Make You More Money? (The Real Math) | `1E_dBFxc1Cn0XtqiVS4bu6k2oiEwtWZwb` |
 
 ## Project Overview
 
