@@ -6,7 +6,7 @@ description: >
   narrative-aligned prompts ready for Grok text-to-image generation (Stage 3 of the pipeline).
   Outputs both static image prompts AND video prompts with camera movements. Each prompt ties 
   directly to the script moment, extracts statistics for on-canvas visualisation, and respects 
-  strict character and style rules (monkey appears in ~25% of scenes; never specify suit colour).
+  strict character and style rules (monkey appears in ~80% of scenes; never specify suit colour).
   Use this skill whenever Sham asks to generate image prompts, create scene visuals,
   turn a script into animation prompts, run Stage 3 of the pipeline, or says anything like
   "generate the image prompts", "create the scene visuals", "what does scene X look like",
@@ -89,7 +89,7 @@ Read all prompts as a sequence. Check:
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
-- [ ] Video prompts: monkey in ~25% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
+- [ ] Video prompts: monkey in ~80% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
 
 ---
 
@@ -148,10 +148,10 @@ Full action library is in `references/VISUAL-RULES.md`.
 |---|---|
 | **Scene 01** | Monkey — brand intro |
 | **Final scene** | Monkey — brand sign-off |
-| **Most scenes** | Monkey — present in ~25% of all scenes as guide, narrator, reactor |
-| **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~75% of scenes) |
+| **Most scenes** | Monkey — present in ~80% of all scenes as guide, narrator, reactor |
+| **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~20% of scenes) |
 
-**Monkey threshold:** Use a monkey in approximately 25% of scenes. Reserve no-monkey treatment for scenes where a statistic or diagram is the sole centrepiece and a character would distract from the number. The monkey acts as guide, narrator, and emotional reactor throughout — not just at peak moments.
+**Monkey threshold:** Use a monkey in approximately 80% of scenes. The monkey is the consistent visual narrator throughout the video — always active, always doing something with a prop. Reserve no-monkey treatment only for scenes where a large statistic or diagram must dominate the entire frame without distraction (e.g. a full-canvas £680,000 reveal, a 40% tax threshold chart). If in doubt, include the monkey.
 
 **Never use:**
 - ❌ Any suit colour specified in a monkey prompt
@@ -208,8 +208,8 @@ Full animation brief per scene. Scene number + everything in one paragraph. Blan
 ```
 
 **Video prompt rules (non-negotiable):**
-- Monkey in ~25% of scenes — facial expressions only, no mouth movement ever
-- No-monkey scenes: stat-heavy frames where a character would distract from the number
+- Monkey in ~80% of scenes — facial expressions only, no mouth movement ever
+- No-monkey scenes: only stat-heavy frames where a large number or diagram must fill the entire canvas
 - Monkey present in Scene 01 and the final scene (no suit colour specified)
 - Each prompt: one clear animation sequence — no timing specified
 - Camera variety: zoom in / zoom out / pan left-right / pan right-left / hold steady — never the same move more than twice in a row
@@ -235,7 +235,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **No suit colour** specified in any monkey prompt
-- [ ] **Monkey** used in ~25% of scenes as guide, narrator, reactor
+- [ ] **Monkey** used in ~80% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
 - [ ] **Named characters appear in scenes that reference them** — monkey never replaces a named character, only accompanies them
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas
@@ -245,7 +245,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **Central 60% / 20% border instruction** present in every image prompt
 
 **Video prompts:**
-- [ ] **Monkey in ~25% of scenes** — matches image prompt monkey distribution exactly
+- [ ] **Monkey in ~80% of scenes** — matches image prompt monkey distribution exactly
 - [ ] **No mouth movement** stated in every prompt with a monkey
 - [ ] **Facial expressions only** — no lip sync, no talking animation
 - [ ] **No timing** specified in any video prompt
