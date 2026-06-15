@@ -4,7 +4,7 @@ description: >
   State-of-the-art image prompt generator for Monkey Finance whiteboard animation videos.
   Transforms a narration script into sub-scenes (~25 words each) and generates eye-catching, 
   narrative-aligned prompts ready for Grok text-to-image generation (Stage 3 of the pipeline).
-  Outputs both static image prompts AND video prompts with camera movements. Each prompt ties 
+  Outputs static image prompts only (04-image-prompts.txt). Each prompt ties 
   directly to the script moment, extracts statistics for on-canvas visualisation, and respects 
   strict character and style rules (monkey appears in ~80% of scenes; never specify suit colour).
   Use this skill whenever Sham asks to generate image prompts, create scene visuals,
@@ -52,7 +52,7 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 
 **One image prompt per narration scene. No grouping. No merging.**
 
-The narration script uses 15–25 word scenes (target ~20 words). Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. Every narration scene gets its own image prompt — label using the structured script's scene numbers (e.g. 0.1, 0.2, 1.1, 1.2, 3.4, etc.). A 99-scene script produces 99 image prompts and 99 video prompts.
+The narration script uses scenes of varying length — one visual beat per scene, typically 5–29 words. There is no fixed word-count target. Short sentences that share the same visual moment may appear grouped on one line in the script; honour those boundaries exactly. Sham edits scene boundaries in the V2 Google Doc — always reverse-engineer the structured script from his edited clean script, never re-split by word count. Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. Every narration scene gets its own image prompt — label using the structured script's scene numbers (e.g. 0.1, 0.2, 1.1, 1.2, 3.4, etc.). A 107-scene script produces 107 image prompts.
 
 ### Pass 1 — Parse & Map (The Director)
 For each narration scene, identify:
@@ -62,10 +62,11 @@ For each narration scene, identify:
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
 - **Whether a monkey** adds value — present / none (never specify suit colour)
 
-### Pass 2 — Write Two Files (The Artist)
-Generate both output files simultaneously:
+### Pass 2 — Write the Image Prompts File (The Artist)
+Generate one output file:
 1. **Image prompts** (`04-image-prompts.txt`) — static scenes for Grok text-to-image, with central 60% / 20% border rule in every prompt
-2. **Video prompts** (`05-video-prompts.txt`) — full animation brief per scene for AI video generation (Kling, Runway, Pika etc.)
+
+**Note: `05-video-prompts.txt` is deprecated and no longer generated.** Image prompts only.
 
 Format image prompts: `1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
 
@@ -77,8 +78,6 @@ Example — monkey with prop:
 Example — stat scene (no monkey):
 `1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
 
-Format video prompts: `1.1 Whiteboard animation, clean white background. [monkey/no-character setup]. [animation sequence — what draws in, what moves, in what order]. [monkey facial expression shift if present]. [camera move]. No mouth movement.`
-
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
 - [ ] Prompt count matches narration scene count exactly (1:1)
@@ -88,8 +87,7 @@ Read all prompts as a sequence. Check:
 - [ ] No suit colour specified in any monkey prompt
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
-- [ ] Camera movements logical and varied (specified in video prompts, not a separate file)
-- [ ] Video prompts: monkey in ~80% of scenes, no mouth movement, facial expressions only, no two adjacent scenes with identical camera move
+- [ ] **Character expressions**: every Sophie/Chris scene has a contextually appropriate facial expression — anxious/worried for setbacks, confident/relieved for wins, surprised for reveals, thoughtful for realisations
 
 ---
 
@@ -243,25 +241,17 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **No channel name, brand name, or text branding** of any kind
 - [ ] **Visual variety** — no two adjacent scenes are compositionally identical
 - [ ] **Central 60% / 20% border instruction** present in every image prompt
-
-**Video prompts:**
-- [ ] **Monkey in ~80% of scenes** — matches image prompt monkey distribution exactly
-- [ ] **No mouth movement** stated in every prompt with a monkey
-- [ ] **Facial expressions only** — no lip sync, no talking animation
-- [ ] **No timing** specified in any video prompt
-- [ ] **Animation sequence is specific** — describes what draws in, appears, pulses, in order
-- [ ] **Camera variety** — no identical move on adjacent scenes
-- [ ] **No headers or section labels** in any output file
+- [ ] **Named characters have scene-appropriate expressions** — never a neutral or generic pose
+- [ ] **No headers or section labels** in output file
 
 ---
 
 ## Delivery
 
-Always generate both files without asking. Save both to Drive in the episode folder:
+Generate one file only. Save to Drive in the episode folder:
 - `04-image-prompts.txt`
-- `05-video-prompts.txt`
 
-Then confirm: *"Stage 3 complete — {scene_count} prompts (1 per narration scene). Image prompts and video prompts saved to Drive. Ready for your review before Stage 4."*
+Then confirm: *"Stage 3 complete — {scene_count} image prompts (1 per narration scene). Saved to Drive. Ready for your review before Stage 4."*
 
 ---
 

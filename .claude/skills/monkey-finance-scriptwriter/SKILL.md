@@ -5,7 +5,7 @@ description: >
   fully-written, broadcast-ready narration scripts engineered for maximum retention,
   built on storytelling psychology, dopamine loop architecture, and the Monkey Finance
   brand voice — punchy, relatable, conversational, and UK-first. Breaks content into
-  exactly 25-word scenes and outputs two files: structured script with section headers
+  one-visual-beat-per-scene scenes (5–29 words, no fixed target) and outputs two files: structured script with section headers
   and clean narration-only file for TTS audio generation.
   Use this skill whenever Sham asks to write a script, draft a video, create narration,
   or says anything like "write the script", "script this up", "write me a video",
@@ -156,7 +156,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 - [ ] **Curiosity gaps** — at least 2 open loops planted and paid off across the script
 - [ ] **UK-first** — no American terms, products, or references
 - [ ] **Word count 1,900–2,100** — not under, not over
-- [ ] **Scene format** — 15–25 words per scene (target ~20); numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene
+- [ ] **Scene format** — one visual beat per scene; word count varies 5–29 words (no fixed target); numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene; short sentences sharing the same visual moment may be grouped
 
 ---
 
@@ -164,7 +164,7 @@ Read the full script aloud. Cut anything you wouldn't say in conversation. Check
 
 **Scene format — non-negotiable:**
 
-Target 15–25 words per scene (aim for ~20). Merge short sentences with adjacent ones to stay within range. Never let a scene run over 25 words — split it.
+One visual beat = one scene. Word count varies 5–29 words — there is **no fixed target**. Write the narration naturally, then split at visual beat boundaries. Short consecutive sentences that belong to the same visual moment can be grouped on one scene line. Never split a scene mid-thought just to hit a word count.
 
 **Numbered-item exception:** Any sentence beginning with `One:`, `Two:`, `Three:`, `Four:`, `Five:`, `Option one:`, `Option two:`, `Option three:`, `Option four:`, `Option five:` (any case) **always starts a new scene**, regardless of the current word count.
 
@@ -174,8 +174,8 @@ Target 15–25 words per scene (aim for ~20). Merge short sentences with adjacen
 - Apply the numbered-item exception throughout
 - Scene count will typically be 80–120 scenes for a 1,900–2,100 word script
 
-**Important — narration scenes ≠ images:**
-Narration is split at 15–25 word scenes for TTS and audio alignment accuracy. The image prompt generator (Stage 3) groups consecutive narration scenes into ~25-word visual sub-scenes independently. One narration scene does not mean one unique image — Stage 3 handles the grouping.
+**Important — narration scenes = images (1:1):**
+Each narration scene gets exactly one image prompt at Stage 3. Stage 3 no longer groups or re-splits — it maps 1:1 to whatever scene boundaries are in the clean script. The scene boundaries you set here are the visual boundaries for the whole video. Get them right at script stage.
 
 Then automatically:
 
