@@ -153,14 +153,14 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE        = 1.2   # zoom factor for pan/zoom effects
-KB_SUBTLE_SCALE = 1.05  # barely-perceptible zoom factor for subtle zoom in/out effects
+KB_SCALE        = 1.06  # zoom factor for pan/zoom effects — 6% travel, smooth not dramatic
+KB_SUBTLE_SCALE = 1.02  # barely-perceptible zoom factor for subtle zoom in/out — 2% travel
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
 SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-SUB_FONT_SIZE  = 42
-SUB_MARGIN_V   = 55          # pixels from bottom to glyph baseline
+SUB_FONT_SIZE  = 36
+SUB_MARGIN_V   = 30          # pixels from bottom to glyph baseline
 SUB_PHRASE_LEN = 5           # words per phrase group
 BOX_PAD_H      = 14          # horizontal padding inside green box
 BOX_PAD_V      = 7           # vertical padding inside green box
@@ -198,40 +198,34 @@ def get_kb_filter(idx, duration, w, h):
 
     effects = [
         # 0. Pan left → right
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 1. Zoom in
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        # 1. Zoom in — crop shrinks to centre as P goes 0→1
+        (f"scale={LW}:{LH},"
          f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
          f":x='{px}*{P}/2':y='{py}*{P}/2',"
          f"scale={w}:{h},setsar=1"),
 
         # 2. Pan top → bottom
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
          f"scale={w}:{h},setsar=1"),
 
         # 3. Pan bottom → top
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
 
-        # 4. Subtle zoom in — barely perceptible, 5% travel only
-        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
-         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        # 4. Subtle zoom in — 2% travel, barely perceptible
+        (f"scale={SLW}:{SLH},"
          f"crop=w='{w}+{spx}*(1-{P})':h='{h}+{spy}*(1-{P})'"
          f":x='{spx}*{P}/2':y='{spy}*{P}/2',"
          f"scale={w}:{h},setsar=1"),
 
-        # 5. Subtle zoom out — barely perceptible, 5% travel only
-        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
-         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        # 5. Subtle zoom out — 2% travel, barely perceptible
+        (f"scale={SLW}:{SLH},"
          f"crop=w='{w}+{spx}*{P}':h='{h}+{spy}*{P}'"
          f":x='{spx}*(1-{P})/2':y='{spy}*(1-{P})/2',"
          f"scale={w}:{h},setsar=1"),
