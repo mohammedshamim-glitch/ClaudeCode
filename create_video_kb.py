@@ -167,7 +167,7 @@ BOX_RADIUS     = 6           # rounded corner radius
 
 EFFECT_NAMES = [
     "pan left → right",
-    "zoom in",
+    "pan right → left",
     "pan top → bottom",
     "pan bottom → top",
 ]
@@ -188,10 +188,9 @@ def get_kb_filter(idx, duration, w, h):
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
-        # 1. Zoom in
+        # 1. Pan right → left
         (f"scale={LW}:{LH},"
-         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
-         f":x='{px}*{P}/2':y='{py}*{P}/2',"
+         f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
          f"scale={w}:{h},setsar=1"),
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
