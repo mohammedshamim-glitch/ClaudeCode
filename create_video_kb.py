@@ -153,8 +153,7 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE        = 1.2   # pan effects — 20% travel, smooth at 30fps
-KB_ZOOM_SCALE   = 1.5   # zoom in/out — 50% travel, linear ease, clearly visible
+KB_SCALE        = 1.2   # 20% travel — smooth at 30fps (~2px/frame)
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
@@ -171,60 +170,39 @@ EFFECT_NAMES = [
     "zoom in",
     "pan top → bottom",
     "pan bottom → top",
-    "zoom out",
 ]
 
 def get_kb_filter(idx, duration, w, h):
-    """
-    Returns a smooth Ken Burns vf filter string.
-    Effects 0,2,3: crop/scale pan (smooth at 1.2x travel).
-    Effects 1,4: zoompan filter for true centred zoom in/out (sub-pixel precision).
-    """
-    D   = duration
-    LW  = int(w * KB_SCALE)
-    LH  = int(h * KB_SCALE)
-    px  = LW - w
-    py  = LH - h
-    cx  = px // 2
-    cy  = py // 2
-    ZLW = int(w * KB_ZOOM_SCALE)
-    ZLH = int(h * KB_ZOOM_SCALE)
-    zpx = ZLW - w
-    zpy = ZLH - h
-
-    # Cosine ease for pans, linear for zoom (linear starts motion immediately)
-    P     = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
-    P_lin = f"min(t/{D:.6f},1)"
+    """4 Ken Burns effects cycling on 25% of scenes (every 4th, skipping scene 0)."""
+    D  = duration
+    LW = int(w * KB_SCALE)
+    LH = int(h * KB_SCALE)
+    px = LW - w
+    py = LH - h
+    cx = px // 2
+    cy = py // 2
+    P  = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
 
     effects = [
         # 0. Pan left → right
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
-
-        # 1. Zoom in — 1.5× scale, linear ease, centred crop shrinks to show centre closer
-        (f"scale={ZLW}:{ZLH},"
-         f"crop=w='{w}+{zpx}*(1-{P_lin})':h='{h}+{zpy}*(1-{P_lin})'"
-         f":x='{zpx}*{P_lin}/2':y='{zpy}*{P_lin}/2',"
+        # 1. Zoom in
+        (f"scale={LW}:{LH},"
+         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
+         f":x='{px}*{P}/2':y='{py}*{P}/2',"
          f"scale={w}:{h},setsar=1"),
-
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
          f"scale={w}:{h},setsar=1"),
-
         # 3. Pan bottom → top
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
-
-        # 4. Zoom out — 1.5× scale, linear ease, starts tight on centre then pulls back
-        (f"scale={ZLW}:{ZLH},"
-         f"crop=w='{w}+{zpx}*{P_lin}':h='{h}+{zpy}*{P_lin}'"
-         f":x='{zpx}*(1-{P_lin})/2':y='{zpy}*(1-{P_lin})/2',"
-         f"scale={w}:{h},setsar=1"),
     ]
-    return effects[idx % 5]
+    return effects[idx % 4]
 
 
 def movement_to_effect_idx(text):
@@ -444,17 +422,17 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if use_kb and i > 0 and i % 4 != 0:
+        if use_kb and i > 0 and i % 4 == 1:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
                 if effect_idx is None:
                     # Old-format description — cycle through all 6 effects
-                    effect_idx = kb_cycle_idx % 5
+                    effect_idx = kb_cycle_idx % 4
                     kb_cycle_idx += 1
                 label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}]"
             else:
-                effect_idx = kb_cycle_idx % 5
+                effect_idx = kb_cycle_idx % 4
                 label = f"{EFFECT_NAMES[effect_idx]} [cycle]"
                 kb_cycle_idx += 1
             # Zoom-in on long scenes looks like a slow drift — swap to pan bottom→top

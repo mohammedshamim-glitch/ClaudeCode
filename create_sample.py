@@ -18,7 +18,6 @@ RESOLUTION_H    = 1080
 FPS             = 30
 VIDEO_CRF       = 23
 KB_SCALE        = 1.2
-KB_ZOOM_SCALE   = 1.5   # zoom in/out — 50% travel, linear ease, clearly visible
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 XFADE_DURATION  = 0.3
 
@@ -152,44 +151,33 @@ def drive_upload(token, local_path, filename, folder_id):
     return r.json()
 
 # ── Ken Burns ─────────────────────────────────────────────────────────────────
-EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top", "zoom out"]
+EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top"]
 
 def get_kb_filter(idx, duration, w, h):
-    D     = duration
-    LW    = int(w * KB_SCALE)
-    LH    = int(h * KB_SCALE)
-    px    = LW - w
-    py    = LH - h
-    cx    = px // 2
-    cy    = py // 2
-    ZLW   = int(w * KB_ZOOM_SCALE)
-    ZLH   = int(h * KB_ZOOM_SCALE)
-    zpx   = ZLW - w
-    zpy   = ZLH - h
-    P     = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
-    P_lin = f"min(t/{D:.6f},1)"
+    D  = duration
+    LW = int(w * KB_SCALE)
+    LH = int(h * KB_SCALE)
+    px = LW - w
+    py = LH - h
+    cx = px // 2
+    cy = py // 2
+    P  = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
     effects = [
         # 0. Pan left → right
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},scale={w}:{h},setsar=1"),
-        # 1. Zoom in — 1.5× linear, centred crop shrinks toward centre
-        (f"scale={ZLW}:{ZLH},"
-         f"crop=w='{w}+{zpx}*(1-{P_lin})':h='{h}+{zpy}*(1-{P_lin})'"
-         f":x='{zpx}*{P_lin}/2':y='{zpy}*{P_lin}/2',"
-         f"scale={w}:{h},setsar=1"),
+        # 1. Zoom in
+        (f"scale={LW}:{LH},"
+         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
+         f":x='{px}*{P}/2':y='{py}*{P}/2',scale={w}:{h},setsar=1"),
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',scale={w}:{h},setsar=1"),
         # 3. Pan bottom → top
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
-        # 4. Zoom out — 1.5× linear, starts tight on centre then pulls back
-        (f"scale={ZLW}:{ZLH},"
-         f"crop=w='{w}+{zpx}*{P_lin}':h='{h}+{zpy}*{P_lin}'"
-         f":x='{zpx}*(1-{P_lin})/2':y='{zpy}*(1-{P_lin})/2',"
-         f"scale={w}:{h},setsar=1"),
     ]
-    return effects[idx % 5]
+    return effects[idx % 4]
 
 static_vf = (
     f"scale={RESOLUTION_W}:{RESOLUTION_H}:force_original_aspect_ratio=decrease,"
@@ -507,19 +495,19 @@ def main():
         # Count how many KB effects would have fired before start_scene
         if only_effects is None:
             for s in range(1, start_scene):
-                if s > 1 and (s - 1) % 4 != 0:
+                if s > 1 and (s - 1) % 4 == 1:
                     kb_cycle += 1
         for i, (img_path, row) in enumerate(zip(local_imgs, sample_rows)):
             dur = float(row["duration_seconds"])
             durations.append(dur)
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
             global_i = int(row["scene"]) - 1  # 0-based index in full video
-            use_kb_this = (only_effects is not None) or (global_i > 0 and global_i % 4 != 0)
+            use_kb_this = (only_effects is not None) or (global_i > 0 and global_i % 4 == 1)
             if use_kb_this:
                 if only_effects:
                     effect_idx = only_effects[kb_cycle % len(only_effects)]
                 else:
-                    effect_idx = kb_cycle % 5
+                    effect_idx = kb_cycle % 4
                 kb_cycle += 1
                 if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR and only_effects is None:
                     effect_idx = 3
