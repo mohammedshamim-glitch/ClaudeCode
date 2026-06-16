@@ -151,14 +151,15 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 # ── Gemini TTS ────────────────────────────────────────────────────────────────
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
-    styled_text = (
-        "Read the following aloud as a confident, conversational UK finance narrator. "
-        "Steady pace, clear diction, friendly but authoritative. "
-        "Consistent tone throughout — no dramatic pauses, no variation in delivery style.\n\n"
-        + text
-    )
     body = {
-        "contents": [{"parts": [{"text": styled_text}]}],
+        "systemInstruction": {
+            "parts": [{"text": (
+                "You are a confident, conversational UK finance narrator. "
+                "Speak at a steady, clear pace with friendly but authoritative delivery. "
+                "Consistent tone throughout — no dramatic pauses, no variation in style between sentences."
+            )}]
+        },
+        "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -171,6 +172,7 @@ def tts_chunk(text):
     part = r.json()["candidates"][0]["content"]["parts"][0]
     audio_b64 = part["inlineData"]["data"]
     mime      = part["inlineData"]["mimeType"]
+    print(f"    MIME: {mime}")
     return base64.b64decode(audio_b64), mime
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
@@ -184,15 +186,34 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
     return buf.getvalue()
 
 def merge_wavs_from_files(chunk_paths, output_path):
-    frames, params = b"", None
+    import subprocess, tempfile, shutil
+    # Log each chunk's actual sample rate before merging
     for path in chunk_paths:
         with wave.open(path, "rb") as wf:
-            if params is None:
-                params = wf.getparams()
-            frames += wf.readframes(wf.getnframes())
-    with wave.open(output_path, "wb") as out:
-        out.setparams(params)
-        out.writeframes(frames)
+            print(f"    {os.path.basename(path)}: {wf.getframerate()}Hz, {wf.getnchannels()}ch, {wf.getnframes()} frames")
+    if shutil.which("ffmpeg"):
+        # Write concat list for ffmpeg — handles any rate/channel mismatches
+        with tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False) as f:
+            for path in chunk_paths:
+                f.write(f"file '{path}'\n")
+            list_path = f.name
+        subprocess.run(
+            ["ffmpeg", "-f", "concat", "-safe", "0", "-i", list_path,
+             "-ar", str(SAMPLE_RATE), "-ac", "1", output_path, "-y"],
+            check=True, capture_output=True
+        )
+        os.unlink(list_path)
+    else:
+        # Fallback: manual merge (assumes identical params)
+        frames, params = b"", None
+        for path in chunk_paths:
+            with wave.open(path, "rb") as wf:
+                if params is None:
+                    params = wf.getparams()
+                frames += wf.readframes(wf.getnframes())
+        with wave.open(output_path, "wb") as out:
+            out.setparams(params)
+            out.writeframes(frames)
 
 def wav_to_mp3(wav_path, mp3_path, bitrate="128k"):
     import subprocess, shutil
