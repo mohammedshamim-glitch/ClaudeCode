@@ -64,6 +64,13 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Competitor video research**: To find a competitor video ID, use the YouTube Data API search endpoint with a refreshed `youtube_refresh_token`: `GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video` with Bearer auth. Then pass the video ID to Gemini for transcript extraction.
 - **Script style — character-driven**: Scripts perform better with named characters (e.g. Jake and Marcus) rather than abstract "you vs you" comparisons. The Wealth Logic "Real Estate vs Stocks" format (1.48M views) uses two characters to make the emotional journey concrete and followable. Adopt this structure for comparison videos.
 - **Script adaptation workflow**: Find the top-performing competitor video on a topic → extract transcript via Gemini → adapt to UK (swap $ for £, add ISA/CGT/Section 24/stamp duty, change characters/scenarios) → keep the proven emotional beats and structure intact.
+- **Drive upload — service account has no storage quota**: Service accounts return 403 "Service Accounts do not have storage quota" on file uploads to user's personal Drive. Always use user OAuth credentials (digital_fusion_refresh_token) for Drive uploads. Service account is fine for reads/lists only.
+- **Drive upload with user OAuth**: Use `digital_fusion_refresh_token` + client_id/secret to get access token, then POST to `https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable`. Check `init_r.ok` before accessing `init_r.headers['Location']` — non-200 means permission/quota error.
+- **Drive public image URL for LinkedIn**: After uploading thumbnail to Drive, set permission `role=reader, type=anyone` via Drive API. Use `https://drive.google.com/uc?export=download&id=FILE_ID` as the image_url in the LinkedIn GitHub Actions workflow — GitHub runners have open internet and can fetch it. This sandbox cannot verify the URL (drive.google.com blocked here) but it works on runners.
+- **YouTube force-ssl scope**: `digital_fusion_refresh_token` was minted with `youtube + drive` scopes only — NOT `youtube.force-ssl`. Caption (SRT) upload requires force-ssl. Re-auth needed: visit the OAuth URL with all three scopes + `prompt=consent` + `login_hint=mohammedshamim@gmail.com`, paste the code, exchange for new refresh token, update token.json.
+- **Aeneas numpy patch**: Aeneas requires `numpy.fromstring` → `numpy.frombuffer` in `/usr/local/lib/python3.11/dist-packages/aeneas/wavfile.py` line 78. Also needs `pip install scipy` and `apt-get install espeak espeak-ng libespeak-dev libespeak-ng-dev`. Input WAV must be re-encoded as `ffmpeg -f wav -acodec pcm_s16le`.
+- **Digital Fusion pipeline sequence**: (1) Download mp4 from Drive → (2) Add logo overlay (ffmpeg drawbox+drawtext) → (3) Extract audio WAV → (4) Transcribe via Gemini Files API → (5) Aeneas SRT alignment → (6) Generate SEO via Gemini → (7) Generate thumbnail (ColdFusion style) → (8) Upload to YouTube (scheduled Thu 6pm BST) → (9) Upload processed mp4 + assets to Drive episode folder → (10) Post LinkedIn with thumbnail via GitHub Actions.
+- **The Two AI Lies episode**: Video ID `e4KzZGUkOFo`, Drive episode folder `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO`, scheduled 2026-06-18 Thu 6pm BST. SRT upload still pending (needs force-ssl re-auth). LinkedIn posted at `urn:li:share:7472780845058281472`.
 
 ## Known Drive Folder IDs
 
@@ -74,6 +81,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | Processed (episode subfolders) | `1q80MPi_hAfcCLeKsYCBOB-_vrBJCV26z` |
 | The Military-Grade AI Gap | `13781WAsBW1Ndg6GuqOw9SB_yW3kL_BQZ` |
 | The NFT Bubble | `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH` |
+| The Two AI Lies | `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO` |
 
 #### Digital Fusion Key Info
 - YouTube Channel ID: `UCQ5XUCyx0FExP8bh8sj_qkA`
