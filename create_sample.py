@@ -18,6 +18,7 @@ RESOLUTION_H    = 1080
 FPS             = 30
 VIDEO_CRF       = 23
 KB_SCALE        = 1.2
+KB_SUBTLE_SCALE = 1.05
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 XFADE_DURATION  = 0.3
 
@@ -151,23 +152,27 @@ def drive_upload(token, local_path, filename, folder_id):
     return r.json()
 
 # ── Ken Burns ─────────────────────────────────────────────────────────────────
-EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top"]
+EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top", "subtle zoom in", "subtle zoom out"]
 
 def get_kb_filter(idx, duration, w, h):
-    D  = duration
-    LW = int(w * KB_SCALE)
-    LH = int(h * KB_SCALE)
-    px = LW - w
-    py = LH - h
-    cx = px // 2
-    cy = py // 2
-    P  = f"min(t/{D:.6f},1)"
+    D   = duration
+    LW  = int(w * KB_SCALE)
+    LH  = int(h * KB_SCALE)
+    px  = LW - w
+    py  = LH - h
+    cx  = px // 2
+    cy  = py // 2
+    SLW = int(w * KB_SUBTLE_SCALE)
+    SLH = int(h * KB_SUBTLE_SCALE)
+    spx = SLW - w
+    spy = SLH - h
+    P   = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
     effects = [
         # 0. Pan left → right
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},scale={w}:{h},setsar=1"),
-        # 1. Zoom in — crop shrinks to centre; rescale to output = zoom effect
+        # 1. Zoom in
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
@@ -180,8 +185,18 @@ def get_kb_filter(idx, duration, w, h):
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
+        # 4. Subtle zoom in — barely perceptible, 5% travel
+        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
+         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w='{w}+{spx}*(1-{P})':h='{h}+{spy}*(1-{P})'"
+         f":x='{spx}*{P}/2':y='{spy}*{P}/2',scale={w}:{h},setsar=1"),
+        # 5. Subtle zoom out — barely perceptible, 5% travel
+        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
+         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w='{w}+{spx}*{P}':h='{h}+{spy}*{P}'"
+         f":x='{spx}*(1-{P})/2':y='{spy}*(1-{P})/2',scale={w}:{h},setsar=1"),
     ]
-    return effects[idx % 4]
+    return effects[idx % 6]
 
 static_vf = (
     f"scale={RESOLUTION_W}:{RESOLUTION_H}:force_original_aspect_ratio=decrease,"
@@ -495,15 +510,15 @@ def main():
         kb_cycle  = 0
         # Count how many KB effects would have fired before start_scene
         for s in range(1, start_scene):
-            if s > 1 and (s - 1) % 4 == 1:
+            if s > 1 and (s - 1) % 4 != 0:
                 kb_cycle += 1
         for i, (img_path, row) in enumerate(zip(local_imgs, sample_rows)):
             dur = float(row["duration_seconds"])
             durations.append(dur)
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
             global_i = int(row["scene"]) - 1  # 0-based index in full video
-            if global_i > 0 and global_i % 4 == 1:
-                effect_idx = kb_cycle % 4
+            if global_i > 0 and global_i % 4 != 0:
+                effect_idx = kb_cycle % 6
                 kb_cycle += 1
                 if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR:
                     effect_idx = 3
