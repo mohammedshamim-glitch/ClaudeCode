@@ -18,7 +18,7 @@ RESOLUTION_H    = 1080
 FPS             = 30
 VIDEO_CRF       = 23
 KB_SCALE        = 1.2
-KB_SUBTLE_SCALE = 1.02  # kept for reference but not in active cycle (stutters at 30fps)
+KB_ZOOM_SCALE   = 1.5   # zoom in/out — 50% travel, linear ease, clearly visible
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 XFADE_DURATION  = 0.3
 
@@ -155,38 +155,39 @@ def drive_upload(token, local_path, filename, folder_id):
 EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top", "zoom out"]
 
 def get_kb_filter(idx, duration, w, h):
-    D   = duration
-    LW  = int(w * KB_SCALE)
-    LH  = int(h * KB_SCALE)
-    px  = LW - w
-    py  = LH - h
-    cx  = px // 2
-    cy  = py // 2
-    SLW = int(w * KB_SUBTLE_SCALE)
-    SLH = int(h * KB_SUBTLE_SCALE)
-    spx = SLW - w
-    spy = SLH - h
-    P   = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
+    D     = duration
+    LW    = int(w * KB_SCALE)
+    LH    = int(h * KB_SCALE)
+    px    = LW - w
+    py    = LH - h
+    cx    = px // 2
+    cy    = py // 2
+    ZLW   = int(w * KB_ZOOM_SCALE)
+    ZLH   = int(h * KB_ZOOM_SCALE)
+    zpx   = ZLW - w
+    zpy   = ZLH - h
+    P     = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
+    P_lin = f"min(t/{D:.6f},1)"
     effects = [
         # 0. Pan left → right
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},scale={w}:{h},setsar=1"),
-        # 1. Zoom in — zoompan: 1.0→1.5, sub-pixel smooth, truly centred
-        (lambda: (lambda d: f"scale={w}:{h},"
-                  f"zoompan=z='1+0.5*in/max({d-1},1)'"
-                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
+        # 1. Zoom in — 1.5× linear, centred crop shrinks toward centre
+        (f"scale={ZLW}:{ZLH},"
+         f"crop=w='{w}+{zpx}*(1-{P_lin})':h='{h}+{zpy}*(1-{P_lin})'"
+         f":x='{zpx}*{P_lin}/2':y='{zpy}*{P_lin}/2',"
+         f"scale={w}:{h},setsar=1"),
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',scale={w}:{h},setsar=1"),
         # 3. Pan bottom → top
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
-        # 4. Zoom out — zoompan: 1.5→1.0, sub-pixel smooth, truly centred
-        (lambda: (lambda d: f"scale={w}:{h},"
-                  f"zoompan=z='1.5-0.5*in/max({d-1},1)'"
-                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
+        # 4. Zoom out — 1.5× linear, starts tight on centre then pulls back
+        (f"scale={ZLW}:{ZLH},"
+         f"crop=w='{w}+{zpx}*{P_lin}':h='{h}+{zpy}*{P_lin}'"
+         f":x='{zpx}*(1-{P_lin})/2':y='{zpy}*(1-{P_lin})/2',"
+         f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % 5]
 

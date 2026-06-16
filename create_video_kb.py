@@ -153,8 +153,8 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE        = 1.2   # zoom factor — 1.2 = 20% travel = ~2px/frame at 30fps (smooth)
-KB_SUBTLE_SCALE = 1.02  # kept for reference but not in active cycle (stutters at 30fps)
+KB_SCALE        = 1.2   # pan effects — 20% travel, smooth at 30fps
+KB_ZOOM_SCALE   = 1.5   # zoom in/out — 50% travel, linear ease, clearly visible
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
@@ -187,14 +187,14 @@ def get_kb_filter(idx, duration, w, h):
     py  = LH - h
     cx  = px // 2
     cy  = py // 2
-    # Subtle scale vars — tiny travel, barely perceptible
-    SLW = int(w * KB_SUBTLE_SCALE)
-    SLH = int(h * KB_SUBTLE_SCALE)
-    spx = SLW - w
-    spy = SLH - h
+    ZLW = int(w * KB_ZOOM_SCALE)
+    ZLH = int(h * KB_ZOOM_SCALE)
+    zpx = ZLW - w
+    zpy = ZLH - h
 
-    # Ease-in/ease-out via cosine: slow start, smooth through, gentle stop
-    P = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
+    # Cosine ease for pans, linear for zoom (linear starts motion immediately)
+    P     = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
+    P_lin = f"min(t/{D:.6f},1)"
 
     effects = [
         # 0. Pan left → right
@@ -202,11 +202,11 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 1. Zoom in — zoompan: 1.0→1.5, sub-pixel smooth, truly centred
-        (lambda: (lambda d: f"scale={w}:{h},"
-                  f"zoompan=z='1+0.5*in/max({d-1},1)'"
-                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
+        # 1. Zoom in — 1.5× scale, linear ease, centred crop shrinks to show centre closer
+        (f"scale={ZLW}:{ZLH},"
+         f"crop=w='{w}+{zpx}*(1-{P_lin})':h='{h}+{zpy}*(1-{P_lin})'"
+         f":x='{zpx}*{P_lin}/2':y='{zpy}*{P_lin}/2',"
+         f"scale={w}:{h},setsar=1"),
 
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
@@ -218,11 +218,11 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
 
-        # 4. Zoom out — zoompan: 1.5→1.0, sub-pixel smooth, truly centred
-        (lambda: (lambda d: f"scale={w}:{h},"
-                  f"zoompan=z='1.5-0.5*in/max({d-1},1)'"
-                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
+        # 4. Zoom out — 1.5× scale, linear ease, starts tight on centre then pulls back
+        (f"scale={ZLW}:{ZLH},"
+         f"crop=w='{w}+{zpx}*{P_lin}':h='{h}+{zpy}*{P_lin}'"
+         f":x='{zpx}*(1-{P_lin})/2':y='{zpy}*(1-{P_lin})/2',"
+         f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % 5]
 
