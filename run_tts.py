@@ -16,7 +16,7 @@ import requests
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
-CHUNK_WORDS     = 500
+CHUNK_WORDS     = 3000
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
 OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
