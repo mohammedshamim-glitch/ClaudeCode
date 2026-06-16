@@ -153,7 +153,8 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE        = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+KB_SCALE        = 1.2   # zoom factor for pan/zoom effects
+KB_SUBTLE_SCALE = 1.05  # barely-perceptible zoom factor for subtle zoom in/out effects
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
@@ -170,15 +171,14 @@ EFFECT_NAMES = [
     "zoom in",
     "pan top → bottom",
     "pan bottom → top",
+    "subtle zoom in",
+    "subtle zoom out",
 ]
 
 def get_kb_filter(idx, duration, w, h):
     """
     Returns a smooth Ken Burns vf filter string using scale+crop+t.
-    Image is pre-scaled to KB_SCALE× output, then a time-varying crop
-    window pans/zooms across it, then rescaled to w×h.
-    't' is ffmpeg's built-in time variable (seconds, continuous).
-    idx selects one of 4 effects.
+    idx selects one of 6 effects (0–3 standard, 4–5 subtle).
     """
     D   = duration
     LW  = int(w * KB_SCALE)
@@ -187,6 +187,11 @@ def get_kb_filter(idx, duration, w, h):
     py  = LH - h
     cx  = px // 2
     cy  = py // 2
+    # Subtle scale vars — tiny travel, barely perceptible
+    SLW = int(w * KB_SUBTLE_SCALE)
+    SLH = int(h * KB_SUBTLE_SCALE)
+    spx = SLW - w
+    spy = SLH - h
 
     # Ease-in/ease-out via cosine: slow start, smooth through, gentle stop
     P = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
@@ -198,8 +203,7 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 1. Zoom in — crop window shrinks toward centre; rescale to output = zoom effect
-        # At t=0: crop = full pre-scaled image (zoomed out). At t=D: crop = w×h centre (zoomed in).
+        # 1. Zoom in
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
@@ -216,6 +220,20 @@ def get_kb_filter(idx, duration, w, h):
         (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
          f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
+         f"scale={w}:{h},setsar=1"),
+
+        # 4. Subtle zoom in — barely perceptible, 5% travel only
+        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
+         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w='{w}+{spx}*(1-{P})':h='{h}+{spy}*(1-{P})'"
+         f":x='{spx}*{P}/2':y='{spy}*{P}/2',"
+         f"scale={w}:{h},setsar=1"),
+
+        # 5. Subtle zoom out — barely perceptible, 5% travel only
+        (f"scale={SLW}:{SLH}:force_original_aspect_ratio=decrease,"
+         f"pad={SLW}:{SLH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+         f"crop=w='{w}+{spx}*{P}':h='{h}+{spy}*{P}'"
+         f":x='{spx}*(1-{P})/2':y='{spy}*(1-{P})/2',"
          f"scale={w}:{h},setsar=1"),
     ]
     return effects[idx % len(effects)]
@@ -438,17 +456,17 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if use_kb and i > 0 and i % 4 == 1:
+        if use_kb and i > 0 and i % 4 != 0:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
                 if effect_idx is None:
-                    # Old-format description — cycle through the 4 effects
-                    effect_idx = kb_cycle_idx % 4
+                    # Old-format description — cycle through all 6 effects
+                    effect_idx = kb_cycle_idx % 6
                     kb_cycle_idx += 1
                 label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}]"
             else:
-                effect_idx = kb_cycle_idx % 4
+                effect_idx = kb_cycle_idx % 6
                 label = f"{EFFECT_NAMES[effect_idx]} [cycle]"
                 kb_cycle_idx += 1
             # Zoom-in on long scenes looks like a slow drift — swap to pan bottom→top
