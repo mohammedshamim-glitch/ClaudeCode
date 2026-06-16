@@ -17,8 +17,8 @@ RESOLUTION_W    = 1920
 RESOLUTION_H    = 1080
 FPS             = 30
 VIDEO_CRF       = 23
-KB_SCALE        = 1.06
-KB_SUBTLE_SCALE = 1.02
+KB_SCALE        = 1.2
+KB_SUBTLE_SCALE = 1.02  # kept for reference but not in active cycle (stutters at 30fps)
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
 XFADE_DURATION  = 0.3
 
@@ -152,7 +152,7 @@ def drive_upload(token, local_path, filename, folder_id):
     return r.json()
 
 # ── Ken Burns ─────────────────────────────────────────────────────────────────
-EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top", "subtle zoom in", "subtle zoom out"]
+EFFECT_NAMES = ["pan left→right", "zoom in", "pan top→bottom", "pan bottom→top", "zoom out"]
 
 def get_kb_filter(idx, duration, w, h):
     D   = duration
@@ -181,16 +181,12 @@ def get_kb_filter(idx, duration, w, h):
         # 3. Pan bottom → top
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
-        # 4. Subtle zoom in — 2% travel, barely perceptible
-        (f"scale={SLW}:{SLH},"
-         f"crop=w='{w}+{spx}*(1-{P})':h='{h}+{spy}*(1-{P})'"
-         f":x='{spx}*{P}/2':y='{spy}*{P}/2',scale={w}:{h},setsar=1"),
-        # 5. Subtle zoom out — 2% travel, barely perceptible
-        (f"scale={SLW}:{SLH},"
-         f"crop=w='{w}+{spx}*{P}':h='{h}+{spy}*{P}'"
-         f":x='{spx}*(1-{P})/2':y='{spy}*(1-{P})/2',scale={w}:{h},setsar=1"),
+        # 4. Zoom out — starts tight on centre, pulls back to reveal full frame
+        (f"scale={LW}:{LH},"
+         f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
+         f":x='{px}*(1-{P})/2':y='{py}*(1-{P})/2',scale={w}:{h},setsar=1"),
     ]
-    return effects[idx % 6]
+    return effects[idx % 5]
 
 static_vf = (
     f"scale={RESOLUTION_W}:{RESOLUTION_H}:force_original_aspect_ratio=decrease,"
@@ -409,12 +405,14 @@ def main():
         print("Usage: python3 create_sample.py <episode_folder_id> [--crossfade] [--output=filename.mp4]")
         sys.exit(1)
 
-    folder_id   = args[0]
-    use_xfade   = "crossfade" in flags
-    out_name    = flags.get("output", "sample_30s.mp4")
-    local_out   = f"/home/user/ClaudeCode/{out_name}"
-    start_scene = int(flags.get("start-scene", 1))
-    sample_dur  = float(flags.get("duration", SAMPLE_DURATION))
+    folder_id    = args[0]
+    use_xfade    = "crossfade" in flags
+    out_name     = flags.get("output", "sample_30s.mp4")
+    local_out    = f"/home/user/ClaudeCode/{out_name}"
+    start_scene  = int(flags.get("start-scene", 1))
+    sample_dur   = float(flags.get("duration", SAMPLE_DURATION))
+    # --effects=1,4  → force cycle through only those effect indices (comma-separated)
+    only_effects = [int(x) for x in flags["effects"].split(",")] if "effects" in flags else None
 
     print("Authenticating...")
     token = get_access_token()
@@ -504,18 +502,23 @@ def main():
         durations = []
         kb_cycle  = 0
         # Count how many KB effects would have fired before start_scene
-        for s in range(1, start_scene):
-            if s > 1 and (s - 1) % 4 != 0:
-                kb_cycle += 1
+        if only_effects is None:
+            for s in range(1, start_scene):
+                if s > 1 and (s - 1) % 4 != 0:
+                    kb_cycle += 1
         for i, (img_path, row) in enumerate(zip(local_imgs, sample_rows)):
             dur = float(row["duration_seconds"])
             durations.append(dur)
             seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
             global_i = int(row["scene"]) - 1  # 0-based index in full video
-            if global_i > 0 and global_i % 4 != 0:
-                effect_idx = kb_cycle % 6
+            use_kb_this = (only_effects is not None) or (global_i > 0 and global_i % 4 != 0)
+            if use_kb_this:
+                if only_effects:
+                    effect_idx = only_effects[kb_cycle % len(only_effects)]
+                else:
+                    effect_idx = kb_cycle % 5
                 kb_cycle += 1
-                if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR:
+                if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR and only_effects is None:
                     effect_idx = 3
                     label = f"{EFFECT_NAMES[effect_idx]} [zoom skipped >{KB_ZOOM_MAX_DUR:.0f}s]"
                 else:
