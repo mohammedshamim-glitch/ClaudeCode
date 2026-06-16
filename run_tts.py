@@ -14,9 +14,14 @@ import requests
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
-TTS_MODEL       = "gemini-2.5-flash-preview-tts"
+TTS_MODEL       = "gemini-2.5-pro-preview-tts"
 VOICE           = "Orus"
-CHUNK_WORDS     = 3000
+CHUNK_WORDS     = 500    # Pro truncates long single calls (~11 min output cap) — chunk to stay under it
+# Prepended to every call to lock the delivery pace. Pro follows this faithfully
+# without speaking it aloud; flash did not (it rushed and sometimes voiced the line).
+PACE_INSTRUCTION = ("Narrate the following in a calm, measured, unhurried pace, like a "
+                    "professional documentary voiceover. Take a natural pause at every full "
+                    "stop and between paragraphs. Do not rush.\n\n")
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
 OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
@@ -134,16 +139,26 @@ def drive_upload(token, local_path, filename, folder_id, mime="audio/wav"):
 
 # ── Text chunking ─────────────────────────────────────────────────────────────
 def chunk_text(text, max_words=CHUNK_WORDS):
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    """Split into BALANCED chunks of near-equal word count.
+
+    Equal-length chunks synthesise at near-identical pace (pace scales with
+    input length), so balancing avoids a short, slow final chunk. Any residual
+    drift is removed afterwards by the pace-normalisation pass.
+    """
+    import math
+    sentences = [s for s in re.split(r'(?<=[.!?])\s+', text.strip()) if s.strip()]
+    total_words = sum(len(s.split()) for s in sentences)
+    n_chunks = max(1, math.ceil(total_words / max_words))
+    target = total_words / n_chunks  # balanced words-per-chunk
     chunks, current, count = [], [], 0
     for s in sentences:
-        w = len(s.split())
-        if count + w > max_words and count > 0:
+        current.append(s)
+        count += len(s.split())
+        # close the chunk once it reaches the balanced target, leaving room
+        # for the remaining chunks
+        if count >= target and len(chunks) < n_chunks - 1:
             chunks.append(" ".join(current))
-            current, count = [s], w
-        else:
-            current.append(s)
-            count += w
+            current, count = [], 0
     if current:
         chunks.append(" ".join(current))
     return chunks
@@ -152,7 +167,7 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
     body = {
-        "contents": [{"parts": [{"text": text}]}],
+        "contents": [{"parts": [{"text": PACE_INSTRUCTION + text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -160,7 +175,7 @@ def tts_chunk(text):
             }
         }
     }
-    r = requests.post(url, json=body)
+    r = requests.post(url, json=body, timeout=600)
     r.raise_for_status()
     part = r.json()["candidates"][0]["content"]["parts"][0]
     audio_b64 = part["inlineData"]["data"]
