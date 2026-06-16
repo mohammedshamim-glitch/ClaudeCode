@@ -16,7 +16,7 @@ import requests
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
-CHUNK_WORDS     = 150
+CHUNK_WORDS     = 500
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
 OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
@@ -273,7 +273,7 @@ def main():
             continue
 
         if not first_new:
-            time.sleep(90)  # inter-chunk delay to stay within rate limits
+            time.sleep(2)  # paid key — minimal delay between chunks
         first_new = False
 
         print(f"\nGenerating audio chunk {i}/{total} ({len(chunk.split())} words)...")
