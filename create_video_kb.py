@@ -176,8 +176,9 @@ EFFECT_NAMES = [
 
 def get_kb_filter(idx, duration, w, h):
     """
-    Returns a smooth Ken Burns vf filter string using scale+crop+t.
-    idx selects one of 6 effects (0–3 standard, 4–5 subtle).
+    Returns a smooth Ken Burns vf filter string.
+    Effects 0,2,3: crop/scale pan (smooth at 1.2x travel).
+    Effects 1,4: zoompan filter for true centred zoom in/out (sub-pixel precision).
     """
     D   = duration
     LW  = int(w * KB_SCALE)
@@ -201,11 +202,11 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
 
-        # 1. Zoom in — crop shrinks to centre as P goes 0→1
-        (f"scale={LW}:{LH},"
-         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
-         f":x='{px}*{P}/2':y='{py}*{P}/2',"
-         f"scale={w}:{h},setsar=1"),
+        # 1. Zoom in — zoompan: 1.0→1.5, sub-pixel smooth, truly centred
+        (lambda: (lambda d: f"scale={w}:{h},"
+                  f"zoompan=z='1+0.5*in/max({d-1},1)'"
+                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
 
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
@@ -217,11 +218,11 @@ def get_kb_filter(idx, duration, w, h):
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
 
-        # 4. Zoom out — starts tight on centre, pulls back to reveal full frame
-        (f"scale={LW}:{LH},"
-         f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
-         f":x='{px}*(1-{P})/2':y='{py}*(1-{P})/2',"
-         f"scale={w}:{h},setsar=1"),
+        # 4. Zoom out — zoompan: 1.5→1.0, sub-pixel smooth, truly centred
+        (lambda: (lambda d: f"scale={w}:{h},"
+                  f"zoompan=z='1.5-0.5*in/max({d-1},1)'"
+                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
     ]
     return effects[idx % 5]
 

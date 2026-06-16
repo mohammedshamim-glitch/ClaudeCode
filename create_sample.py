@@ -171,20 +171,22 @@ def get_kb_filter(idx, duration, w, h):
         # 0. Pan left → right
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},scale={w}:{h},setsar=1"),
-        # 1. Zoom in
-        (f"scale={LW}:{LH},"
-         f"crop=w='{w}+{px}*(1-{P})':h='{h}+{py}*(1-{P})'"
-         f":x='{px}*{P}/2':y='{py}*{P}/2',scale={w}:{h},setsar=1"),
+        # 1. Zoom in — zoompan: 1.0→1.5, sub-pixel smooth, truly centred
+        (lambda: (lambda d: f"scale={w}:{h},"
+                  f"zoompan=z='1+0.5*in/max({d-1},1)'"
+                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
         # 2. Pan top → bottom
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',scale={w}:{h},setsar=1"),
         # 3. Pan bottom → top
         (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',scale={w}:{h},setsar=1"),
-        # 4. Zoom out — starts tight on centre, pulls back to reveal full frame
-        (f"scale={LW}:{LH},"
-         f"crop=w='{w}+{px}*{P}':h='{h}+{py}*{P}'"
-         f":x='{px}*(1-{P})/2':y='{py}*(1-{P})/2',scale={w}:{h},setsar=1"),
+        # 4. Zoom out — zoompan: 1.5→1.0, sub-pixel smooth, truly centred
+        (lambda: (lambda d: f"scale={w}:{h},"
+                  f"zoompan=z='1.5-0.5*in/max({d-1},1)'"
+                  f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+                  f":d={d}:fps={FPS}:s={w}x{h},setsar=1")(max(2, int(D*FPS))))(),
     ]
     return effects[idx % 5]
 
