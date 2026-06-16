@@ -14,11 +14,11 @@ import requests
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
-TTS_MODEL       = "gemini-2.5-pro-preview-tts"
+TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
-CHUNK_WORDS     = 500    # Pro truncates long single calls (~11 min output cap) — chunk to stay under it
-# Prepended to every call to lock the delivery pace. Pro follows this faithfully
-# without speaking it aloud; flash did not (it rushed and sometimes voiced the line).
+CHUNK_WORDS     = 150    # small balanced chunks hold Flash's natural ~165 wpm pace
+# Only Pro follows a prepended pace instruction without speaking it aloud.
+# Flash voices the line and rushes anyway, so the prefix is Pro-only (see tts_chunk).
 PACE_INSTRUCTION = ("Narrate the following in a calm, measured, unhurried pace, like a "
                     "professional documentary voiceover. Take a natural pause at every full "
                     "stop and between paragraphs. Do not rush.\n\n")
@@ -166,8 +166,9 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 # ── Gemini TTS ────────────────────────────────────────────────────────────────
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
+    prefix = PACE_INSTRUCTION if "pro" in TTS_MODEL else ""
     body = {
-        "contents": [{"parts": [{"text": PACE_INSTRUCTION + text}]}],
+        "contents": [{"parts": [{"text": prefix + text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -192,6 +193,40 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
         wf.setframerate(sample_rate)
         wf.writeframes(pcm_bytes)
     return buf.getvalue()
+
+def pace_lock(chunk_paths, word_counts):
+    """Lock every chunk to the same speaking rate.
+
+    Measures each chunk's wpm, then time-stretches each one (ffmpeg atempo,
+    which preserves pitch — the voice does NOT change) so they all land on the
+    median wpm. Returns the list of normalised paths to feed into the merge.
+    Correction factors are tiny (~0.95–1.05) and inaudible.
+    """
+    import subprocess, shutil
+    if not shutil.which("ffmpeg") or len(chunk_paths) < 2:
+        return chunk_paths
+    wpms = []
+    for path, words in zip(chunk_paths, word_counts):
+        with wave.open(path, "rb") as wf:
+            dur = wf.getnframes() / wf.getframerate()
+        wpms.append(words / (dur / 60.0) if dur else 0)
+    target = sorted(wpms)[len(wpms) // 2]  # median
+    print(f"  Pace per chunk (wpm): {[round(w) for w in wpms]}")
+    print(f"  Locking all chunks to {round(target)} wpm...")
+    out_paths = []
+    for path, wpm in zip(chunk_paths, wpms):
+        factor = max(0.90, min(1.10, target / wpm)) if wpm else 1.0
+        if abs(factor - 1.0) < 0.01:
+            out_paths.append(path)
+            continue
+        out = path.replace(".wav", "_locked.wav")
+        subprocess.run(
+            ["ffmpeg", "-i", path, "-filter:a", f"atempo={factor:.4f}",
+             "-ar", str(SAMPLE_RATE), "-ac", "1", out, "-y"],
+            check=True, capture_output=True
+        )
+        out_paths.append(out)
+    return out_paths
 
 def merge_wavs_from_files(chunk_paths, output_path):
     import subprocess, tempfile, shutil
@@ -328,10 +363,13 @@ def main():
                     print(f"  Chunks 1–{i-1} are saved. Re-run to resume from chunk {i}.")
                     sys.exit(1)
 
-    # All chunks on disk — merge
+    # All chunks on disk — pace-lock then merge
     chunk_paths = [chunk_path(run_id, i, total) for i in range(1, total + 1)]
+    word_counts = [len(c.split()) for c in chunks]
+    print(f"\nPace-locking {total} chunks...")
+    merge_paths = pace_lock(chunk_paths, word_counts)
     print(f"\nMerging {total} chunks into WAV...")
-    merge_wavs_from_files(chunk_paths, OUTPUT_WAV)
+    merge_wavs_from_files(merge_paths, OUTPUT_WAV)
     print(f"  ✓ WAV: {os.path.getsize(OUTPUT_WAV):,} bytes")
 
     print("Converting to MP3...")
@@ -348,9 +386,10 @@ def main():
     print(f"  ✓ Uploaded: {result['name']}")
     print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
-    # Clean up chunk files after successful upload
-    for path in chunk_paths:
-        os.remove(path)
+    # Clean up chunk files (originals + any pace-locked variants) after upload
+    for path in set(chunk_paths) | set(merge_paths):
+        if os.path.exists(path):
+            os.remove(path)
     print(f"  ✓ Chunk files cleaned up")
 
 if __name__ == "__main__":
