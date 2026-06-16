@@ -21,7 +21,7 @@ VIDEO_MIME        = "video/mp4"
 YT_CATEGORY       = "27"   # Education
 YT_LANGUAGE       = "en-GB"
 PUBLISH_HOUR_UK   = 16     # 4:00pm UK time
-MIN_DAYS_BUFFER   = 4      # minimum days between upload and publish
+MIN_DAYS_BUFFER   = 2      # minimum days between upload and publish
 BEST_WEEKDAY      = 2      # Wednesday (Mon=0 … Sun=6)
 
 
