@@ -106,6 +106,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Flash TTS pace variance — pace-lock is mandatory**: Without intervention, Flash chunks range 145–195 wpm (a 50 wpm swing), producing audibly inconsistent audio. `run_tts.py` now includes a `pace_lock()` pass that measures each chunk's wpm and applies `ffmpeg atempo` (pitch-preserving tempo stretch) to normalise all chunks to the median wpm before merging. This is automatic — do not remove it.
 - **Flash speaks any text prefix aloud**: Flash cannot follow instructions embedded in the prompt text — it will voice them as narration. `PACE_INSTRUCTION` in `run_tts.py` is therefore Pro-only (gated by `"pro" in TTS_MODEL`). Flash's pace consistency relies entirely on balanced chunking + pace-lock, not on instruction prefixes.
 - **Re-run aeneas after every TTS regeneration**: Any time `run_tts.py` produces a new `narration.mp3`, aeneas MUST be re-run (`python3 generate_timings.py <folder_id>`) before video assembly. The old `audio_timings_new.csv` will be misaligned with the new audio length — never reuse it.
+- **Competitor transcript is MANDATORY before scripting — NON-NEGOTIABLE**: Before writing a single word of any script, find the top-performing Wealth Logic video on the topic and download its transcript via Gemini API (use `gemini_tts_api_key` — NOT `gemini_api_key`, which hits free-tier quota). Save immediately as `00-source-transcript-wealth-logic-original.txt` in the episode Drive folder. Then adapt from that transcript — never write from scratch when a Wealth Logic video on the topic exists. Skipping this step and writing original scripts is a process failure. The script adaptation workflow (Competitor Adaptation Workflow in the scriptwriter skill) is mandatory, not optional.
 
 ## Known Drive Folder IDs
 
@@ -123,6 +124,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | 10 Bad Money Habits | `1r4Ay0qa-Z8eBSioyXlwurUd_rt839EZj` |
 | Property vs Stocks — The Real Math | `14wJDYLxkPX2_ltbwxv8VS8b2kk4orMVq` |
 | ISA vs Pension — Which One Will Make You More Money? (The Real Math) | `1E_dBFxc1Cn0XtqiVS4bu6k2oiEwtWZwb` |
+| SpaceX Just Went Public — And The Real Risk Starts Now | `13qgKco77jUIlKQPl-r8YViV5SctqR0U1` |
 
 ## Project Overview
 
