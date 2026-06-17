@@ -1,0 +1,48 @@
+name: LinkedIn Token Exchange
+
+on:
+  workflow_dispatch:
+    inputs:
+      code:
+        description: 'LinkedIn auth code'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  exchange:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exchange code for token
+        env:
+          LI_CODE: ${{ inputs.code }}
+          LI_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LI_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+        run: |
+          python3 - <<'PYEOF'
+          import requests, json, os
+          r = requests.post('https://www.linkedin.com/oauth/v2/accessToken', data={
+              'grant_type': 'authorization_code',
+              'code': os.environ['LI_CODE'],
+              'redirect_uri': 'http://localhost',
+              'client_id': os.environ['LI_CLIENT_ID'],
+              'client_secret': os.environ['LI_CLIENT_SECRET'],
+          })
+          print(f'Status: {r.status_code}')
+          data = r.json()
+          out = {'status': r.status_code, 'access_token': data.get('access_token',''), 'expires_in': data.get('expires_in',''), 'scope': data.get('scope',''), 'error': data.get('error','')}
+          os.makedirs('linkedin_results', exist_ok=True)
+          with open('linkedin_results/token_exchange.json', 'w') as f:
+              json.dump(out, f, indent=2)
+          print(json.dumps(out, indent=2))
+          PYEOF
+      - name: Commit result
+        run: |
+          git config user.name 'github-actions'
+          git config user.email 'actions@github.com'
+          git add -f linkedin_results/token_exchange.json
+          git commit -m 'LinkedIn token exchange result' || echo 'no changes'
+          git push
