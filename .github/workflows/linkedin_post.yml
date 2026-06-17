@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: ''
+      org_id:
+        description: 'Optional LinkedIn org ID to post as company page (e.g. 119123925)'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -34,6 +39,7 @@ jobs:
           MESSAGE: ${{ inputs.message }}
           TAG: ${{ inputs.tag }}
           IMAGE_URL: ${{ inputs.image_url }}
+          ORG_ID: ${{ inputs.org_id }}
         run: python3 scripts/li_post.py
       - name: Commit result
         run: |
