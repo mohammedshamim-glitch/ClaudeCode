@@ -1,0 +1,47 @@
+name: LinkedIn Scheduled — AI Reality Bottleneck
+
+on:
+  schedule:
+    - cron: '0 17 25 6 *'  # Thu 25 Jun 2026, 6pm BST (17:00 UTC)
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install requests
+        run: pip install requests
+      - name: Post to LinkedIn
+        env:
+          LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_MEMBER: ${{ secrets.LINKEDIN_MEMBER_ID }}
+          IMAGE_URL: "https://drive.google.com/uc?export=download&id=1B1U8r_JnAgJJ4NSI9EOOX0lYm3_8iz3H"
+          TAG: "reality_bottleneck_v1"
+          MESSAGE: |
+            $650 billion for AI infrastructure in 2026? Much of it is hitting a brick wall.
+
+            The race for AI dominance is on, with 4 major tech companies pouring a staggering $650 billion into data centers by 2026. Yet, this monumental investment is facing an alarming reality: nearly 50% of planned US data center builds are already delayed or cancelled. In Q1 2026 alone, 75+ projects worth $130 billion have been blocked. We're spending big, but not building fast enough. 🚧
+
+            Why the bottleneck? Look no further than critical hardware. The specialized transformers needed to power these behemoths now demand delivery times of 3-5 years. Switchgear, essential for managing electricity flow, is completely sold out through 2028. This isn't a supply chain hiccup; it's a fundamental choke point, grinding progress to a halt before it even begins. 🔌
+
+            The environmental toll is equally staggering. Imagine Meta's new Louisiana facility, projected to consume 5 gigawatts – the average electricity demand of the entire city of London. And that's just one site. These facilities can guzzle up to 2 million gallons of water per day, often discharging it laced with PFAS 'forever chemicals,' contaminating local supplies. This insatiable hunger for resources is unsustainable. 💧
+
+            Local communities are bearing the brunt. Data centers promise jobs, but often deliver soaring electricity bills – like the 24% hike seen in Georgia. Meanwhile, crucial public services suffer. Oregon schools lost a staggering $275 million in potential tax revenue due to abatements granted to these tech giants. The true cost of 'progress' is being paid by citizens. 🏘️
+
+            This isn't just about delayed projects; it's about the very stability of our AI future. With billions tied up in stalled builds and significant portions financed through high-risk junk bonds (8-12%), the financial underpinnings of this boom are looking increasingly shaky. Can we sustain this race when the foundation is cracking, and the return on investment is pushed further into the uncertain future? 💸
+
+            As the promise of AI collides with the reality of infrastructure collapse, what solutions can genuinely make AI's future sustainable for everyone, not just a few tech giants?
+
+            Watch the full investigation: https://www.youtube.com/watch?v=S3e7mZTPWzY
+            #AI #AIInfrastructure #DataCenters #TechCrisis #Sustainability #FutureofAI
+        run: python3 scripts/li_post.py
+      - name: Commit result
+        run: |
+          git config user.name 'github-actions'
+          git config user.email 'actions@github.com'
+          git add -f linkedin_results/
+          git commit -m "LinkedIn result: reality_bottleneck_v1" || echo "no changes"
+          git push
