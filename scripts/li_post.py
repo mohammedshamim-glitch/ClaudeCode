@@ -6,6 +6,11 @@ member  = os.environ['LINKEDIN_MEMBER']
 msg     = os.environ['MESSAGE']
 tag     = os.environ['TAG']
 img_url = os.environ.get('IMAGE_URL', '').strip()
+org_id  = os.environ.get('ORG_ID', '').strip()
+
+# Post as org if ORG_ID provided, otherwise as personal profile
+author_urn = f'urn:li:organization:{org_id}' if org_id else f'urn:li:person:{member}'
+owner_urn  = author_urn
 
 HEADERS = {
     'Authorization': f'Bearer {token}',
@@ -22,7 +27,7 @@ def upload_image(url):
         json={
             'registerUploadRequest': {
                 'recipes': ['urn:li:digitalmediaRecipe:feedshare-image'],
-                'owner': f'urn:li:person:{member}',
+                'owner': owner_urn,
                 'serviceRelationships': [{
                     'relationshipType': 'OWNER',
                     'identifier': 'urn:li:userGeneratedContent',
@@ -74,7 +79,7 @@ r = requests.post(
     'https://api.linkedin.com/v2/ugcPosts',
     headers=HEADERS,
     json={
-        'author': f'urn:li:person:{member}',
+        'author': author_urn,
         'lifecycleState': 'PUBLISHED',
         'specificContent': {'com.linkedin.ugc.ShareContent': share_content},
         'visibility': {'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'},
