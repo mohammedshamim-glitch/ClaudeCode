@@ -68,7 +68,7 @@ def drive_list_files(token, folder_id, mime_filter=None):
     files, page_token = [], None
     while True:
         params = {
-            "q": f"'{folder_id}' in parents" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
+            "q": f"'{folder_id}' in parents and trashed=false" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
             "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
             "pageSize": 100,
         }
