@@ -5,7 +5,8 @@
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__download_file_content",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__create_file",
       "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__read_file_content",
-      "Bash(cp \"/root/.claude/uploads/1069d133-76d7-5e12-9897-78db80bee3b9/a4a65dc9-claude494714a03810b1c7be.json\" /home/user/ClaudeCode/service_account.json && echo \"Saved\")"
+      "Bash(cp \"/root/.claude/uploads/1069d133-76d7-5e12-9897-78db80bee3b9/a4a65dc9-claude494714a03810b1c7be.json\" /home/user/ClaudeCode/service_account.json && echo \"Saved\")",
+      "mcp__99a10a78-6604-4b20-9dbf-2355119e66fa__list_recent_files"
     ]
   }
 }
