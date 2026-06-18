@@ -6,63 +6,36 @@ Assemble images and narration audio from a Drive episode folder into a finished 
 
 ## Pipeline position
 
-Run **after** images are uploaded to Drive and `narration.mp3` exists in the episode folder.
-
-Prerequisite order:
-1. TTS → `narration.mp3` in Drive
-2. Images uploaded to Drive `Images/` subfolder
-3. **`generate_timings.py`** → `audio_timings_new.csv` (aeneas forced alignment)
-4. **`create_sample.py`** → 30-second preview for approval
-5. **`create_video_kb.py`** → finished MP4
+Stage 5b — runs after:
+1. ✅ `03-narration-script-clean.txt` in Drive
+2. ✅ Images uploaded to Drive `Images/` subfolder (Sham generates in Grok)
+3. ✅ `narration.mp3` in Drive (Stage 4)
+4. ✅ `audio_timings_new.csv` in Drive (Stage 5a — aeneas)
+5. ✅ SEO package in Drive (Stage 5a)
 
 ---
 
-## Step 1 — Generate scene timings
+## Step 1 — 30-second preview (always do this first)
 
-```bash
-python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
-```
-
-Uses **aeneas forced alignment** — syncs source text directly to audio using espeak + DTW on MFCC features. No re-transcription, no drift. Outputs `audio_timings_new.csv` with columns: `scene`, `narration_excerpt`, `words`, `duration_seconds`, `start_time`, `end_time`, `start_seconds`, `end_seconds`.
-
-Script priority for narration text (first match wins):
-1. `03b-narration-sentences.txt`
-2. `03-narration-script-clean.txt`
-3. `03-narration-script-clean-FINAL.txt`
-4. `narration_script.txt`
-
----
-
-## Step 2 — Preview sample (always do this first)
-
-Before a full render, generate a 30-second preview to check KB motion, subtitles, and transitions:
+Before a full render, generate a 30-second preview to validate KB motion, subtitles, and transitions:
 
 ```bash
 python3 /home/user/ClaudeCode/create_sample.py <episode_folder_id> --crossfade --output=sample_crossfade.mp4
 ```
 
-Uploads to the episode Drive folder. Confirm with Sham before running the full render.
-
-Flags:
-- `--crossfade` — 0.3s dissolve transitions (preferred style)
-- `--output=filename.mp4` — output filename in Drive
+Share the Drive link with Sham for approval before running the full render.
 
 ---
 
-## Step 3 — Full video render
+## Step 2 — Full video render
 
 ```bash
-# Standard: Ken Burns + karaoke subtitles
 python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --subs
-
-# No subtitles
-python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
-
-# Static (no Ken Burns)
-python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --no-kb
 ```
 
-Auto-names the output after the Drive folder name. Uploads finished MP4 back to the episode folder.
+**Always use `--subs`** — omitting it produces a video with no karaoke subtitles.
+
+Auto-names the output after the Drive folder name (slugified). Uploads finished MP4 back to the episode folder.
 
 ---
 
@@ -75,65 +48,67 @@ Auto-names the output after the Drive folder name. Uploads finished MP4 back to 
 | FPS | 30 |
 | Video codec | H.264 (libx264), CRF 23, preset fast |
 | Audio codec | AAC 192kbps |
-| Last scene bonus | +5s (image lingers after narration ends) |
+| Last scene bonus | +5s |
 
 ### Ken Burns
 | Setting | Value |
 |---|---|
-| Frequency | Every 4th scene (`i > 0 and i % 4 == 1`) — never scene 1 |
-| Zoom scale | 1.2× (image scaled to 120%, ~83% of image visible, panning across it) |
-| Directions | Pan L→R, R→L, T→B, B→T (cycles automatically) |
+| Frequency | Every 4th scene (`i > 0 and i % 4 == 1`) — never scene 0 |
+| Zoom scale | 1.2× |
+| Directions | Pan L→R, R→L, T→B, B→T (cycles) |
 | Override file | `05-kb-movements.txt` in episode folder (optional) |
 
 ### Transitions
 | Setting | Value |
 |---|---|
-| Preferred style | Crossfade 0.3s dissolve |
-| Available in | `create_sample.py --crossfade` (confirmed working) |
-| Full render | Hard cuts currently; crossfade to be added to `create_video_kb.py` |
+| Style | Crossfade 0.3s dissolve (preferred) |
+| Sample preview | `create_sample.py --crossfade` |
+| Full render | `create_video_kb.py --subs` |
 
-### Karaoke subtitles (`--subs`)
+### Karaoke subtitles (`--subs`) — confirmed working values
 | Setting | Value |
 |---|---|
-| Method | PIL RGBA frames composited as MOV overlay (`ffmpeg overlay` filter) |
-| Font | LiberationSans-Bold, 80pt |
+| Method | PIL RGBA frames → MOV overlay via `ffmpeg overlay` |
+| Font | LiberationSans-Bold |
+| Font size | 42pt |
 | Font path | `/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf` |
-| Words per phrase | 4 |
+| Words per phrase | 5 |
 | Active word highlight | Solid green rounded rectangle `(0, 200, 0, 255)` |
-| Box horizontal padding | 18px |
-| Box vertical padding | 10px |
-| Box corner radius | 8px |
+| Box horizontal padding | 14px |
+| Box vertical padding | 7px |
+| Box corner radius | 6px |
 | Text colour | White with 2px black stroke |
-| Margin from bottom | 90px |
-| Box y-positioning | `y1 = y_text + bb[1] - pad`, `y2 = y_text + bb[3] + pad` (raw `getbbox()` values) |
-| Anchor y_text | `h - SUB_MARGIN_V - max(bb[3] for all words)` — glyph bottom sits at margin |
-| Timing source | `audio_timings_new.csv` — requires `start_seconds`/`end_seconds` columns |
+| Text case | ALL CAPS |
+| Margin from bottom | 55px |
+| Box y-positioning | `y1 = y_text + bb[1] - pad`, `y2 = y_text + bb[3] + pad` (raw `getbbox()`) |
+| Timing source | `audio_timings_new.csv` |
 
 ---
 
 ## Drive folder structure expected
 
 ```
-Episode Folder/
-├── Images/                       ← sorted by leading number in filename (1_xx, 2_xx…)
-│   ├── 1_1.1.png
+YYYY-MM-DD — Episode Title/
+├── Images/
+│   ├── scene_001.jpg (or .png, .jpeg)
 │   └── ...
-├── narration.mp3                 ← TTS output
-├── audio_timings_new.csv         ← aeneas output (required for --subs)
-├── 05-kb-movements.txt           ← optional KB direction overrides
-├── sample_crossfade.mp4          ← 30s preview for approval
-└── <folder name>.mp4             ← finished video
+├── narration.mp3
+├── audio_timings_new.csv
+├── 06-seo-metadata.txt
+├── 07-thumbnail-prompt.txt
+├── thumbnail                     ← generated by Sham in Grok
+├── sample_crossfade.mp4          ← 30s preview
+└── <episode-title-slug>.mp4      ← finished video
 ```
 
-Image sort order: **leading number in filename** (`re.match(r'^(\d+)_', name)`). Not by modifiedTime.
+Image sort order: by scene number in filename (e.g. `scene_001`, `scene_002`).
 
 ---
 
 ## Known issues / gotchas
 
-- **`--subs` requires `start_seconds` column**: Old `auto_timings.csv` doesn't have it. If missing, re-run `generate_timings.py` to get `audio_timings_new.csv`.
-- **PIL box clipping text**: Box bottom must use raw `bb[3]` from `font.getbbox()`, not `bb[3] - bb[1]`. The delta subtracts the top offset twice and clips letter bottoms.
-- **OAuth 7-day expiry**: Happens when Google Cloud app is in Testing mode. Fix once: Cloud Console → OAuth consent screen → Publish App → re-run `setup_auth.py`. Token is then permanent.
-- **KB movements file**: `movement_to_effect_idx()` returns `None` for unrecognised text — caller falls back to cycling. Never hardcode a default direction.
-- **generate_timings.py content check**: After the rename commit the file briefly reverted to old proportional code. Verify it imports `aeneas` — if not, restore: `git show 2e91d8b:generate_timings_whisper.py > generate_timings.py`.
-- **Pillow install**: `pip install Pillow` — required for `create_sample.py` and `--subs` in `create_video_kb.py`.
+- **`--subs` requires `audio_timings_new.csv`**: Must be generated by aeneas at Stage 5a before running video assembly.
+- **aeneas row count must match image count**: After aeneas, verify CSV row count == clean script paragraph count == image count. If any disagree, stop and report.
+- **PIL box clipping**: Box bottom uses raw `bb[3]` from `font.getbbox()`, not `bb[3] - bb[1]`.
+- **trashed=false in Drive queries**: `create_video_kb.py` queries must include `trashed=false` or deleted files inflate the image count.
+- **Re-run aeneas after every TTS regeneration**: If `narration.mp3` is regenerated, `audio_timings_new.csv` must be regenerated too — never reuse the old CSV.

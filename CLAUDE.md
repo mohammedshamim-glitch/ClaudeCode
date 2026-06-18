@@ -17,7 +17,7 @@
 These rules apply on every task, every session, without being asked:
 
 - **End-of-stage review**: After every completed pipeline stage, before moving on, flag anything that could be better. Don't just confirm it's done — give an opinion.
-- **Pipeline sequencing**: If a completed stage produces data that would improve a later stage, say so immediately. Example: Whisper timings ready → flag that SEO chapters and SRT should use them before upload.
+- **Pipeline sequencing**: If a completed stage produces data that would improve a later stage, say so immediately. Example: aeneas timings ready → flag that SEO chapters should use them before upload.
 - **Continuous improvement**: Every video should be better than the last. After each full episode is published, note what could be improved — SEO, scene pacing, image quality, caption accuracy — and carry those lessons forward.
 - **Spot problems before they happen**: If a skill file, script, or process has a rule that's easy to miss or a step that's fragile, raise it proactively. Don't wait for a failed output to prove the point.
 - **Never wait to be asked**: If something is suboptimal, say so. Sham should not have to find the gaps — that is my job as the expert in this pipeline.
@@ -150,6 +150,6 @@ Monkey Finance — automated YouTube video production pipeline.
 - KB effects: 25% of scenes (every 4th); cosine ease-in/out on all effects; 4 effects cycle: pan left→right, pan right→left, pan top→bottom, pan bottom→top
 - Image prompts: 20% border instruction goes SECOND in the prompt (immediately after "2D colourful whiteboard animation style. Clean white background."); never specify monkey suit colour
 - Development branch: `claude/general-session-8o65N`
-- Whisper model: base (139MB at `~/.cache/whisper/base.pt`)
+- Timing method: aeneas forced alignment (Whisper is deprecated — never use)
 - **Clean script blank-line check — non-negotiable**: After saving `03-narration-script-clean.txt`, immediately count its blank-line-separated paragraphs and compare to the structured script scene count. If they differ, a scene has an internal blank line — find and fix it before running TTS or aeneas. A mismatch here cascades into broken video timing.
 - **aeneas row count validation**: After `generate_timings.py` produces `audio_timings_new.csv`, immediately check that CSV row count == clean script paragraph count == image count (if images exist). If any of these three disagree, stop and report — never proceed to video assembly. The correct merge strategy: if CSV has N+1 rows for N images, find the split scene (two consecutive rows that belong to the same structured scene) and merge THOSE rows — not the last two rows blindly.

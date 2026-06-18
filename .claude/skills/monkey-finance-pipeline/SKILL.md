@@ -488,7 +488,7 @@ Save a brief `09-analytics-review.md` to the episode Drive folder with:
 | "Script's done, make the image prompts" | Stage 3 |
 | "Generate the audio" | Stage 4 |
 | "Build the video" | Stage 5 |
-| "Generate the SEO" | Stage 6 |
+| "Generate the SEO" | Stage 5a |
 | "Upload the video" | Stage 7 |
 | "Make a Short" / "Create a Short" | Stage 8 |
 | "Write the community post" | Stage 9 |

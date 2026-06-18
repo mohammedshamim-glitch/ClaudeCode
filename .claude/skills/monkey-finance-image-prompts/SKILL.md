@@ -197,32 +197,14 @@ Generate TWO files — **no headers, no section labels, no title block**. Just s
 1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 ```
 
-### Video Prompts (`05-video-prompts.txt`)
-Full animation brief per scene. Scene number + everything in one paragraph. Blank line between scenes.
-```
-1.1 Whiteboard animation, clean white background. [character or no-character setup]. [animation sequence — what draws in, what appears, in what order]. [monkey facial expression change if present — no mouth movement]. [camera move]. No mouth movement.
-
-1.2 Whiteboard animation, clean white background. [description]. [animation]. [expression]. [camera]. No mouth movement.
-```
-
-**Video prompt rules (non-negotiable):**
-- Monkey in ~80% of scenes — facial expressions only, no mouth movement ever
-- No-monkey scenes: only stat-heavy frames where a large number or diagram must fill the entire canvas
-- Monkey present in Scene 01 and the final scene (no suit colour specified)
-- Each prompt: one clear animation sequence — no timing specified
-- Camera variety: zoom in / zoom out / pan left-right / pan right-left / hold steady — never the same move more than twice in a row
-- Animation sequence describes what draws in, what appears, what pulses — in order
-- Stats: describe the number drawing itself in stroke by stroke for maximum impact
-
 **Critical formatting:**
-- Scene number at start of every line in both files
-- Image prompts: everything in one paragraph, blank line between scenes
-- Video prompts: everything in one paragraph, blank line between scenes
+- Scene number at start of every line
+- Everything in one paragraph, blank line between scenes
 - **Central 60% / 20% border + 16:9 instruction is always the second statement** — immediately after "Clean white background." Never at the end, never omitted
 - **No file title, no section headers, no dividers** — scene number and content only
 
-Save both files to Drive in the run's project folder.
-Total prompt count: matches the narration scene count exactly — typically 80–120 prompts for a 15–25 word per scene script.
+Save `04-image-prompts.txt` to Drive in the episode folder.
+Total prompt count: matches the narration scene count exactly — typically 80–120 prompts.
 
 ---
 
