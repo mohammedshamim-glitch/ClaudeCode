@@ -290,11 +290,11 @@ print(f'  ✓ Episode folder: {EP_FOLDER}')
 
 THUMB_DRIVE_ID = None
 assets = [
-    (ORIG,  'original.mp4',         'video/mp4'),
-    (PROC,  'processed.mp4',        'video/mp4'),
-    (THUMB, 'thumbnail.jpg',        'image/jpeg'),
-    (TXTF,  'transcript.txt',       'text/plain'),
-    (SEOF,  'seo_description.txt',  'text/plain'),
+    (ORIG,  'original.mp4',        'video/mp4'),
+    (PROC,  'processed.mp4',       'video/mp4'),
+    (THUMB, 'thumbnail.jpg',       'image/jpeg'),
+    (TXTF,  'transcript.txt',      'text/plain'),
+    (SEOF,  'seo_description.txt', 'text/plain'),
 ]
 for path, name, mime in assets:
     tok = get_token(DF_REFRESH)
@@ -354,6 +354,16 @@ if up.status_code not in (200, 201):
 
 yt_id = up.json()['id']
 print(f'  ✓ YouTube ID: {yt_id}')
+
+# Upload LinkedIn draft now that YouTube ID is known
+LI_DRAFT = TMP / 'linkedin_draft.txt'
+LI_DRAFT.write_text(
+    linkedin.replace('[VIDEO_URL]', f'https://www.youtube.com/watch?v={yt_id}'),
+    encoding='utf-8'
+)
+tok = get_token(DF_REFRESH)
+li_fid = upload_to_drive(LI_DRAFT, 'linkedin_draft.txt', 'text/plain', EP_FOLDER, tok)
+print(f'  ✓ linkedin_draft.txt: {li_fid}')
 
 # Set thumbnail
 tok = get_token(DF_REFRESH)
