@@ -177,8 +177,9 @@ UK-friendly long-form LinkedIn post. Formatting rules (STRICT):
 - Start with a bold header line marked as **Header Here** (this will be bolded)
 - Then a strong single-sentence hook paragraph
 - 3-4 short paragraphs, each starting with ONE emoji at the very beginning of the line (e.g. "📉 Revenue fell..."). NEVER place emojis inside a sentence or mid-paragraph.
-- Each paragraph may have its own **Bold Section Title** on the line above it
-- Closing question call-to-action paragraph
+- Each content paragraph has a **Bold Section Title** on the line IMMEDIATELY above it — NO blank line between the title and its paragraph
+- One blank line between each complete section (title + paragraph)
+- Closing question call-to-action paragraph (no header, no emoji)
 - Video URL placeholder [VIDEO_URL] on its own line
 - 4-5 hashtags on the final line
 Use £ not $. UK context where relevant. No bullet lists.
