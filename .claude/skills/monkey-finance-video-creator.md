@@ -53,7 +53,7 @@ Auto-names the output after the Drive folder name (slugified). Uploads finished 
 ### Ken Burns
 | Setting | Value |
 |---|---|
-| Frequency | Every 4th scene (`i > 0 and i % 4 == 1`) — never scene 0 |
+| Frequency | Every 2nd scene (`i > 0 and i % 2 == 1`) — never scene 0 |
 | Zoom scale | 1.2× |
 | Directions | Pan L→R, R→L, T→B, B→T (cycles) |
 | Override file | `05-kb-movements.txt` in episode folder (optional) |

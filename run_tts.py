@@ -215,7 +215,7 @@ def pace_lock(chunk_paths, word_counts):
     print(f"  Locking all chunks to {round(target)} wpm...")
     out_paths = []
     for path, wpm in zip(chunk_paths, wpms):
-        factor = max(0.90, min(1.10, target / wpm)) if wpm else 1.0
+        factor = max(0.75, min(1.35, target / wpm)) if wpm else 1.0
         if abs(factor - 1.0) < 0.01:
             out_paths.append(path)
             continue
