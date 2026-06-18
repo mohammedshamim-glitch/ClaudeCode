@@ -361,17 +361,16 @@ print(f'  ✓ YouTube ID: {yt_id}')
 li_text = linkedin.replace('[VIDEO_URL]', f'https://www.youtube.com/watch?v={yt_id}')
 
 def linkedin_to_html(text):
-    """Convert **bold** markers and paragraphs to HTML for Google Doc upload."""
+    """Convert **bold** markers to <b> tags; preserve blank lines as &nbsp; paragraphs."""
     lines = text.strip().split('\n')
-    html_lines = ['<html><body style="font-family:Arial,sans-serif;font-size:11pt;">']
+    html_lines = ['<html><body style="font-family:Arial,sans-serif;font-size:11pt;line-height:1.7;max-width:640px;">']
     for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        # Convert **bold text** to <b>
-        line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
-        # Wrap in paragraph
-        html_lines.append(f'<p>{line}</p>')
+        stripped = line.strip()
+        if not stripped:
+            html_lines.append('<p>&nbsp;</p>')
+        else:
+            converted = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', stripped)
+            html_lines.append(f'<p>{converted}</p>')
     html_lines.append('</body></html>')
     return '\n'.join(html_lines)
 
