@@ -196,7 +196,7 @@ SEOF.write_text(seo_raw, encoding='utf-8')
 print(f'  ✓ {len(seo_raw)} chars')
 
 def get_field(text, key):
-    m = re.search(rf'^{key}:\s*(.+?)(?=\n[A-Z_]{{3,}}:|$)', text, re.M | re.S)
+    m = re.search(rf'^{key}:\s*(.+?)(?=\n[A-Z_]{{3,}}:|\Z)', text, re.M | re.S)
     return m.group(1).strip() if m else ''
 
 yt_title   = get_field(seo_raw, 'TITLE')
