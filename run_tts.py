@@ -195,12 +195,11 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
     return buf.getvalue()
 
 def pace_lock(chunk_paths, word_counts):
-    """Lock every chunk to the same speaking rate.
+    """Slow fast chunks down to the median wpm — never speed slow ones up.
 
-    Measures each chunk's wpm, then time-stretches each one (ffmpeg atempo,
-    which preserves pitch — the voice does NOT change) so they all land on the
-    median wpm. Returns the list of normalised paths to feed into the merge.
-    Correction factors are tiny (~0.95–1.05) and inaudible.
+    Measures each chunk's wpm. Chunks faster than the median are slowed via
+    ffmpeg atempo (pitch-preserving). Chunks at or below the median are left
+    completely untouched — natural measured delivery is preserved as-is.
     """
     import subprocess, shutil
     if not shutil.which("ffmpeg") or len(chunk_paths) < 2:
@@ -210,24 +209,27 @@ def pace_lock(chunk_paths, word_counts):
         with wave.open(path, "rb") as wf:
             dur = wf.getnframes() / wf.getframerate()
         wpms.append(words / (dur / 60.0) if dur else 0)
-    target = sorted(wpms)[len(wpms) // 2]  # median
+    target = sorted(wpms)[len(wpms) // 2]  # median — ceiling, not floor
     print(f"  Pace per chunk (wpm): {[round(w) for w in wpms]}")
-    print(f"  Locking all chunks to {round(target)} wpm...")
+    print(f"  Ceiling: {round(target)} wpm — fast chunks slowed, slow chunks untouched...")
     out_paths = []
     for path, wpm in zip(chunk_paths, wpms):
         raw_factor = (target / wpm) if wpm else 1.0
-        factor = max(0.75, min(1.35, raw_factor))
-        if wpm and abs(raw_factor - factor) > 0.001:
-            print(f"  ⚠️  WARNING: chunk {path} at {round(wpm)} wpm needs {raw_factor:.2f}x correction — clamped to {factor:.2f}x. Audio quality may vary. Consider re-generating this chunk.")
-        if abs(factor - 1.0) < 0.01:
+        if raw_factor >= 1.0:
+            # Chunk is at or below target — keep natural pace
+            print(f"  chunk {path.split('/')[-1]}: {round(wpm)} wpm — natural pace kept")
             out_paths.append(path)
             continue
+        factor = max(0.75, raw_factor)
+        if abs(raw_factor - factor) > 0.001:
+            print(f"  ⚠️  WARNING: chunk {path.split('/')[-1]} at {round(wpm)} wpm needs {raw_factor:.2f}x — clamped to {factor:.2f}x.")
         out = path.replace(".wav", "_locked.wav")
         subprocess.run(
             ["ffmpeg", "-i", path, "-filter:a", f"atempo={factor:.4f}",
              "-ar", str(SAMPLE_RATE), "-ac", "1", out, "-y"],
             check=True, capture_output=True
         )
+        print(f"  chunk {path.split('/')[-1]}: {round(wpm)} wpm → slowed to {round(target)} wpm ({factor:.3f}x)")
         out_paths.append(out)
     return out_paths
 
