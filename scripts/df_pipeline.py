@@ -355,15 +355,24 @@ if up.status_code not in (200, 201):
 yt_id = up.json()['id']
 print(f'  ✓ YouTube ID: {yt_id}')
 
-# Upload LinkedIn draft now that YouTube ID is known
-LI_DRAFT = TMP / 'linkedin_draft.txt'
-LI_DRAFT.write_text(
-    linkedin.replace('[VIDEO_URL]', f'https://www.youtube.com/watch?v={yt_id}'),
-    encoding='utf-8'
-)
+# Upload LinkedIn draft as Google Doc (preserves emojis, easy to copy-paste)
+li_text = linkedin.replace('[VIDEO_URL]', f'https://www.youtube.com/watch?v={yt_id}')
+li_data = li_text.encode('utf-8')
 tok = get_token(DF_REFRESH)
-li_fid = upload_to_drive(LI_DRAFT, 'linkedin_draft.txt', 'text/plain', EP_FOLDER, tok)
-print(f'  ✓ linkedin_draft.txt: {li_fid}')
+init = requests.post(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&convert=true',
+    headers={**auth(tok), 'Content-Type': 'application/json',
+             'X-Upload-Content-Type': 'text/plain',
+             'X-Upload-Content-Length': str(len(li_data))},
+    json={'name': 'linkedin_draft',
+          'mimeType': 'application/vnd.google-apps.document',
+          'parents': [EP_FOLDER]},
+    timeout=30
+)
+li_up = requests.put(init.headers['Location'], data=li_data,
+                     headers={'Content-Type': 'text/plain'}, timeout=30)
+li_doc_id = li_up.json()['id']
+print(f'  ✓ linkedin_draft (Google Doc): https://docs.google.com/document/d/{li_doc_id}/edit')
 
 # Set thumbnail
 tok = get_token(DF_REFRESH)
