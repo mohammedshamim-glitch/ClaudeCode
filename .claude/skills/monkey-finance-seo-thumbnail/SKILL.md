@@ -36,6 +36,7 @@ Every run outputs a complete **Click Package** containing:
 | **Chapters** | Timestamped sections for watch time and search visibility |
 | **Upload timing** | Best day and time to publish for maximum launch-window impact |
 | **Pinned comment** | Ready-to-post comment — paste within 60 minutes of going live |
+| **Community post** | 3–4 sentence YouTube Community post — hook + teaser + video link placeholder + question. Post in Studio → Community on publish day. |
 | **Caption note** | YouTube auto-generates captions — no SRT needed. Language set to en-GB on upload. |
 | **Thumbnail Brief** | Visual concept, emotional trigger, layout direction |
 | **AI Image Prompt** | Ready-to-paste Grok/Midjourney prompt for the thumbnail |
@@ -132,7 +133,7 @@ Output the complete Click Package in clean, labelled sections. Then automaticall
 > `Subscribe: https://www.youtube.com/@MonkeySeeMoney`
 > Never copy subscribe links from competitor videos. Never include any external channel links. Only the Monkey See Money channel URL goes in the description.
 
-1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, thumbnail brief, and AI thumbnail prompt.
+1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, pinned comment, community post draft, thumbnail brief, and AI thumbnail prompt. Community post goes under a `COMMUNITY POST` section — 3–4 sentences, hook + teaser + `[video URL]` placeholder + engagement question.
 
 2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
 

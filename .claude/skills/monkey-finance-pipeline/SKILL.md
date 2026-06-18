@@ -21,13 +21,12 @@ Every Monkey Finance video flows through these stages in order:
 |---|---|---|---|
 | **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.md` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
-| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` |
+| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `00b-character-references.txt` (if named chars) |
 | **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
-| **5** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` + `audio_timings_new.csv` |
-| **6** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` + competitor data | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
+| **5a** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` | `06-seo-metadata.txt` (inc. community post) + `07-thumbnail-prompt.txt` |
+| **5b** | `monkey-finance-video-creator` | Images + `narration.mp3` + `audio_timings_new.csv` | `<episode-title>.mp4` |
 | **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
-| **8** | Shorts creation (see below) | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short |
-| **9** | Community post (see below) | Script + scheduled video URL | YouTube Community post drafted + published |
+| **8→9** | Shorts + Wrap Up | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short → folder moved to Completed |
 | **10** | Analytics review | YouTube Studio data | `09-analytics-review.md` |
 
 **yt-dlp is used at Stages 1 and 6** — pulling live YouTube data during trend research and competitor tags during SEO generation.
@@ -181,9 +180,9 @@ Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5a — Whisper Timings + SEO (run together, before video assembly)
+### ▶ STAGE 5a — Timings + SEO + Community Post (run together, before video assembly)
 
-**Run both in parallel immediately after TTS is approved — do not wait for video assembly.**
+**Run all three in parallel immediately after TTS is approved — do not wait for video assembly.**
 
 **Timings:**
 ```bash
@@ -196,10 +195,25 @@ Run `monkey-finance-seo-thumbnail` skill using the narration script. Use the exa
 
 Save `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` to Drive.
 
-**Why before video assembly:** SEO and thumbnail can be generated and reviewed while Grok renders the thumbnail — nothing is blocked. This means upload day is a single step: video + metadata + thumbnail all ready together.
+**Community post (draft at the same time as SEO):**
+Draft the YouTube Community post while writing the SEO package — both pull from the same script. Format:
+
+```
+[1–2 sentence hook — something counterintuitive or surprising from the video]
+
+[1 sentence payoff or teaser — what the video reveals]
+
+Full video is live now 👇 [video URL — add after upload]
+
+[Engaging question tied to the topic]
+```
+
+Include the community post draft in `06-seo-metadata.txt` under a `COMMUNITY POST` section. Post manually in YouTube Studio → Community tab on the day the video goes live.
+
+**Why before video assembly:** SEO, community post, and thumbnail can all be reviewed while Grok renders the thumbnail — nothing is blocked. Upload day is a single step.
 
 **Approval gate:**
-> *"Stage 5a complete. Timings and SEO package saved to Drive — [links]. Generate the thumbnail in Grok using 07-thumbnail-prompt.txt and save it to Drive as 'thumbnail'. Ready to move to video assembly."*
+> *"Stage 5a complete. Timings, SEO package, and community post draft saved to Drive — [links]. Generate the thumbnail in Grok using 07-thumbnail-prompt.txt and save it to Drive as 'thumbnail'. Ready to move to video assembly."*
 
 Wait for Sham's approval (and thumbnail confirmation) before Stage 5b.
 
@@ -311,61 +325,18 @@ ffmpeg -y \
 - **Privacy:** `private` with `publishAt` set — same as main video upload
 - **Pinned comment:** Link to full video, posted immediately after upload. Pin manually in Studio within 60 min of going live.
 
-**Approval gate:**
+**Approval gate (preview only):**
 > *"Short saved to Drive — [link]. 55s. Hook: [X]s / Reveal: [X]s / Closure: [X]s. Happy with this or want me to adjust any segment?"*
 
-Wait for Sham's go-ahead before uploading to YouTube.
+Wait for Sham's go-ahead on the preview before uploading to YouTube. Once uploaded, move immediately to Stage 9 — no further gate.
 
 ---
 
 ---
 
-### ▶ STAGE 9 — Community Post
+### ▶ STAGE 9 — Wrap Up (runs immediately after Stage 8 — no approval gate)
 
-Run on the same day the main video goes live (Wednesday publish day).
-
-**Goal:** A short YouTube Community post on the channel that references the video topic, drives viewers to the full video, and sparks engagement.
-
-#### Format
-
-3–4 sentences maximum. No jargon. Conversational tone matching the Monkey Finance / Monkey See Money voice. End with a question to drive comments.
-
-```
-[1–2 sentence hook on the topic — something counterintuitive or surprising from the video]
-
-[1 sentence payoff or teaser — what the video reveals]
-
-Full video is live now 👇 [video URL]
-
-[Engaging question tied to the topic]
-```
-
-**Example (for "10 Bad Money Habits"):**
-```
-Most personal finance advice is wrong.
-
-Not paying off your mortgage early, ignoring the latte factor, having no monthly budget — these are all things I do. And they're all quietly building more wealth than conventional wisdom ever suggested.
-
-Full video is live now 👇 [video URL]
-
-Which of these "bad" habits surprised you the most?
-```
-
-#### Process
-
-1. Draft the post using the narration script for inspiration — pull the sharpest counterintuitive line as the hook
-2. Include the full YouTube watch URL (from the upload output)
-3. Present the draft to Sham for approval before posting
-4. Post manually in YouTube Studio → Community tab on publish day
-
-**Approval gate:**
-> *"Stage 9 complete — community post drafted. Happy with this or want any changes? Post this in Studio → Community on Wednesday when the video goes live."*
-
----
-
-### ▶ STAGE 10 — Wrap Up
-
-Once the Short is approved and uploaded and the community post is drafted:
+Once the Short is uploaded to YouTube:
 
 Move the episode Drive folder into the Completed folder:
 
@@ -378,7 +349,7 @@ requests.patch(
 ```
 
 **Pipeline complete:**
-> *"Pipeline complete. Video scheduled [date], Short scheduled [date], community post ready to publish Wednesday. Episode folder moved to Completed. ✓"*
+> *"Pipeline complete. Video scheduled [date], Short scheduled [date-1], community post ready in 06-seo-metadata.txt — post in Studio → Community on Wednesday when the video goes live. Episode folder moved to Completed. ✓"*
 
 ---
 
@@ -491,8 +462,7 @@ Save a brief `09-analytics-review.md` to the episode Drive folder with:
 | "Generate the SEO" | Stage 5a |
 | "Upload the video" | Stage 7 |
 | "Make a Short" / "Create a Short" | Stage 8 |
-| "Write the community post" | Stage 9 |
-| "Check the analytics" / "How did it do?" | Stage 11 |
+| "Check the analytics" / "How did it do?" | Stage 10 (Analytics) |
 
 ---
 

@@ -197,9 +197,27 @@ One dominant element with generous white space. Overcrowded compositions lose im
 
 ---
 
-## Output Format
+## Character Reference File — Create at Stage 3 (if named characters present)
 
-Generate TWO files — **no headers, no section labels, no title block**. Just scene number and content, blank line between each scene.
+If the episode uses named characters, create `00b-character-references.txt` and save it to the episode Drive folder alongside `04-image-prompts.txt`. This file is used by the TTS and image generation phases for consistent character identity.
+
+**Format:**
+```
+# Character References — [Episode Title]
+
+## Characters in this episode
+[List each character, their colour identity, and which scenes they appear in]
+
+## Standing-pose prompts (for Grok)
+[Copy the exact one-liner from CHARACTERS.md for each character used]
+
+## Usage notes
+[Any episode-specific notes — e.g. Emma and Tom appear together in scenes 3.4–3.8]
+```
+
+One-liner prompts come verbatim from `references/CHARACTERS.md`. Each character gets exactly one standing-pose prompt — no action poses, no variants.
+
+If the episode has no named characters, skip this file entirely.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
@@ -241,10 +259,11 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 
 ## Delivery
 
-Generate one file only. Save to Drive in the episode folder:
-- `04-image-prompts.txt`
+Save to Drive in the episode folder:
+- `04-image-prompts.txt` — always
+- `00b-character-references.txt` — only if named characters are present in this episode
 
-Then confirm: *"Stage 3 complete — {scene_count} image prompts (1 per narration scene). Saved to Drive. Ready for your review before Stage 4."*
+Then confirm: *"Stage 3 complete — {scene_count} image prompts (1 per narration scene). [Character reference file created for Emma and Tom / No named characters — monkey only.] Saved to Drive. Ready for your review before Stage 4."*
 
 ---
 
