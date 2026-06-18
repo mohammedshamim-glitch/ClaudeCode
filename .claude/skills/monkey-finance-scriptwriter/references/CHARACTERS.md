@@ -40,11 +40,11 @@ Copy the one-liner prompt directly into `00b-character-references.txt` for the e
 
 ---
 
-### Priya
+### Aisha
 **Colour identity:** Coral (#E8694A)
 **Role:** First-time investor, career-focused, numbers-driven
 **One-liner prompt:**
-`Priya: 2D colourful whiteboard animation style. Clean white background. Priya standing, arms at sides, neutral expression, woman in her early thirties with long straight black hair, wearing a coral blouse and black trousers, smart-casual. Bold colourful hand-drawn illustration.`
+`Aisha: 2D colourful whiteboard animation style. Clean white background. Aisha standing, arms at sides, neutral expression, woman in her early thirties with long straight black hair, wearing a coral blouse and black trousers, smart-casual. Bold colourful hand-drawn illustration.`
 
 ---
 
@@ -58,11 +58,11 @@ Copy the one-liner prompt directly into `00b-character-references.txt` for the e
   | Narrative type | Characters |
   |---|---|
   | Pure explainer / macro topic | 0 (monkey only) |
-  | Single person's journey | 1 (e.g. Priya starts investing) |
+  | Single person's journey | 1 (e.g. Aisha starts investing) |
   | Two-path comparison | 2 (e.g. Emma + Tom — early vs late) |
   | Three-way comparison or family scenario | 3 (e.g. Emma + Tom + James) |
   | Early vs late investing | Emma + Tom |
   | Property vs stocks | Sarah + James |
-  | First-time investor journey | Priya or Priya + Tom |
+  | First-time investor journey | Aisha or Aisha + Tom |
   | Tax / pension planning | James + Sarah |
-  | Savings / ISA decisions | Emma + Priya |
+  | Savings / ISA decisions | Emma + Aisha |
