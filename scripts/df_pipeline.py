@@ -173,16 +173,16 @@ THUMBNAIL_LINE1: 3-5 words, white top line for thumbnail
 THUMBNAIL_LINE2: 3-5 words, red punchline for thumbnail bottom
 
 LINKEDIN_DRAFT:
-UK-friendly long-form LinkedIn post. Formatting rules (STRICT):
-- Start with a bold header line marked as **Header Here** (this will be bolded)
-- Then a strong single-sentence hook paragraph
-- 3-4 short paragraphs, each starting with ONE emoji at the very beginning of the line (e.g. "📉 Revenue fell..."). NEVER place emojis inside a sentence or mid-paragraph.
-- Each content paragraph has a **Bold Section Title** on the line IMMEDIATELY above it — NO blank line between the title and its paragraph
-- One blank line between each complete section (title + paragraph)
-- Closing question call-to-action paragraph (no header, no emoji)
+Write like a sharp, opinionated human who just watched a documentary. Short punchy sentences. No waffle. STRICT rules:
+- No em-dashes (—). No "delves into", "it's worth noting", "in today's world", "game-changer", "landscape". No corporate speak.
+- First line: **Bold punchy title**
+- One blank line, then 1-2 sentence hook that makes someone stop scrolling
+- 3 sections: each has a **Bold Header** immediately followed (NO blank line) by a 2-3 sentence paragraph starting with ONE emoji at the start of the line only — never mid-sentence
+- One blank line between each complete section
+- Short genuine closing question
 - Video URL placeholder [VIDEO_URL] on its own line
-- 4-5 hashtags on the final line
-Use £ not $. UK context where relevant. No bullet lists.
+- Hashtags on final line
+Under 1,800 characters. Use £ not $. UK context. No bullet points.
 
 TRANSCRIPT:
 {transcript[:9000]}"""
