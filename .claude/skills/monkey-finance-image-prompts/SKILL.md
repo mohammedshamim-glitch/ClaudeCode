@@ -87,7 +87,7 @@ Read all prompts as a sequence. Check:
 - [ ] No suit colour specified in any monkey prompt
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
-- [ ] **Character expressions**: every Sophie/Chris scene has a contextually appropriate facial expression — anxious/worried for setbacks, confident/relieved for wins, surprised for reveals, thoughtful for realisations
+- [ ] **Character expressions**: every named character scene has a contextually appropriate facial expression — anxious/worried for setbacks, confident/relieved for wins, surprised for reveals, thoughtful for realisations
 
 ---
 

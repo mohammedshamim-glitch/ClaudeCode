@@ -21,7 +21,7 @@ Every Monkey Finance video flows through these stages in order:
 |---|---|---|---|
 | **1** | `monkey-finance-trends` | Topic idea or blank | `01-trend-report.md` |
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
-| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `05-media-prompts.txt` |
+| **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` |
 | **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
 | **5** | `monkey-finance-video-creator` | Images + `narration.mp3` | `<episode-title>.mp4` + `audio_timings_new.csv` |
 | **6** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` + competitor data | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
@@ -148,7 +148,7 @@ Wait for Sham's approval (and any edits) before Stage 3.
 ### ▶ STAGE 3 — Image Prompts
 **Skill:** `monkey-finance-image-prompts`
 
-Parse the clean narration script into sub-scenes (~25 words each). Generate `04-image-prompts.txt` and `05-media-prompts.txt`. Save both to Drive.
+Parse the clean narration script into sub-scenes (~25 words each). Generate `04-image-prompts.txt`. Save to Drive.
 
 **Image prompt rules (non-negotiable):**
 - Opening line: `2D colourful whiteboard animation style. Clean white background.`
