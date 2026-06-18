@@ -48,16 +48,21 @@ Copy the one-liner prompt directly into `00b-character-references.txt` for the e
 
 ---
 
-## Rotation Rules
+## Selection Rules
 
-- Pick 2 characters per episode based on the video's narrative (e.g. early vs late starter → Emma + Tom; property vs stocks → Sarah + James)
-- Never use the same pair in back-to-back episodes
-- Never create new characters — always use these five
-- Pair suggestions by topic:
-  | Topic type | Suggested pair |
+- Each episode uses **0, 1, 2, or 3** characters — never more than 3
+- Some videos have no named characters at all — monkey only. That's fine.
+- Never create new characters outside these five
+- Avoid reusing the exact same combination in back-to-back episodes
+- Character count and selection should match the narrative:
+  | Narrative type | Characters |
   |---|---|
+  | Pure explainer / macro topic | 0 (monkey only) |
+  | Single person's journey | 1 (e.g. Priya starts investing) |
+  | Two-path comparison | 2 (e.g. Emma + Tom — early vs late) |
+  | Three-way comparison or family scenario | 3 (e.g. Emma + Tom + James) |
   | Early vs late investing | Emma + Tom |
   | Property vs stocks | Sarah + James |
-  | First-time investor journey | Priya + Tom |
+  | First-time investor journey | Priya or Priya + Tom |
   | Tax / pension planning | James + Sarah |
   | Savings / ISA decisions | Emma + Priya |
