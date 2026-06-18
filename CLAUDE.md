@@ -69,10 +69,11 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Drive public image URL for LinkedIn**: After uploading thumbnail to Drive, set permission `role=reader, type=anyone` via Drive API. Use `https://drive.google.com/uc?export=download&id=FILE_ID` as the image_url in the LinkedIn GitHub Actions workflow — GitHub runners have open internet and can fetch it. This sandbox cannot verify the URL (drive.google.com blocked here) but it works on runners.
 - **YouTube force-ssl scope**: `digital_fusion_refresh_token` was minted with `youtube + drive` scopes only — NOT `youtube.force-ssl`. Caption (SRT) upload requires force-ssl. Re-auth needed: visit the OAuth URL with all three scopes + `prompt=consent` + `login_hint=mohammedshamim@gmail.com`, paste the code, exchange for new refresh token, update token.json.
 - **Aeneas numpy patch**: Aeneas requires `numpy.fromstring` → `numpy.frombuffer` in `/usr/local/lib/python3.11/dist-packages/aeneas/wavfile.py` line 78. Also needs `pip install scipy` and `apt-get install espeak espeak-ng libespeak-dev libespeak-ng-dev`. Input WAV must be re-encoded as `ffmpeg -f wav -acodec pcm_s16le`.
-- **Digital Fusion pipeline sequence**: (1) Download mp4 + thumbnail from Drive → (2) Add logo overlay bottom-right (ffmpeg drawbox+drawtext) → (3) Extract audio WAV → (4) Transcribe via Gemini Files API → (5) Generate SEO via Gemini (title, full description with chapters, tags, thumbnail lines, LinkedIn draft) → (6) Build thumbnail using uploaded PNG as background + title text overlay (ColdFusion style) → (7) Upload ALL assets to Drive episode folder FIRST (original mp4, processed mp4, thumbnail, transcript, seo_description.txt) → (8) Upload processed mp4 to YouTube (scheduled Thu 6pm BST) with thumbnail + description → (9) Post LinkedIn with thumbnail via GitHub Actions after user approves draft. NO SRT generation — audio transcript is used only for SEO title/chapters/description.
+- **Digital Fusion pipeline sequence**: (1) Download mp4 from Drive (no thumbnail needed — generated from frame) → (2) Add logo overlay bottom-right (ffmpeg drawbox+drawtext) → (3) Extract audio WAV → (4) Transcribe via Gemini Files API → (5) Generate SEO via Gemini (title, full description with chapters, tags, thumbnail lines, LinkedIn draft) → (6) Build thumbnail from video frame at 30% + PIL text overlay (ColdFusion style) → (7) Upload ALL assets to Drive episode folder FIRST (original mp4, processed mp4, thumbnail, transcript, seo_description.txt) → (8) Upload processed mp4 to YouTube (scheduled Thu 6pm BST) with thumbnail + description → (9) Upload LinkedIn draft as Google Doc to episode folder (real YouTube URL embedded). Script: `scripts/df_pipeline.py`. NO SRT generation.
 - **Digital Fusion logo position**: Bottom-right corner of video. drawbox x=1040:y=662:w=230:h=48, drawtext x=1052:y=673 (for 1280x720). NOT top, NOT bottom-left.
 - **YouTube description quality**: Description must be detailed and meaty — not light. Structure: punchy 2-3 sentence hook → 4-5 paragraphs with specific stats/company names/examples from transcript → "What you'll discover" bullet list of 6-8 points → subscribe line → chapters. Never generate a short 3-paragraph description.
-- **LinkedIn post quality**: Always write long-form LinkedIn posts (not just a link). Include: hook story, key stats with emojis, specific named examples, a closing call-to-action. Always web-search any year-specific stats in the video (e.g. layoff numbers, projections) and update them to reflect the current year before posting — video content may have been written 1-2 years prior and stats will be outdated. Show the draft to the user for approval before posting.
+- **LinkedIn draft quality**: Saved as Google Doc (HTML upload → Drive converts) so emojis and bold render correctly. Tone: sharp, opinionated human — short punchy sentences, no em-dashes, no AI waffle ("delves into", "game-changer", "landscape"). Structure: **Bold title** → hook → 3 sections each with **Bold Header** immediately above its paragraph (no blank line between them) → blank line between sections → closing question → URL → hashtags. Under 1,800 chars. Emojis at START of paragraph line only, never mid-sentence. Upload LinkedIn doc AFTER YouTube step so real video URL is embedded.
+- **LinkedIn Google Doc formatting**: Upload as HTML with `mimeType: application/vnd.google-apps.document`. Blank lines in source become `<p>&nbsp;</p>` — preserved when copy-pasted into LinkedIn. `**text**` → `<b>text</b>`. Use `\Z` not `$` in regex to capture full multi-line fields from Gemini output.
 - **The Two AI Lies episode**: Video ID `e4KzZGUkOFo`, Drive episode folder `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO`, scheduled 2026-06-18 Thu 6pm BST. SRT upload still pending (needs force-ssl re-auth). LinkedIn posted at `urn:li:share:7472780845058281472`.
 
 ## Known Drive Folder IDs
@@ -85,6 +86,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | The Military-Grade AI Gap | `13781WAsBW1Ndg6GuqOw9SB_yW3kL_BQZ` |
 | The NFT Bubble | `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH` |
 | The Two AI Lies | `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO` |
+| AI Reality Bottleneck | `18vHjyUw1sv2T8KqeqRdH2ZxlEwrTt0xA` |
+| AI Gold Rush (Flaw in the Foundation) | `1uCh1c-1YOlKmc1x0cToShbojAZuN9qRu` |
 
 #### Digital Fusion Key Info
 - YouTube Channel ID: `UCQ5XUCyx0FExP8bh8sj_qkA`
@@ -99,16 +102,14 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 #### Digital Fusion Scripts
 | Script | Purpose |
 |---|---|
-| `digital_fusion_upload.py` | Download from Drive, add logo, upload to YouTube |
-| `digital_fusion_thumbnail.py` | Extract frame, generate thumbnail, upload to YouTube + Drive |
-| `digital_fusion_linkedin.py` | Post to LinkedIn via Zapier webhook |
+| `scripts/df_pipeline.py` | Full pipeline: download → logo → transcribe → SEO → thumbnail → Drive upload → YouTube → LinkedIn Google Doc |
 
 #### Digital Fusion Thumbnail Style
-- Background: video frame at ~30% through video, brightness 0.75
-- Line 1: white, 110px bold — left aligned at x=60
-- Line 2: red (#DC1E1E), 110px bold
-- Left red accent bar (8px wide)
-- "Digital Fusion" branding top-left black box
+- Background: video frame at 30% through video, brightness 0.60
+- Line 1: white, 100px bold — left aligned at x=60, y=160
+- Line 2: red (#DC1E1E), 100px bold
+- Left red accent bar (8px wide, full height)
+- "Digital Fusion" branding top-left black box (x=18:y=16:w=270:h=58)
 
 ### Monkey Finance / Monkey See Money
 | Location | Folder ID |
