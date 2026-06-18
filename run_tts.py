@@ -93,6 +93,53 @@ def drive_download_text(token, file_id):
     r.raise_for_status()
     return r.content.decode("utf-8")
 
+def drive_get_or_create_subfolder(token, parent_id, name):
+    """Return the Drive folder ID for name inside parent, creating it if needed."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            "q": f"'{parent_id}' in parents and name='{name}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+            "fields": "files(id)",
+        },
+    )
+    r.raise_for_status()
+    files = r.json().get("files", [])
+    if files:
+        return files[0]["id"]
+    meta = {"name": name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
+    r = requests.post(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        data=json.dumps(meta),
+    )
+    r.raise_for_status()
+    return r.json()["id"]
+
+def drive_list_chunks(token, subfolder_id, run_id):
+    """Return {filename: file_id} for all chunks matching run_id in subfolder."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            "q": f"'{subfolder_id}' in parents and name contains '{run_id}' and trashed=false",
+            "fields": "files(id,name)",
+            "pageSize": 50,
+        },
+    )
+    r.raise_for_status()
+    return {f["name"]: f["id"] for f in r.json().get("files", [])}
+
+def drive_download_binary(token, file_id, local_path):
+    """Download a binary file from Drive to local_path."""
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r.raise_for_status()
+    with open(local_path, "wb") as f:
+        f.write(r.content)
+
 def drive_delete_existing(token, filename, folder_id):
     r = requests.get(
         "https://www.googleapis.com/drive/v3/files",
@@ -328,11 +375,26 @@ def main():
     total  = len(chunks)
     print(f"  ✓ Split into {total} chunk(s) of ~{CHUNK_WORDS} words")
 
-    # Check which chunks already exist on disk
+    # Get or create tts_chunks/ subfolder in the episode Drive folder
+    chunks_folder_id = drive_get_or_create_subfolder(token, folder_id, "tts_chunks")
+
+    # Download any chunks that exist in Drive but are missing locally
+    drive_chunks = drive_list_chunks(token, chunks_folder_id, run_id)
+    n_downloaded = 0
+    for i in range(1, total + 1):
+        path = chunk_path(run_id, i, total)
+        fname = os.path.basename(path)
+        if not chunk_exists(path) and fname in drive_chunks:
+            print(f"  Downloading chunk {i}/{total} from Drive...")
+            drive_download_binary(token, drive_chunks[fname], path)
+            n_downloaded += 1
+    if n_downloaded:
+        print(f"  ✓ Downloaded {n_downloaded} chunk(s) from Drive")
+
     existing = [chunk_exists(chunk_path(run_id, i, total)) for i in range(1, total + 1)]
     n_existing = sum(existing)
     if n_existing:
-        print(f"  ✓ Resuming — {n_existing}/{total} chunks already on disk, generating remaining {total - n_existing}")
+        print(f"  ✓ Resuming — {n_existing}/{total} chunks ready, generating remaining {total - n_existing}")
 
     first_new = True
     for i, chunk in enumerate(chunks, 1):
@@ -357,6 +419,11 @@ def main():
                 with open(path, "wb") as f:
                     f.write(wav_bytes)
                 print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz → saved to disk")
+                # Upload chunk to Drive immediately so it survives session restarts
+                fname = os.path.basename(path)
+                if fname not in drive_chunks:
+                    drive_upload(token, path, fname, chunks_folder_id, mime="audio/wav")
+                    print(f"  ✓ Chunk {i} backed up to Drive")
                 break
             except Exception as e:
                 if attempt < 5:
@@ -391,11 +458,7 @@ def main():
     print(f"  ✓ Uploaded: {result['name']}")
     print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
-    # Clean up chunk files (originals + any pace-locked variants) after upload
-    for path in set(chunk_paths) | set(merge_paths):
-        if os.path.exists(path):
-            os.remove(path)
-    print(f"  ✓ Chunk files cleaned up")
+    print(f"  ✓ Chunk WAVs preserved in Drive (tts_chunks/ subfolder) for session resume")
 
 if __name__ == "__main__":
     main()
