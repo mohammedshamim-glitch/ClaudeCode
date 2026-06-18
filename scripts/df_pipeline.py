@@ -173,13 +173,15 @@ THUMBNAIL_LINE1: 3-5 words, white top line for thumbnail
 THUMBNAIL_LINE2: 3-5 words, red punchline for thumbnail bottom
 
 LINKEDIN_DRAFT:
-UK-friendly long-form LinkedIn post. Include:
-- Strong single-sentence hook
-- 3-4 short paragraphs with key stats and named examples (£ not $, UK context)
-- Emojis to break up text (🔑 💡 📉 ⚠️ etc.)
-- Closing question call-to-action
-- Video URL placeholder [VIDEO_URL] and 4-5 hashtags
-Medium length, punchy. No excessive bullet lists.
+UK-friendly long-form LinkedIn post. Formatting rules (STRICT):
+- Start with a bold header line marked as **Header Here** (this will be bolded)
+- Then a strong single-sentence hook paragraph
+- 3-4 short paragraphs, each starting with ONE emoji at the very beginning of the line (e.g. "📉 Revenue fell..."). NEVER place emojis inside a sentence or mid-paragraph.
+- Each paragraph may have its own **Bold Section Title** on the line above it
+- Closing question call-to-action paragraph
+- Video URL placeholder [VIDEO_URL] on its own line
+- 4-5 hashtags on the final line
+Use £ not $. UK context where relevant. No bullet lists.
 
 TRANSCRIPT:
 {transcript[:9000]}"""
@@ -355,22 +357,38 @@ if up.status_code not in (200, 201):
 yt_id = up.json()['id']
 print(f'  ✓ YouTube ID: {yt_id}')
 
-# Upload LinkedIn draft as Google Doc (preserves emojis, easy to copy-paste)
+# Upload LinkedIn draft as Google Doc via HTML (bold headers + emojis at line starts)
 li_text = linkedin.replace('[VIDEO_URL]', f'https://www.youtube.com/watch?v={yt_id}')
-li_data = li_text.encode('utf-8')
+
+def linkedin_to_html(text):
+    """Convert **bold** markers and paragraphs to HTML for Google Doc upload."""
+    lines = text.strip().split('\n')
+    html_lines = ['<html><body style="font-family:Arial,sans-serif;font-size:11pt;">']
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        # Convert **bold text** to <b>
+        line = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', line)
+        # Wrap in paragraph
+        html_lines.append(f'<p>{line}</p>')
+    html_lines.append('</body></html>')
+    return '\n'.join(html_lines)
+
+li_html = linkedin_to_html(li_text).encode('utf-8')
 tok = get_token(DF_REFRESH)
 init = requests.post(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&convert=true',
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
     headers={**auth(tok), 'Content-Type': 'application/json',
-             'X-Upload-Content-Type': 'text/plain',
-             'X-Upload-Content-Length': str(len(li_data))},
+             'X-Upload-Content-Type': 'text/html',
+             'X-Upload-Content-Length': str(len(li_html))},
     json={'name': 'linkedin_draft',
           'mimeType': 'application/vnd.google-apps.document',
           'parents': [EP_FOLDER]},
     timeout=30
 )
-li_up = requests.put(init.headers['Location'], data=li_data,
-                     headers={'Content-Type': 'text/plain'}, timeout=30)
+li_up = requests.put(init.headers['Location'], data=li_html,
+                     headers={'Content-Type': 'text/html'}, timeout=30)
 li_doc_id = li_up.json()['id']
 print(f'  ✓ linkedin_draft (Google Doc): https://docs.google.com/document/d/{li_doc_id}/edit')
 
