@@ -74,7 +74,11 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **YouTube description quality**: Description must be detailed and meaty — not light. Structure: punchy 2-3 sentence hook → 4-5 paragraphs with specific stats/company names/examples from transcript → "What you'll discover" bullet list of 6-8 points → subscribe line → chapters. Never generate a short 3-paragraph description.
 - **LinkedIn draft quality**: Saved as Google Doc (HTML upload → Drive converts) so emojis and bold render correctly. Tone: sharp, opinionated human — short punchy sentences, no em-dashes, no AI waffle ("delves into", "game-changer", "landscape"). Structure: **Bold title** → hook → 3 sections each with **Bold Header** immediately above its paragraph (no blank line between them) → blank line between sections → closing question → URL → hashtags. Under 1,800 chars. Emojis at START of paragraph line only, never mid-sentence. Upload LinkedIn doc AFTER YouTube step so real video URL is embedded.
 - **LinkedIn Google Doc formatting**: Upload as HTML with `mimeType: application/vnd.google-apps.document`. Blank lines in source become `<p>&nbsp;</p>` — preserved when copy-pasted into LinkedIn. `**text**` → `<b>text</b>`. Use `\Z` not `$` in regex to capture full multi-line fields from Gemini output.
-- **The Two AI Lies episode**: Video ID `e4KzZGUkOFo`, Drive episode folder `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO`, scheduled 2026-06-18 Thu 6pm BST. SRT upload still pending (needs force-ssl re-auth). LinkedIn posted at `urn:li:share:7472780845058281472`.
+- **The Two AI Lies episode**: Video ID `e4KzZGUkOFo`, Drive folder `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO`, scheduled 2026-06-18 Thu 6pm BST. LinkedIn posted at `urn:li:share:7472780845058281472`.
+- **The Military-Grade AI Gap episode**: Video ID `suv3m6nQkbk`, Drive folder `13781WAsBW1Ndg6GuqOw9SB_yW3kL_BQZ`, published 2026-05-29.
+- **NFT Crash episode** (titled "Millions Lost: The Brutal Reality Behind the NFT Crash"): Video ID `cH6zmhWf_iU`, Drive folder `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH`, published 2026-06-05.
+- **AI Reality Bottleneck episode**: Video ID `S3e7mZTPWzY`, Drive folder `18vHjyUw1sv2T8KqeqRdH2ZxlEwrTt0xA`, scheduled 2026-06-25 Thu 6pm BST.
+- **AI Gold Rush episode** (The Flaw in the Foundation): Video ID `Uq3WyEguv14`, Drive folder `1uCh1c-1YOlKmc1x0cToShbojAZuN9qRu`, scheduled 2026-07-02 Thu 6pm BST.
 
 ## Known Drive Folder IDs
 
@@ -84,7 +88,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | **Digital Fusion (root)** | `1MFA1Ooo-KElIRffQRC-TJmTnOytyc-SZ` |
 | Processed (episode subfolders) | `1q80MPi_hAfcCLeKsYCBOB-_vrBJCV26z` |
 | The Military-Grade AI Gap | `13781WAsBW1Ndg6GuqOw9SB_yW3kL_BQZ` |
-| The NFT Bubble | `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH` |
+| The NFT Bubble (Millions Lost) | `1dcwPW4rFItaVBHzOLubDgQcHJQXYNRBH` |
+| Anatomy of a Financial Bubble (draft, unused) | `1PZxBQppoLYQ0_NFIz2KCilG4P-gZqDRQ` |
 | The Two AI Lies | `1cnQi3nqVo_unB4T5CAy2aIWlBPsvwEiO` |
 | AI Reality Bottleneck | `18vHjyUw1sv2T8KqeqRdH2ZxlEwrTt0xA` |
 | AI Gold Rush (Flaw in the Foundation) | `1uCh1c-1YOlKmc1x0cToShbojAZuN9qRu` |
