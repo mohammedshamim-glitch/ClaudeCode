@@ -63,9 +63,9 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 - Expressive face — confident, welcoming, or energetic depending on scene context
 - May hold props: a marker, a sign, a megaphone
 - Always positioned on the right side of the frame, facing left (toward the content)
-- Slightly larger than the monkey — this is the brand moment
+- Slightly larger than the regular monkey — this is the brand moment
 
-### Monkey (~75% of scenes — guide, narrator, reactor)
+### Monkey (~80% of scenes — guide, narrator, reactor)
 - Same monkey character, no suit — casual, unguarded, human
 - Present in approximately 75% of all scenes as a consistent guide and emotional anchor
 
@@ -101,11 +101,26 @@ Every monkey scene must feature an active physical action with a prop or in a si
 - Warning → stern face, one hand raised in stop gesture
 - Curiosity → leaning in, squinting, head tilted
 
-### No Monkey (~25% of scenes — pure stat/data scenes only)
+### No Monkey (~20% of scenes — pure stat/data scenes only)
 - Reserved for scenes where a statistic, equation, or diagram must own the entire frame
 - The number or chart IS the visual — a character would dilute its impact
 - Content is centred, given full canvas space, and composed cleanly
 - Typical no-monkey scenes: massive percentage reveals, before/after financial comparisons, key equations
+
+---
+
+### Named Characters (Emma, Tom, Sarah, James, Aisha)
+
+When an episode uses named characters, they appear in their designated scenes as 2D whiteboard figures — same style as the monkey, hand-drawn, bold outlines, flat colour.
+
+**Rules:**
+- If a scene's narration names a character, that character MUST appear in the image prompt
+- The monkey may appear alongside a named character as a narrator/guide — but never INSTEAD of them
+- Never describe clothing or physical appearance in scene prompts — use the character name only. Visual identity is established by the one-liner prompt in `00b-character-references.txt`
+- Always give named characters a contextually appropriate facial expression matching the narration moment
+- Characters face toward the content (stat, chart, diagram) — never away from it
+
+**Before writing image prompts for an episode with named characters:** read `00b-character-references.txt` in the episode Drive folder to understand which characters are used and which scenes they appear in.
 
 ---
 

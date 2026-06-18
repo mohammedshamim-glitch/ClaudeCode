@@ -48,6 +48,17 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 
 ---
 
+## Before Starting — Check for Named Characters
+
+If the episode has named characters, read `00b-character-references.txt` from the episode Drive folder before writing a single prompt. It tells you:
+- Which characters appear in this episode
+- Which scenes each character appears in
+- Their colour identity (for consistent scene composition)
+
+If the episode is monkey-only, skip this step.
+
+---
+
 ## The 1:1 Scene Method
 
 **One image prompt per narration scene. No grouping. No merging.**

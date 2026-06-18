@@ -25,15 +25,16 @@ Every script produced by this skill is engineered across three dimensions simult
 
 ---
 
-## Reference Files — Read ALL THREE before writing a single word
+## Reference Files — Read ALL FOUR before writing a single word
 
 | File | What it covers | When to read |
 |---|---|---|
 | `references/VOICE.md` | Brand voice, tone, UK language rules, monkey theme, analogy craft | Always — read first |
 | `references/STRUCTURE.md` | Script blueprint, section jobs, word counts, pacing, value escalation | Always — read second |
 | `references/RETENTION.md` | Dopamine loop architecture, curiosity gap science, hook formulas, the 4-pass writing method | Always — read third |
+| `references/CHARACTERS.md` | Fixed 5-character roster (Emma, Tom, Sarah, James, Aisha), one-liner prompts, selection rules | Read when episode uses named characters |
 
-**Do not write until all three are loaded. The references are the craft. This file is the process.**
+**Do not write until all required files are loaded. The references are the craft. This file is the process.**
 
 ---
 
@@ -92,7 +93,7 @@ Read the transcript and identify:
 Keep the proven structure and emotional beats intact. Change everything UK-specific:
 - Swap $ for £ and US figures for UK equivalents
 - Replace US products/laws with UK equivalents (ISA, SIPP, Section 24, CGT, Section 75, stamp duty, etc.)
-- Create new UK characters (never reuse Jake/Marcus — rotate pairs each episode)
+- Select characters from the fixed roster in `references/CHARACTERS.md` (Emma, Tom, Sarah, James, Aisha) — 0 to 3 per episode, never create new characters
 - Replace US examples and analogies with UK ones
 - Never copy sentences verbatim — rewrite in Monkey Finance voice
 
@@ -170,7 +171,7 @@ One visual beat = one scene. Word count varies 5–29 words — there is **no fi
 
 **How to apply:**
 - Write the narration naturally first
-- Then split into scenes: accumulate sentences until ~20 words, never exceeding 25
+- Then split into scenes: accumulate sentences until ~20 words, never exceeding 29
 - Apply the numbered-item exception throughout
 - Scene count will typically be 80–120 scenes for a 1,900–2,100 word script
 
@@ -181,10 +182,12 @@ Then automatically:
 
 1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), and scene numbers (1.1, 1.2, etc.). Each scene = one sentence (or merged block). Blank line between each scene.
 
-2. **Save the clean narration file** to the same Google Drive folder as `03-narration-script-clean.txt` — spoken words only, no scene numbers, no headers, no section labels. One sentence (or merged block) per line with a blank line between each. This is the file used by the TTS tool, image prompt generator, and Whisper alignment — it must be sentence-level, never multi-sentence blocks.
+2. **Save the clean narration file** to the same Google Drive folder as `03-narration-script-clean.txt` — spoken words only, no scene numbers, no headers, no section labels. One sentence (or merged block) per line with a blank line between each. This is the file used by the TTS tool, image prompt generator, and aeneas forced alignment — it must be sentence-level, never multi-sentence blocks.
 
 3. Once both files are saved, confirm with the Drive links and ask:
-*"Structured script and clean narration file saved to Drive. Want me to punch up any section, or shall we continue to the next pipeline stage?"*
+*"Stage 2 complete. Structured script and clean narration saved to Drive. Word count: [X]. Scene count: [X]. Want me to punch up any section, or shall we move to Stage 3 (image prompts)?"*
+
+**Wait for Sham's explicit approval before proceeding to Stage 3.**
 
 ---
 
