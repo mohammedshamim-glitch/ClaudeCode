@@ -512,12 +512,12 @@ def main():
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
     def sort_key(f):
         name = f["name"]
-        # Number after last underscore: e.g. "grok_scene_7.png" → 7
-        m = re.search(r'_(\d+)\.[^.]+$', name)
+        # Leading number before underscore or hyphen — always try first (e.g. "001_scene.jpg" → 1)
+        m = re.match(r'^(\d+)[_-]', name)
         if m:
             return (0, int(m.group(1)), "")
-        # Leading number before underscore or hyphen: e.g. "7_scene.png" or "7-scene.png" → 7
-        m = re.match(r'^(\d+)[_-]', name)
+        # Trailing number fallback for legacy filenames (e.g. "grok_scene_7.png" → 7)
+        m = re.search(r'_(\d+)\.[^.]+$', name)
         if m:
             return (0, int(m.group(1)), "")
         return (1, 0, f.get("modifiedTime", ""))
@@ -588,6 +588,14 @@ def main():
                 print(f"    Likely causes: trashed image not excluded, extra image uploaded,")
                 print(f"    or a scene was added/removed after timings were generated.")
                 print(f"    Run: generate_timings.py <folder_id>  to regenerate the CSV.")
+                sys.exit(1)
+            # Verify first image sorts as scene 001 — catches filename sort bugs
+            import re as _re
+            first_name = image_files[0]["name"]
+            m = _re.match(r'^0*1[_-]', first_name)
+            if not m:
+                print(f"\n  ✗ SORT ERROR — first image is '{first_name}' (expected 001_...)")
+                print(f"    The image for scene 1 is not sorted first. Check filenames.")
                 sys.exit(1)
             print(f"  ✓ Counts match — {n_imgs} images : {n_rows} CSV rows. Sequencing OK.")
             durations = [float(r["duration_seconds"]) for r in timing_rows]
