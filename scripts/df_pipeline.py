@@ -173,16 +173,16 @@ THUMBNAIL_LINE1: 3-5 words, white top line for thumbnail
 THUMBNAIL_LINE2: 3-5 words, red punchline for thumbnail bottom
 
 LINKEDIN_DRAFT:
-Write like a sharp, opinionated human who just watched a documentary. Short punchy sentences. No waffle. STRICT rules:
-- No em-dashes (—). No "delves into", "it's worth noting", "in today's world", "game-changer", "landscape". No corporate speak.
-- First line: **Bold punchy title**
-- One blank line, then 1-2 sentence hook that makes someone stop scrolling
-- 3 sections: each has a **Bold Header** immediately followed (NO blank line) by a 2-3 sentence paragraph starting with ONE emoji at the start of the line only — never mid-sentence
-- One blank line between each complete section
-- Short genuine closing question
-- Video URL placeholder [VIDEO_URL] on its own line
-- Hashtags on final line
-Under 1,800 characters. Use £ not $. UK context. No bullet points.
+Write like a sharp, opinionated human who just watched a documentary. Strong opinions backed by specific named facts and figures. No waffle. STRICT rules:
+- No em-dashes (—). No "delves into", "it's worth noting", "game-changer", "landscape". No corporate speak.
+- **Bold punchy title** on line 1
+- Hook: 2-3 punchy sentences on the VERY NEXT LINE — NO blank line after the title
+- Blank line
+- 4 sections: each **Bold Header** immediately followed (NO blank line) by a 4-5 sentence paragraph starting with ONE emoji at the start of the line only — never mid-sentence
+- Blank line between each section
+- Closing: 2-3 sentences posing a genuine question. No header, no emoji.
+- Blank line, then [VIDEO_URL], then hashtags (5-6 tags) on final line
+Target 2,400 to 2,800 characters. Use £ not $. UK context. No bullet points.
 
 TRANSCRIPT:
 {transcript[:9000]}"""
