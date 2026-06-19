@@ -29,7 +29,7 @@ Every Monkey Finance video flows through these stages in order:
 | **8→9** | Shorts + Wrap Up | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short → folder moved to Completed |
 | **10** | Analytics review | YouTube Studio data | `09-analytics-review.md` |
 
-**yt-dlp is used at Stages 1 and 6** — pulling live YouTube data during trend research and competitor tags during SEO generation.
+**yt-dlp is used at Stage 1** — pulling live YouTube data during trend research. Competitor tags for SEO are pulled via the YouTube Data API at Stage 5a (yt-dlp is SSL-blocked on this server).
 
 ---
 
@@ -222,13 +222,9 @@ Wait for Sham's approval (and thumbnail confirmation) before Stage 5b.
 ### ▶ STAGE 5b — Video Assembly
 **Skill:** `monkey-finance-video-creator`
 
-1. Generate aeneas forced alignment timing CSV:
-```bash
-python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
-```
-This auto-selects the highest-priority script file (`03b-narration-sentences.txt` > `03-narration-script-clean.txt` etc.) and produces exact per-image timings via aeneas forced alignment.
+`audio_timings_new.csv` is already in Drive from Stage 5a — do NOT re-run `generate_timings.py` here. Only re-run it if `narration.mp3` was regenerated after Stage 5a.
 
-2. Create the video with subtitles:
+Create the video with subtitles:
 ```bash
 python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --subs
 ```
@@ -244,27 +240,16 @@ This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploade
 
 ---
 
-### ▶ STAGE 6 — YouTube Upload (previously SEO — now moved to Stage 5a)
-
-SEO and thumbnail are generated at Stage 5a alongside timings. By the time video assembly completes, the metadata and thumbnail should already be ready.
-
-**Pre-upload check:**
-- [ ] `06-seo-metadata.txt` in Drive ✓ (done at Stage 5a)
-- [ ] `07-thumbnail-prompt.txt` in Drive ✓ (done at Stage 5a)
-- [ ] Thumbnail generated in Grok and saved to Drive as `thumbnail` ✓
-- [ ] Video assembled and in Drive ✓ (done at Stage 5b)
-
-If SEO wasn't done at 5a for any reason, run `monkey-finance-seo-thumbnail` now before upload.
-
-**Approval gate:**
-> *"All assets confirmed in Drive. Ready to upload — video, metadata, and thumbnail go together in one shot."*
-
-Wait for Sham's go-ahead before Stage 7.
-
----
-
 ### ▶ STAGE 7 — YouTube Upload
 **Skill:** `monkey-finance-youtube-upload`
+
+**Pre-upload checklist — confirm all four before running:**
+- [ ] `06-seo-metadata.txt` in Drive ✓ (Stage 5a)
+- [ ] `07-thumbnail-prompt.txt` in Drive ✓ (Stage 5a)
+- [ ] Thumbnail generated in Grok and saved to Drive as `thumbnail` ✓
+- [ ] Video assembled and in Drive ✓ (Stage 5b)
+
+If SEO wasn't done at 5a for any reason, run `monkey-finance-seo-thumbnail` now before upload.
 
 ```bash
 python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id>
@@ -296,33 +281,20 @@ Run immediately after the main video is uploaded. Always save to Drive for Sham'
 
 **Critical rule — closure must end on a complete sentence.** Scan the `end_seconds` values near the target endpoint and pick the one whose `narration_excerpt` ends the thought. Never cut mid-sentence.
 
-**Step 2 — Build the Short with blurred background:**
-Images are 16:9 — always use the blur-background treatment. Raw centre-crop looks bad.
+**Step 2 — Build and upload the Short using `create_short.py`:**
 
 ```bash
-ffmpeg -y \
-  -ss <hook_start>   -to <hook_end>    -i <source.mp4> \
-  -ss <reveal_start> -to <reveal_end>  -i <source.mp4> \
-  -ss <close_start>  -to <close_end>   -i <source.mp4> \
-  -filter_complex "
-    [0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[vraw][aout];
-    [vraw]split=2[bg][fg];
-    [bg]scale=-2:1920,crop=1080:1920:(iw-1080)/2:0,boxblur=25:5[blurred];
-    [fg]scale=1080:608[small];
-    [blurred][small]overlay=(W-w)/2:(H-h)/2[vout]
-  " \
-  -map "[vout]" -map "[aout]" \
-  -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 192k \
-  short_preview_v1.mp4
+python3 /home/user/ClaudeCode/create_short.py <folder_id> <yt_video_id> "<episode_title>" "<short_title>" --schedule YYYY-MM-DDTHH:MM:SSZ
 ```
 
-**Step 3 — Upload to Drive as `short_preview_v1.mp4`, share link with Sham for review.** Do not upload to YouTube until approved.
+- `create_short.py` auto-picks hook/reveal/closure segments from `audio_timings_new.csv`
+- Applies blur-background treatment automatically (16:9 source → 9:16 vertical with blurred bg)
+- Schedule for the day before the main video (Tuesday 4pm BST if main is Wednesday)
+- Script saves `short_preview_v1.mp4` to Drive and shares the link before pushing to YouTube
 
-**Step 4 — Once approved, upload to YouTube:**
-- **Title:** Curiosity-gap hook, emoji, `#Shorts` — under 60 chars. Example: *"Nobody tells landlords this about their returns 👀 #Shorts"*
+**Step 3 — Review, then upload to YouTube:**
+- **Title:** Curiosity-gap hook, emoji, `#Shorts` — under 60 chars
 - **Description:** One teaser line + link to full video + `Subscribe: https://www.youtube.com/@MonkeySeeMoney` + relevant hashtags
-- **Schedule:** Day before the main video (Tuesday if main is Wednesday) at 4pm BST
-- **Privacy:** `private` with `publishAt` set — same as main video upload
 - **Pinned comment:** Link to full video, posted immediately after upload. Pin manually in Studio within 60 min of going live.
 
 **Approval gate (preview only):**
@@ -353,7 +325,7 @@ requests.patch(
 
 ---
 
-### ▶ STAGE 11 — Analytics Review (7–14 days after publish)
+### ▶ STAGE 10 — Analytics Review (7–14 days after publish)
 
 **When to run:** 7 days after the video goes live on YouTube. Run again at 14 days for a fuller picture.
 

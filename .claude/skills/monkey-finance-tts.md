@@ -16,9 +16,11 @@ Where `narration_file_id` is the Drive file ID of `03-narration-script-clean.txt
 
 This will:
 - Download the clean narration from Drive
+- Check Drive `tts_chunks/` subfolder for existing chunks and download them before generating
 - Chunk it into balanced ~150-word segments
-- Generate audio via Gemini TTS (Orus voice)
-- Pace-lock all chunks to the median wpm via `ffmpeg atempo` (prevents Flash's 145–195 wpm variance)
+- Generate audio via Gemini TTS (Orus voice) — skips chunks already on disk
+- Upload each chunk to Drive `tts_chunks/` immediately after generating (session-restart safe)
+- Pace-lock: slow fast chunks down to the median wpm ceiling via `ffmpeg atempo` — slow chunks kept at their natural pace, never sped up
 - Merge chunks into a single WAV, then convert to MP3
 - Upload `narration.mp3` back into the episode folder automatically
 
@@ -37,16 +39,19 @@ This will:
 
 ## Resume behaviour
 
-Chunks are saved to `/home/user/ClaudeCode/tts_chunks/` locally. If quota is hit or the run is interrupted, re-run the same command — already-completed chunks are skipped automatically. Do NOT delete chunk files between sessions.
+Chunks are saved both locally (`/home/user/ClaudeCode/tts_chunks/`) and to a `tts_chunks/` subfolder inside the episode Drive folder. On re-run, Drive is checked first — existing chunks are downloaded before generating. This means chunks survive session restarts without wasting quota. Do NOT delete chunk files from Drive until the episode is fully assembled and uploaded.
 
 ## Daily quota
 
-The free-tier `gemini-2.5-flash-preview-tts` hits quota after ~13 chunks (~2,000 words). If quota is hit, wait until the next day (resets ~midnight Pacific / ~8am UK) and re-run.
+The free-tier `gemini-2.5-flash-preview-tts` hits quota after ~13 chunks (~2,000 words). If quota is hit, wait until the next day (resets ~midnight Pacific / ~8am UK) and re-run. Completed chunks are safe in Drive.
 
 ## Drive folder structure
 
 ```
 YYYY-MM-DD — Episode Title/
+├── tts_chunks/                    ← chunk WAVs backed up here after generation
+│   ├── <run_id>_chunk_01.wav
+│   └── ...
 ├── 00-source-transcript-wealth-logic-original.txt
 ├── 00b-character-references.txt   (if named characters used)
 ├── 02-narration-script-structured.txt
