@@ -44,7 +44,7 @@ Each prompt produced by this skill is engineered across three dimensions simulta
 |---|---|---|
 | `narration_script.txt` | Pipeline Stage 2 output / Drive | Plain text, scenes separated by blank lines |
 | `content_brief` | Drive or conversation | Used for emotional arc and topic context |
-| `scene_count` | Calculated from narration | Must match sub-scene count exactly (typically 35-45 sub-scenes) |
+| `scene_count` | Calculated from narration | Must match narration scene count exactly — 1 prompt per scene (typically 80–120 for a full episode) |
 
 ---
 

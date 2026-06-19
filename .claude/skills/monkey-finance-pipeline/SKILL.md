@@ -180,18 +180,16 @@ Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5a — Timings + SEO + Community Post (run together, before video assembly)
+### ▶ STAGE 5a — Timings + SEO + Community Post (run before video assembly)
 
-**Run all three in parallel immediately after TTS is approved — do not wait for video assembly.**
-
-**Timings:**
+**Step 1 — Run aeneas timings first (takes 2–3 minutes):**
 ```bash
 python3 /home/user/ClaudeCode/generate_timings.py <episode_folder_id>
 ```
-This produces `audio_timings_new.csv` — exact per-scene timestamps via aeneas forced alignment. Used for chapter markers in SEO and for video assembly.
+This produces `audio_timings_new.csv` — exact per-scene timestamps via aeneas forced alignment. Chapter markers in SEO must use these real timestamps, not estimates. Wait for the CSV before starting SEO.
 
-**SEO (run at the same time as timings):**
-Run `monkey-finance-seo-thumbnail` skill using the narration script. Use the exact timestamps from `audio_timings_new.csv` for chapter markers (or estimate from script structure if timings aren't ready yet — update when CSV lands).
+**Step 2 — SEO + Community Post (once CSV is ready):**
+Run `monkey-finance-seo-thumbnail` skill using the narration script and the real timestamps from `audio_timings_new.csv` for chapter markers.
 
 Save `06-seo-metadata.txt` and `07-thumbnail-prompt.txt` to Drive.
 
@@ -224,16 +222,23 @@ Wait for Sham's approval (and thumbnail confirmation) before Stage 5b.
 
 `audio_timings_new.csv` is already in Drive from Stage 5a — do NOT re-run `generate_timings.py` here. Only re-run it if `narration.mp3` was regenerated after Stage 5a.
 
-Create the video with subtitles:
+**Step 1 — 30-second sample preview first (mandatory):**
+```bash
+python3 /home/user/ClaudeCode/create_sample.py <episode_folder_id> --crossfade --output=sample_crossfade.mp4
+```
+Share the Drive link with Sham. Wait for approval before running the full render. This catches KB motion, subtitle style, and transition issues before committing to a 10+ minute full render.
+
+**Step 2 — Full video render (after sample is approved):**
 ```bash
 python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id> --subs
 ```
+Always use `--subs` — omitting it produces a video with no karaoke subtitles.
 
-This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploaded to Drive.
+This produces `<episode-title>.mp4` uploaded to Drive.
 
 **KB effect rules:**
+- Every 2nd scene (`i > 0 and i % 2 == 1`) — never scene 0
 - Cosine ease-in/ease-out on all effects
-- Zoom-in only fires on scenes ≤8s — longer scenes automatically swap to pan bottom→top
 
 **Approval gate:**
 > *"Stage 5b complete. Video assembled and uploaded to Drive — [link]. SEO and thumbnail were generated at Stage 5a — confirm thumbnail is saved to Drive as 'thumbnail' and we'll go straight to upload."*
@@ -243,7 +248,8 @@ This produces `<episode-title>.mp4` and `audio_timings_new.csv` — both uploade
 ### ▶ STAGE 7 — YouTube Upload
 **Skill:** `monkey-finance-youtube-upload`
 
-**Pre-upload checklist — confirm all four before running:**
+**Pre-upload checklist — confirm all five before running:**
+- [ ] Channel verified: `GET /youtube/v3/channels?part=snippet&mine=true` returns "Monkey See Money" — if not, re-authenticate before proceeding
 - [ ] `06-seo-metadata.txt` in Drive ✓ (Stage 5a)
 - [ ] `07-thumbnail-prompt.txt` in Drive ✓ (Stage 5a)
 - [ ] Thumbnail generated in Grok and saved to Drive as `thumbnail` ✓
@@ -259,6 +265,8 @@ Auto-schedules for next Wednesday 4pm UK time (minimum 2 days after upload). Set
 
 **Approval gate:**
 > *"Stage 7 complete. Video scheduled for [date] at 4pm UK. Moving to Short next."*
+
+**Pinned comment — manual step required:** `upload_youtube.py` attempts to auto-post the pinned comment, but this only works on public/unlisted videos. Since we always schedule, the pinned comment will fail silently. Post it manually in YouTube Studio within 60 minutes of the video going live — 3 dots → Pin.
 
 **Do NOT declare the pipeline complete here — Stages 8 and 9 still follow.**
 

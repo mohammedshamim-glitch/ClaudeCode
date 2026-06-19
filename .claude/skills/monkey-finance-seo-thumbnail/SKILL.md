@@ -106,13 +106,20 @@ Choose the dominant emotion for this video's packaging:
 
 **Step 5 — Write the description** (see `SEO.md`)
 
-**Step 6 — Pull competitor tags with yt-dlp, then generate tags, hashtags, chapters**
+**Step 6 — Pull competitor tags via YouTube Data API, then generate tags, hashtags, chapters**
 
-Before writing the tag list, use yt-dlp to extract the exact hidden tags from the top 3–5 competitor videos on the same topic:
+Before writing the tag list, use the YouTube Data API to extract hidden tags from the top 3–5 competitor videos on the same topic. yt-dlp is SSL-blocked on this server — always use the API instead:
 
 ```
-For each competitor video URL:
-→ Extract: tags array, description, view count
+GET https://www.googleapis.com/youtube/v3/videos?part=snippet&id=VIDEO_ID
+Authorization: Bearer {youtube_access_token}
+→ Extract: tags array, description, view count from snippet
+```
+
+Use a YouTube Data API search first to find the video IDs:
+```
+GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video
+Authorization: Bearer {youtube_access_token}
 ```
 
 Use the competitor tags to:
