@@ -91,7 +91,7 @@ Every monkey scene must feature an active physical action with a prop or in a si
 | Standing at a crossroads / fork | Two signposts labelled with options | Decision points, two choices |
 | Catching falling money / coins | Coins, bank notes raining down | Windfall, unexpected gain |
 | Pointing a remote / clicking | Remote control aimed at a chart | Control, activation, setting a strategy |
-| Writing on a large board | Giant marker, whiteboard with key numbers | Teaching, explaining a concept |
+| Writing / drawing numbers | Giant marker, hand-drawn text floating on white background | Teaching, explaining a concept |
 
 **Expression must match the action:**
 - Physical exertion → gritted teeth, focused brow
@@ -127,7 +127,7 @@ When an episode uses named characters, they appear in their designated scenes as
 ## What Never Appears in Any Scene
 
 - ❌ Logos of any kind (channel, brand, company)
-- ❌ A physical whiteboard object (frame, tray, eraser, chalk ledge)
+- ❌ A physical whiteboard object (frame, tray, eraser, chalk ledge) — the style is whiteboard animation but NO actual whiteboard appears. All text and elements float directly on the clean white background.
 - ❌ Jungle environments, vines, tropical colours as primary setting
 - ❌ 3D rendering or photorealistic elements
 - ❌ Cinematic lighting effects

@@ -23,26 +23,28 @@ Every prompt is built in this order:
 ```
 2D colourful whiteboard animation style. Clean white background. 
 [MONKEY DESCRIPTION — green suit, position, expression, action]. 
-On the whiteboard, [WHITEBOARD CONTENT — what's drawn/written and how]. 
+[VISUAL CONTENT — text and elements drawn directly on the white background in hand-drawn marker style]. 
 [ADDITIONAL VISUAL ELEMENTS if needed]. 
 Bold hand-drawn illustration style, high contrast, expressive composition, 
 landscape orientation, YouTube thumbnail 1280x720, 
-no logos, no watermarks, no text cutoff.
+no logos, no watermarks, no text cutoff, no physical whiteboard, no board frame, no ledge.
 ```
+
+**Critical rule — no physical whiteboard ever:** The style is whiteboard animation but no actual whiteboard object appears in the frame. All text and drawn elements exist directly on the clean white background. Never write "on the whiteboard" in a prompt — write "on the white background", "in the frame", or simply describe the element's position.
 
 ---
 
-## The Whiteboard Content System
+## The Visual Content System
 
-The whiteboard is the main communication surface. Everything the viewer reads happens on it.
+The white background is the canvas. All text and graphics are drawn directly on it in hand-drawn marker style.
 
-### Text on the whiteboard — always specify:
-- **Position** (top, centre, left side, right side)
+### Text — always specify:
+- **Position** (top, centre, left side, right side of the frame)
 - **Size** (largest/boldest, slightly smaller, small)
 - **Marker colour** (thick black marker, thick red marker, thick green marker, thick blue marker, thick yellow marker)
-- **Style** (written in thick marker, drawn in bold hand-drawn style, underlined in red)
+- **Style** (hand-drawn in thick marker, bold hand-drawn style, underlined in red)
 
-### Graphic elements on the whiteboard — always hand-drawn, never digital icons:
+### Graphic elements — always hand-drawn, never digital icons:
 
 | Element | Description for prompt |
 |---|---|
@@ -56,7 +58,7 @@ The whiteboard is the main communication surface. Everything the viewer reads ha
 | Warning sign | "hand-drawn red triangle warning icon" |
 | Upward graph | "bold hand-drawn line graph shooting upward in green" |
 | Downward graph | "bold hand-drawn line graph plunging downward in red" |
-| Versus divider | "bold vertical line dividing whiteboard into two halves" |
+| Versus divider | "bold vertical line dividing the frame into two halves" |
 | Highlight circle | "rough hand-drawn circle in red around the key word" |
 | Clock/timer | "hand-drawn clock face with urgent red hands" |
 
@@ -70,7 +72,7 @@ Always specify the monkey in a **green suit**. Always give both a precise **expr
 |---|---|---|
 | 😨 Fear / Warning | Wide eyes, open mouth, jaw dropped | Both hands raised to face in shock, or pointing frantically at the board |
 | 😮 Shock / Surprise | Eyes wide, brows at top of head, mouth open in O | One hand on head, one pointing at the stat |
-| 🧐 Curiosity | Head tilted, one eyebrow raised | Chin resting on hand, or tapping whiteboard thoughtfully |
+| 🧐 Curiosity | Head tilted, one eyebrow raised | Chin resting on hand, or tapping chin thoughtfully |
 | 🤑 Aspiration | Big smile, eyes lit up | Arms spread wide, or one fist pumped in the air |
 | 😅 Relief | Relaxed expression, slight smile | Shoulders down, hands open, calm posture |
 | 😤 Concern / Serious | Furrowed brow, tight mouth, intense eyes | Arms crossed, or one finger pointing firmly at text |
@@ -86,7 +88,7 @@ Always specify the monkey in a **green suit**. Always give both a precise **expr
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], positioned on the right side of the frame, 
-[ACTION]. On the whiteboard, a single massive "[STAT]" written in the largest boldest 
+[ACTION]. On the white background, a single massive "[STAT]" written in the largest boldest 
 thick [COLOUR] marker, dominating the left two-thirds of the frame. Below it in slightly 
 smaller thick [COLOUR] marker: "[2-3 WORD LABEL]". [Optional hand-drawn graphic element 
 next to the stat]. At the top of the whiteboard in thick black marker with [COLOUR] underline: 
@@ -98,7 +100,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 jaw dropped in shock, eyes wide open, one hand on head and the other pointing frantically 
-at the whiteboard, positioned on the right side of the frame. On the whiteboard, a single 
+at the text, positioned on the right side of the frame. On the white background, a single 
 massive "40%" written in the largest boldest thick red marker, dominating the left 
 two-thirds of the frame. Below it in slightly smaller thick red marker: "DEATH TAX". 
 To the left, a bold hand-drawn red explosion starburst icon. At the top of the whiteboard 
@@ -115,7 +117,7 @@ YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], [ACTION]. 
-On the whiteboard, at the top in the largest boldest thick black marker 
+On the white background, at the top in the largest boldest thick black marker 
 with [COLOUR] underline: "[QUESTION]". Below that in slightly smaller thick 
 [COLOUR] marker: "[SUBTEXT]". [Optional visual element — graph, icon, symbol]. 
 A large hand-drawn question mark in thick yellow marker [position]. 
@@ -127,7 +129,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 head tilted to the side, one eyebrow raised in deep thought, one hand on chin and the other 
-gesturing at the whiteboard, positioned centre-left. On the whiteboard, at the top in the 
+gesturing at the text, positioned centre-left. On the white background, at the top in the 
 largest boldest thick black marker with red underline: FIX NOW OR WAIT? Below that in 
 slightly smaller thick blue marker: MORTGAGE RATES 2026. To the right, a large bold yellow 
 question mark drawn in thick marker. Below the question mark, a hand-drawn line graph 
@@ -144,7 +146,7 @@ YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], positioned [centre / left], [ACTION]. 
-On the whiteboard, a bold vertical line dividing it into two halves. 
+On the white background, a bold vertical line dividing it into two halves. 
 On the left side: "[OPTION A]" in thick [COLOUR] marker at top, "[VALUE A]" below 
 in [COLOUR] marker, and a hand-drawn [ICON A] beneath. 
 On the right side: "[OPTION B]" in thick [COLOUR] marker at top, "[VALUE B]" below 
@@ -157,7 +159,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 eyes darting between both sides in wide-eyed disbelief, both hands raised in a 
-"what do I choose?" shrug gesture, positioned centre-bottom. On the whiteboard, a bold 
+"what do I choose?" shrug gesture, positioned centre-bottom. On the white background, a bold 
 vertical line dividing it into two halves. On the left: "CASH ISA" in thick black marker 
 at top, "4.5%" below in thick blue marker, a flat horizontal arrow in blue marker beneath. 
 On the right: "STOCKS ISA" in thick black marker at top, "12%?" below in thick green marker, 
@@ -174,8 +176,9 @@ style, high contrast, expressive composition, landscape orientation, YouTube thu
 Bold hand-drawn illustration style, high contrast, expressive composition, 
 landscape orientation, YouTube thumbnail 1280x720, 
 no logos, no watermarks, no text cutoff at edges, 
-no photorealistic style, no digital-looking fonts on the whiteboard, 
-no gradients, no drop shadows, clean white background
+no photorealistic style, no digital-looking fonts, 
+no physical whiteboard, no board frame, no chalk ledge, 
+no gradients, no drop shadows, clean white background only
 ```
 
 ---
@@ -214,6 +217,7 @@ no gradients, no drop shadows, clean white background
 no watermarks, no logos, no channel name, no text cutoff, 
 no photorealistic style, no digital computer fonts, 
 no gradients, no drop shadows, no cluttered background, 
-no more than 3 whiteboard elements, no small illegible text, 
+no physical whiteboard, no board frame, no chalk ledge, no eraser, 
+no more than 3 visual elements, no small illegible text, 
 no American references
 ```
