@@ -569,32 +569,32 @@ def main():
             print(f"  ✓ scene_{i+1:03d}{ext}")
 
         # Load per-scene durations from CSV if available
+        # ── Sequencing validation (mandatory before assembly) ─────────────────
+        print("\nSequencing validation...")
         durations   = None
         timing_rows = []
         if timings_file:
             timing_rows = drive_load_csv(token, timings_file["id"])
             timing_rows.sort(key=lambda r: int(r["scene"]))
-            if len(timing_rows) == len(image_paths):
-                durations = [float(r["duration_seconds"]) for r in timing_rows]
-                durations[-1] += LAST_SCENE_BONUS_SECONDS
-                print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
-            else:
-                n_rows = len(timing_rows)
-                n_imgs = len(image_paths)
-                print(f"  ⚠ CSV has {n_rows} rows but {n_imgs} images — proportional mapping")
-                row_durs = [float(r["duration_seconds"]) for r in timing_rows]
-                durations = []
-                for img_i in range(n_imgs):
-                    row_start = img_i * n_rows / n_imgs
-                    row_end   = (img_i + 1) * n_rows / n_imgs
-                    dur = 0.0
-                    for row_j in range(n_rows):
-                        overlap = min(row_j + 1, row_end) - max(row_j, row_start)
-                        if overlap > 0:
-                            dur += overlap * row_durs[row_j]
-                    durations.append(dur)
-                durations[-1] += LAST_SCENE_BONUS_SECONDS
-                print(f"  ✓ Proportionally mapped {n_rows} timing rows → {n_imgs} image durations")
+            n_imgs = len(image_paths)
+            n_rows = len(timing_rows)
+            print(f"  Images in Drive  : {n_imgs}")
+            print(f"  CSV rows         : {n_rows}")
+            print(f"  Sort method      : {sort_method}")
+            print(f"  First 5 images   : {[f['name'] for f in image_files[:5]]}")
+            if n_rows != n_imgs:
+                print(f"\n  ✗ MISMATCH — {n_rows} CSV rows vs {n_imgs} images.")
+                print(f"    Fix the mismatch before running video assembly.")
+                print(f"    Likely causes: trashed image not excluded, extra image uploaded,")
+                print(f"    or a scene was added/removed after timings were generated.")
+                print(f"    Run: generate_timings.py <folder_id>  to regenerate the CSV.")
+                sys.exit(1)
+            print(f"  ✓ Counts match — {n_imgs} images : {n_rows} CSV rows. Sequencing OK.")
+            durations = [float(r["duration_seconds"]) for r in timing_rows]
+            durations[-1] += LAST_SCENE_BONUS_SECONDS
+            print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
+        else:
+            print(f"  ⚠ No timings CSV — cannot validate sequencing. Run generate_timings.py first.")
 
         # Load KB movements from file if available
         kb_movements = None

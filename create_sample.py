@@ -444,6 +444,15 @@ def main():
         print("ERROR: CSV missing start_seconds — re-run generate_timings.py")
         sys.exit(1)
 
+    # Sequencing validation
+    n_imgs = len(image_files)
+    n_rows = len(timing_rows)
+    if n_rows != n_imgs:
+        print(f"\nERROR: Sequencing mismatch — {n_rows} CSV rows vs {n_imgs} images.")
+        print(f"  Fix before proceeding. Run generate_timings.py to regenerate the CSV.")
+        sys.exit(1)
+    print(f"  ✓ Sequencing OK — {n_imgs} images : {n_rows} CSV rows")
+
     # Pick scenes covering ~sample_dur seconds from start_scene
     timing_rows = [r for r in timing_rows if int(r["scene"]) >= start_scene]
     sample_rows = []
