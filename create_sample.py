@@ -63,7 +63,7 @@ def get_access_token():
 def drive_list_files(token, folder_id, mime_filter=None):
     files, page_token = [], None
     while True:
-        q = f"'{folder_id}' in parents"
+        q = f"'{folder_id}' in parents and trashed=false"
         if mime_filter:
             q += f" and mimeType contains '{mime_filter}'"
         params = {"q": q, "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)", "pageSize": 200}
