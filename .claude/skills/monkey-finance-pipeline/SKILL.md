@@ -2,7 +2,7 @@
 name: monkey-finance-pipeline
 description: >
   Full end-to-end video production orchestrator for the Monkey Finance channel.
-  Runs all 6 pipeline stages in order — from trend research to finished MP4 — with
+  Runs all 10 pipeline stages in order — from trend research to finished MP4 — with
   a human approval gate after each stage so nothing moves forward without sign-off.
   Can also start from any stage if earlier work is already done.
   Use this skill whenever Sham says "run the pipeline", "make a new video", "start the
@@ -23,8 +23,9 @@ Every Monkey Finance video flows through these stages in order:
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `00b-character-references.txt` (if named chars) |
 | **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
-| **5a** | `monkey-finance-seo-thumbnail` | Script + `audio_timings_new.csv` | `06-seo-metadata.txt` (inc. community post) + `07-thumbnail-prompt.txt` |
+| **5a** | `monkey-finance-seo-thumbnail` | `narration.mp3` + script | `audio_timings_new.csv` + `06-seo-metadata.txt` (inc. community post) + `07-thumbnail-prompt.txt` |
 | **5b** | `monkey-finance-video-creator` | Images + `narration.mp3` + `audio_timings_new.csv` | `<episode-title>.mp4` |
+| **6** | *(merged into 5a)* | — | — |
 | **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
 | **8→9** | Shorts + Wrap Up | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short → folder moved to Completed |
 | **10** | Analytics review | YouTube Studio data | `09-analytics-review.md` |
@@ -115,7 +116,7 @@ Body: {"contents": [{"parts": [{"text": "Please provide a full word-for-word tra
 #### Route 2 — Full Trend Sweep
 **Skill:** `monkey-finance-trends`
 
-Run the full trend sweep: Phase 0 (yt-dlp live data) + 6 phases + competitor transcript analysis. Produces scored opportunities and a full content brief with competitive differentiation note.
+Run the full trend sweep: competitor channel research via YouTube Data API + web searches + competitor transcript analysis via Gemini. Produces scored opportunities and a full content brief with competitive differentiation note. Note: yt-dlp is SSL-blocked on this server — use the YouTube Data API for all competitor data.
 
 **Approval gate:**
 > *"Stage 1 complete. Top picks:*
@@ -135,7 +136,7 @@ Wait for Sham's go-ahead. Once topic is confirmed:
 ### ▶ STAGE 2 — Script Writing
 **Skill:** `monkey-finance-scriptwriter`
 
-Write the full narration script using the approved topic/brief. 4-pass method. 1,900–2,100 words. 25-word scenes (min 20, max 35). Save both files to Drive.
+Write the full narration script using the approved topic/brief. 4-pass method. 1,900–2,100 words. One visual beat per scene — word count varies 5–29 words, no fixed target. Save both files to Drive.
 
 **Approval gate:**
 > *"Stage 2 complete. Script saved to Drive — [link]. Word count: [X]. Want to punch up any section, or shall we move to image prompts?"*
@@ -157,7 +158,7 @@ Parse the clean narration script into sub-scenes (~25 words each). Generate `04-
 - Every monkey scene must show the monkey mid-action with a prop — never just standing
 
 **Approval gate:**
-> *"Stage 3 complete. [X] image prompts and media prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to audio."*
+> *"Stage 3 complete. [X] image prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to audio."*
 
 Wait for Sham's approval before Stage 4.
 
@@ -174,7 +175,7 @@ python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id>
 No SRT generation needed — YouTube auto-generates en-GB captions when `defaultAudioLanguage` is set to `en-GB` on upload (handled automatically by `upload_youtube.py`).
 
 **Approval gate:**
-> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) uploaded to Drive. Ready to move to Whisper timings + SEO."*
+> *"Stage 4 complete. `narration.mp3` ([X]m [Y]s) uploaded to Drive. Ready to move to aeneas timings + SEO."*
 
 Wait for Sham's approval before Stage 5.
 
@@ -280,25 +281,17 @@ Run immediately after the main video is uploaded. Always save to Drive for Sham'
 
 #### Process
 
-**Step 1 — Select three segments from `audio_timings_new.csv`:**
-| Segment | What to pick | Target length |
-|---|---|---|
-| **Hook** | Opening scenes — establishes the two characters/comparison | ~13s |
-| **Reveal** | Key numbers/conclusion — the payoff the whole video builds to | ~19–22s |
-| **Closure** | A complete sentence that ends the Short naturally — check `narration_excerpt` column to find a sentence that ends with a full stop, not mid-phrase | ~21–23s |
-
-**Critical rule — closure must end on a complete sentence.** Scan the `end_seconds` values near the target endpoint and pick the one whose `narration_excerpt` ends the thought. Never cut mid-sentence.
-
-**Step 2 — Build and upload the Short using `create_short.py`:**
+**Step 1 — Build the Short using `create_short.py`:**
 
 ```bash
 python3 /home/user/ClaudeCode/create_short.py <folder_id> <yt_video_id> "<episode_title>" "<short_title>" --schedule YYYY-MM-DDTHH:MM:SSZ
 ```
 
-- `create_short.py` auto-picks hook/reveal/closure segments from `audio_timings_new.csv`
-- Applies blur-background treatment automatically (16:9 source → 9:16 vertical with blurred bg)
+- Auto-picks hook (~13s), reveal (~19–22s), and closure (~21–23s) segments from `audio_timings_new.csv`
+- Closure must end on a complete sentence — `create_short.py` handles this automatically
+- Applies blur-background treatment (16:9 source → 9:16 vertical with blurred bg)
 - Schedule for the day before the main video (Tuesday 4pm BST if main is Wednesday)
-- Script saves `short_preview_v1.mp4` to Drive and shares the link before pushing to YouTube
+- Saves `short_preview_v1.mp4` to Drive for review before pushing to YouTube
 
 **Step 3 — Review, then upload to YouTube:**
 - **Title:** Curiosity-gap hook, emoji, `#Shorts` — under 60 chars
@@ -309,8 +302,6 @@ python3 /home/user/ClaudeCode/create_short.py <folder_id> <yt_video_id> "<episod
 > *"Short saved to Drive — [link]. 55s. Hook: [X]s / Reveal: [X]s / Closure: [X]s. Happy with this or want me to adjust any segment?"*
 
 Wait for Sham's go-ahead on the preview before uploading to YouTube. Once uploaded, move immediately to Stage 9 — no further gate.
-
----
 
 ---
 
