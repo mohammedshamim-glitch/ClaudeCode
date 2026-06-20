@@ -132,6 +132,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | SpaceX Just Went Public — And The Real Risk Starts Now | `13qgKco77jUIlKQPl-r8YViV5SctqR0U1` |
 | 2026-06-18 — What Happens When You Invest £500 Per Month (Year By Year) | `1EnDHYa0_U6NPh2vy9mai20Nj_fBh-gsM` |
 | 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | **STATUS: Awaiting 98 Grok images + thumbnail → then Stage 5b assembly → Stage 7 upload** |
+| 2026-06-20 — Your Cash ISA Is Being Cut — The Real Math | `120aR5J_0DrOA-FfWgFjs-YPOTMyktWln` | **STATUS: Stage 2 complete — awaiting Sham approval → Stage 3 image prompts** |
 
 ## Project Overview
 
