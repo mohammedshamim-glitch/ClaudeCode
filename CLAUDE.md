@@ -130,6 +130,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | ISA vs Pension — Which One Will Make You More Money? (The Real Math) | `1E_dBFxc1Cn0XtqiVS4bu6k2oiEwtWZwb` |
 | SpaceX Just Went Public — And The Real Risk Starts Now | `13qgKco77jUIlKQPl-r8YViV5SctqR0U1` |
 | 2026-06-18 — What Happens When You Invest £500 Per Month (Year By Year) | `1EnDHYa0_U6NPh2vy9mai20Nj_fBh-gsM` |
+| 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` |
 
 ## Project Overview
 
