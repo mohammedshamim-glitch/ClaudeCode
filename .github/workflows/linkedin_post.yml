@@ -7,29 +7,44 @@ on:
         description: 'Post message'
         required: true
         type: string
+      tag:
+        description: 'Result tag'
+        required: true
+        type: string
+      image_url:
+        description: 'Optional image URL to attach'
+        required: false
+        type: string
+        default: ''
+      org_id:
+        description: 'Optional LinkedIn org ID to post as company page (e.g. 119123925)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
   post:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Install requests
+        run: pip install requests
       - name: Post to LinkedIn
+        env:
+          LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_MEMBER: ${{ secrets.LINKEDIN_MEMBER_ID }}
+          MESSAGE: ${{ inputs.message }}
+          TAG: ${{ inputs.tag }}
+          IMAGE_URL: ${{ inputs.image_url }}
+          ORG_ID: ${{ inputs.org_id }}
+        run: python3 scripts/li_post.py
+      - name: Commit result
         run: |
-          curl -s -X POST https://api.linkedin.com/v2/ugcPosts \
-            -H "Authorization: Bearer ${{ secrets.LINKEDIN_ACCESS_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -H "X-Restli-Protocol-Version: 2.0.0" \
-            -d "$(cat <<EOF
-          {
-            \"author\": \"urn:li:person:${{ secrets.LINKEDIN_MEMBER_ID }}\",
-            \"lifecycleState\": \"PUBLISHED\",
-            \"specificContent\": {
-              \"com.linkedin.ugc.ShareContent\": {
-                \"shareCommentary\": {\"text\": $(echo '${{ inputs.message }}' | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')},
-                \"shareMediaCategory\": \"NONE\"
-              }
-            },
-            \"visibility\": {\"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"}
-          }
-          EOF
-          )" | tee /tmp/response.json
-          cat /tmp/response.json
+          git config user.name 'github-actions'
+          git config user.email 'actions@github.com'
+          git add -f linkedin_results/
+          git commit -m "LinkedIn result: ${{ inputs.tag }}" || echo "no changes"
+          git push

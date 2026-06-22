@@ -1,0 +1,31 @@
+name: LinkedIn Delete
+
+on:
+  workflow_dispatch:
+    inputs:
+      urn:
+        description: 'Share URN to delete'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - name: Delete post
+        env:
+          LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          URN: ${{ inputs.urn }}
+        run: python3 scripts/li_delete.py
+      - name: Commit result
+        run: |
+          git config user.name 'github-actions'
+          git config user.email 'actions@github.com'
+          git add -f linkedin_results/
+          git commit -m 'LinkedIn delete result' || echo 'no changes'
+          git push

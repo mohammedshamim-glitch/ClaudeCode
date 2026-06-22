@@ -1,0 +1,6 @@
+{
+  "status": 422,
+  "post_id": "",
+  "post_url": "",
+  "body": "{\"errorDetailType\":\"com.linkedin.common.error.BadRequest\",\"message\":\"com.linkedin.content.common.exception.BadRequestResponseException: Content is a duplicate of urn:li:share:7466767898351468545\",\"errorDetails\":{\"inputErrors\":[{\"description\":\"Duplicate post is detected\",\"input\":{},\"code\":\"DUPLICATE_POST\"}]},\"status\":422}"
+}
