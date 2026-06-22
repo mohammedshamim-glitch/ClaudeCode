@@ -143,20 +143,34 @@ def drive_download(token, file_id, local_path):
     print()
 
 # ── SEO parser ────────────────────────────────────────────────────────────────
+KNOWN_SECTIONS = {'TITLES', 'DESCRIPTION', 'TAGS', 'HASHTAGS', 'CHAPTERS', 'PINNED COMMENT', 'COMMUNITY POST', 'THUMBNAIL BRIEF', 'AI IMAGE PROMPT'}
+
 def is_separator(line):
     stripped = line.strip()
-    return len(stripped) >= 5 and all(c in '━═─' for c in stripped)
+    # Unicode box-drawing chars
+    if len(stripped) >= 5 and all(c in '━═─' for c in stripped):
+        return True
+    # Plain hyphens/dashes
+    if len(stripped) >= 3 and all(c in '-' for c in stripped):
+        return True
+    return False
+
+def is_bare_section_header(line):
+    """Detect bare uppercase section headers like TITLES, DESCRIPTION, TAGS etc."""
+    stripped = line.strip()
+    return stripped.upper() in KNOWN_SECTIONS and stripped == stripped.upper()
 
 def parse_seo_metadata(text):
-    """Parse 06-seo-metadata.txt — handles both ━━━\\nSECTION\\n━━━ and [SECTION] formats."""
+    """Parse 06-seo-metadata.txt — handles [SECTION], ━━━ separator, and bare header formats."""
     lines = text.split('\n')
     sections = {}
     current_section = None
     content_lines = []
     i = 0
 
-    # Detect format: [SECTION] bracket style vs ━━━ separator style
+    # Detect format: [SECTION] bracket style vs ━━━ separator style vs bare header style
     bracket_format = any(re.match(r'^\[([A-Z][A-Z\s]+)\]$', l.strip()) for l in lines)
+    bare_format = not bracket_format and any(is_bare_section_header(l) for l in lines)
 
     if bracket_format:
         for line in lines:
@@ -167,6 +181,17 @@ def parse_seo_metadata(text):
                 current_section = m.group(1).strip().upper()
                 content_lines = []
             elif current_section is not None:
+                content_lines.append(line)
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
+    elif bare_format:
+        for line in lines:
+            if is_bare_section_header(line) and not is_separator(line):
+                if current_section and content_lines:
+                    sections[current_section] = '\n'.join(content_lines).strip()
+                current_section = line.strip().upper()
+                content_lines = []
+            elif current_section is not None and not is_separator(line):
                 content_lines.append(line)
         if current_section and content_lines:
             sections[current_section] = '\n'.join(content_lines).strip()
