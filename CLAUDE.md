@@ -131,8 +131,9 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | ISA vs Pension — Which One Will Make You More Money? (The Real Math) | `1E_dBFxc1Cn0XtqiVS4bu6k2oiEwtWZwb` |
 | SpaceX Just Went Public — And The Real Risk Starts Now | `13qgKco77jUIlKQPl-r8YViV5SctqR0U1` |
 | 2026-06-18 — What Happens When You Invest £500 Per Month (Year By Year) | `1EnDHYa0_U6NPh2vy9mai20Nj_fBh-gsM` |
-| 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | **STATUS: Awaiting 98 Grok images + thumbnail → then Stage 5b assembly → Stage 7 upload** |
+| 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | YT: `JS3hdxDhQ4g` | **STATUS: UPLOADED — scheduled Wed 24 June 2026 4pm BST. Pin comment on go-live.** |
 | 2026-06-20 — Your Cash ISA Is Being Cut — The Real Math | `120aR5J_0DrOA-FfWgFjs-YPOTMyktWln` | **STATUS: Stage 2 complete — awaiting Sham approval → Stage 3 image prompts** |
+| 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | **STATUS: Stage 2 complete (1,924 words, 119 scenes) — awaiting Sham approval → Stage 3. Chars: Tom/James/Emma. Source: Wealth Logic L08rE9galZM (~180k)** |
 
 ## Project Overview
 
