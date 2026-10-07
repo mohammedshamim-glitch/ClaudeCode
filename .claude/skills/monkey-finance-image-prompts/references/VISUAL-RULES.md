@@ -57,17 +57,16 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 
 ## Character Specifications
 
-### Green Suit Monkey (Scene 01 and Final Scene ONLY)
-- A simple monkey drawn in 2D hand-drawn style
-- Wearing a bright green suit — the brand mascot in full presentation mode
-- Expressive face — confident, welcoming, or energetic depending on scene context
-- May hold props: a marker, a sign, a megaphone
-- Always positioned on the right side of the frame, facing left (toward the content)
-- Slightly larger than the regular monkey — this is the brand moment
+### Green Suit Monkey (the brand mascot — recurring narrator across the video)
+- A simple monkey drawn in 2D hand-drawn style, wearing the bright green brand suit
+- This is the channel mascot AND the consistent on-screen guide — it may appear in as many scenes as suit the narration (a lot of them), not just the open and close
+- Expressive face — confident, welcoming, energetic, concerned, or curious depending on the moment
+- May hold or use props: a marker, a sign, a magnifying glass, a megaphone
+- Give it extra prominence on the opening hook and the sign-off (the brand bookends), but it is free to narrate throughout
 
-### Monkey (~80% of scenes — guide, narrator, reactor)
-- Same monkey character, no suit — casual, unguarded, human
-- Present in approximately 75% of all scenes as a consistent guide and emotional anchor
+### Monkey (guide, narrator, reactor — appears in many scenes)
+- The same green-suit mascot, used as the consistent guide and emotional anchor
+- Aim for the monkey in a large share of scenes (roughly 60–80% is a good target) — present enough to anchor the video, while leaving pure stat/data scenes to breathe
 
 **THE GOLDEN RULE: The monkey must always be DOING something — never just standing.**
 
@@ -132,7 +131,6 @@ When an episode uses named characters, they appear in their designated scenes as
 - ❌ 3D rendering or photorealistic elements
 - ❌ Cinematic lighting effects
 - ❌ Text that says "Monkey Finance" or any channel name
-- ❌ Green suit monkey in any scene except Scene 01 and the final scene
 - ❌ More than 3 colours in a single scene
 - ❌ Cluttered compositions with more than 4 visual elements
 
