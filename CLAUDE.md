@@ -113,6 +113,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 - **Re-run aeneas after every TTS regeneration**: Any time `run_tts.py` produces a new `narration.mp3`, aeneas MUST be re-run (`python3 generate_timings.py <folder_id>`) before video assembly. The old `audio_timings_new.csv` will be misaligned with the new audio length — never reuse it.
 - **Competitor transcript is MANDATORY before scripting — NON-NEGOTIABLE**: Before writing a single word of any script, find the top-performing Wealth Logic video on the topic and download its transcript via Gemini API (use `gemini_tts_api_key` — NOT `gemini_api_key`, which hits free-tier quota). Save immediately as `00-source-transcript-wealth-logic-original.txt` in the episode Drive folder. Then adapt from that transcript — never write from scratch when a Wealth Logic video on the topic exists. Skipping this step and writing original scripts is a process failure. The script adaptation workflow (Competitor Adaptation Workflow in the scriptwriter skill) is mandatory, not optional.
 
+- **YouTube resumable upload robustness (410/401)**: `upload_youtube.py` now (a) recreates the resumable session and restarts from byte 0 on a 404/410 (session invalidated — you cannot resume a dead session), and (b) refreshes the YouTube access token and retries on intermittent 401/403 during both session creation and chunk PUTs. A 410 mid-upload used to leave a broken video (duration `P0D`) plus a crash on `r.json()`; if a broken upload is found, delete it (videos.delete, 204) and re-run — delete may itself 401 transiently, so retry it.
+
 ## Known Drive Folder IDs
 
 | Location | Folder ID |
@@ -133,7 +135,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | 2026-06-18 — What Happens When You Invest £500 Per Month (Year By Year) | `1EnDHYa0_U6NPh2vy9mai20Nj_fBh-gsM` |
 | 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | YT: `JS3hdxDhQ4g` | **STATUS: UPLOADED — scheduled Wed 24 June 2026 4pm BST. Pin comment on go-live.** |
 | 2026-06-20 — Your Cash ISA Is Being Cut — The Real Math | `120aR5J_0DrOA-FfWgFjs-YPOTMyktWln` | **STATUS: Stage 2 complete — awaiting Sham approval → Stage 3 image prompts** |
-| 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | **STATUS: Stage 2 complete (1,924 words, 119 scenes) — awaiting Sham approval → Stage 3. Chars: Tom/James/Emma. Source: Wealth Logic L08rE9galZM (~180k)** |
+| 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | YT: `rlgPaA-P43M` | **STATUS: UPLOADED — scheduled Wed 14 Oct 2026 4pm BST. Pin comment on go-live. Shorts skipped per Sham.** |
 
 ## Project Overview
 

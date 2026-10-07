@@ -274,19 +274,31 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
     }
 
     def create_session():
-        r = requests.post(
-            "https://www.googleapis.com/upload/youtube/v3/videos"
-            "?uploadType=resumable&part=snippet,status",
-            headers={
-                "Authorization":       f"Bearer {yt_token}",
-                "Content-Type":        "application/json",
-                "X-Upload-Content-Type": VIDEO_MIME,
-                "X-Upload-Content-Length": str(file_size),
-            },
-            json=body,
-        )
-        r.raise_for_status()
-        return r.headers["Location"]
+        nonlocal yt_token
+        last = None
+        for a in range(5):
+            r = requests.post(
+                "https://www.googleapis.com/upload/youtube/v3/videos"
+                "?uploadType=resumable&part=snippet,status",
+                headers={
+                    "Authorization":       f"Bearer {yt_token}",
+                    "Content-Type":        "application/json",
+                    "X-Upload-Content-Type": VIDEO_MIME,
+                    "X-Upload-Content-Length": str(file_size),
+                },
+                json=body,
+            )
+            if r.status_code in (200, 201):
+                return r.headers["Location"]
+            last = r
+            if r.status_code in (401, 403):
+                print(f"\n  Session create {r.status_code} (transient auth) — refreshing YouTube token, try {a+1}/5...")
+                yt_token = get_youtube_token()
+            else:
+                print(f"\n  Session create {r.status_code} — retry {a+1}/5...")
+            time.sleep(2 ** a)
+        last.raise_for_status()
+        return last.headers["Location"]
 
     chunk_size = 8 * 1024 * 1024  # 8MB chunks
 
@@ -316,6 +328,12 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
                         break
                     if r.status_code in (404, 410):
                         break  # session gone — stop retrying this chunk
+                    if r.status_code in (401, 403):
+                        yt_token = get_youtube_token()
+                        headers["Authorization"] = f"Bearer {yt_token}"
+                        print(f"\n  Chunk auth {r.status_code} — refreshed token, retrying...")
+                        time.sleep(2 ** attempt)
+                        continue
                     wait = 2 ** attempt
                     print(f"\n  Upload error {r.status_code}, retry in {wait}s...")
                     time.sleep(wait)
