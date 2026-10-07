@@ -273,53 +273,80 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
         },
     }
 
-    r = requests.post(
-        "https://www.googleapis.com/upload/youtube/v3/videos"
-        "?uploadType=resumable&part=snippet,status",
-        headers={
-            "Authorization":       f"Bearer {yt_token}",
-            "Content-Type":        "application/json",
-            "X-Upload-Content-Type": VIDEO_MIME,
-            "X-Upload-Content-Length": str(file_size),
-        },
-        json=body,
-    )
-    r.raise_for_status()
-    upload_url = r.headers["Location"]
-    print(f"  ✓ Upload session created")
+    def create_session():
+        r = requests.post(
+            "https://www.googleapis.com/upload/youtube/v3/videos"
+            "?uploadType=resumable&part=snippet,status",
+            headers={
+                "Authorization":       f"Bearer {yt_token}",
+                "Content-Type":        "application/json",
+                "X-Upload-Content-Type": VIDEO_MIME,
+                "X-Upload-Content-Length": str(file_size),
+            },
+            json=body,
+        )
+        r.raise_for_status()
+        return r.headers["Location"]
 
-    # Step 2: Upload video in chunks
     chunk_size = 8 * 1024 * 1024  # 8MB chunks
-    uploaded = 0
 
-    with open(video_path, "rb") as f:
-        while uploaded < file_size:
-            chunk = f.read(chunk_size)
-            end = uploaded + len(chunk) - 1
-            headers = {
-                "Authorization":  f"Bearer {yt_token}",
-                "Content-Type":   VIDEO_MIME,
-                "Content-Range":  f"bytes {uploaded}-{end}/{file_size}",
-                "Content-Length": str(len(chunk)),
-            }
-            for attempt in range(4):
-                r = requests.put(upload_url, headers=headers, data=chunk, timeout=120)
-                if r.status_code in (200, 201, 308):
+    # Outer loop: a 404/410 means the resumable session was invalidated — we must
+    # create a brand-new session and restart the upload from byte 0 (you cannot
+    # resume a dead session). Retry the whole upload a few times.
+    for session_attempt in range(4):
+        upload_url = create_session()
+        print(f"  ✓ Upload session created" + (f" (attempt {session_attempt+1})" if session_attempt else ""))
+        uploaded = 0
+        session_dead = False
+
+        with open(video_path, "rb") as f:
+            while uploaded < file_size:
+                chunk = f.read(chunk_size)
+                end = uploaded + len(chunk) - 1
+                headers = {
+                    "Authorization":  f"Bearer {yt_token}",
+                    "Content-Type":   VIDEO_MIME,
+                    "Content-Range":  f"bytes {uploaded}-{end}/{file_size}",
+                    "Content-Length": str(len(chunk)),
+                }
+                r = None
+                for attempt in range(4):
+                    r = requests.put(upload_url, headers=headers, data=chunk, timeout=180)
+                    if r.status_code in (200, 201, 308):
+                        break
+                    if r.status_code in (404, 410):
+                        break  # session gone — stop retrying this chunk
+                    wait = 2 ** attempt
+                    print(f"\n  Upload error {r.status_code}, retry in {wait}s...")
+                    time.sleep(wait)
+
+                if r.status_code in (404, 410):
+                    print(f"\n  Session expired ({r.status_code}) — recreating session and restarting...")
+                    session_dead = True
                     break
-                wait = 2 ** attempt
-                print(f"\n  Upload error {r.status_code}, retry in {wait}s...")
-                time.sleep(wait)
+                if r.status_code not in (200, 201, 308):
+                    print(f"\n  Chunk failed ({r.status_code}) after retries — recreating session and restarting...")
+                    session_dead = True
+                    break
 
-            uploaded += len(chunk)
-            pct = uploaded / file_size * 100
-            print(f"\r  Uploading... {pct:.0f}% ({uploaded//1024//1024}MB/{file_size//1024//1024}MB)", end="", flush=True)
+                uploaded += len(chunk)
+                pct = uploaded / file_size * 100
+                print(f"\r  Uploading... {pct:.0f}% ({uploaded//1024//1024}MB/{file_size//1024//1024}MB)", end="", flush=True)
 
-            if r.status_code in (200, 201):
-                print()
-                return r.json()
+                if r.status_code in (200, 201):
+                    print()
+                    try:
+                        return r.json()
+                    except Exception:
+                        print("  ⚠ Upload completed but response body was not JSON — treating as success without id")
+                        return {}
 
-    print()
-    return r.json()
+        if not session_dead:
+            # Loop ended without a 200/201 but no error flagged — shouldn't happen; retry
+            print("\n  Upload ended without final response — recreating session and restarting...")
+        time.sleep(3)
+
+    raise RuntimeError("YouTube upload failed: the resumable session kept expiring after 4 full attempts")
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
