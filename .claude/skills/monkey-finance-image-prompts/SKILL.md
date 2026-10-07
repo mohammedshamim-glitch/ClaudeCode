@@ -63,7 +63,7 @@ If the episode is monkey-only, skip this step.
 
 **One image prompt per narration scene. No grouping. No merging.**
 
-The narration script uses scenes of varying length — one visual beat per scene, typically 5–29 words. There is no fixed word-count target. Short sentences that share the same visual moment may appear grouped on one line in the script; honour those boundaries exactly. Sham edits scene boundaries in the V2 Google Doc — always reverse-engineer the structured script from his edited clean script, never re-split by word count. Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. Every narration scene gets its own image prompt — label using the structured script's scene numbers (e.g. 0.1, 0.2, 1.1, 1.2, 3.4, etc.). A 107-scene script produces 107 image prompts.
+The narration script uses scenes of varying length — one visual beat per scene, typically 5–29 words. There is no fixed word-count target. Short sentences that share the same visual moment may appear grouped on one line in the script; honour those boundaries exactly. Sham edits scene boundaries in the V2 Google Doc — always reverse-engineer the structured script from his edited clean script, never re-split by word count. Numbered items (One:, Two:, Three:, Option one: etc.) always start a new scene. Every narration scene gets its own image prompt — label with CONSECUTIVE scene numbers (1, 2, 3 … straight through to the end), matching the structured script. A 107-scene script produces 107 image prompts numbered 1–107. Never use section-based numbers like 3.12 or 4.5.
 
 ### Pass 1 — Parse & Map (The Director)
 For each narration scene, identify:
@@ -79,15 +79,15 @@ Generate one output file:
 
 **Note: `05-video-prompts.txt` is deprecated and no longer generated.** Image prompts only.
 
-Format image prompts: `1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
+Format image prompts: `1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
 
 The 60% border + 16:9 instruction is always the **second sentence** — immediately after "Clean white background." and before any scene description. Never at the end.
 
 Example — monkey with prop:
-`1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration.`
+`1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration.`
 
 Example — stat scene (no monkey):
-`1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
+`2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
@@ -221,9 +221,9 @@ If the episode has no named characters, skip this file entirely.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1.1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
+1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 
-1.2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
+2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 ```
 
 **Critical formatting:**
@@ -241,7 +241,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 
 **Image prompts:**
 - [ ] **Prompt count matches narration scene count exactly** — 1 prompt per scene, no grouping
-- [ ] **Scene numbers match the structured script** — use the same `X.Y` numbering
+- [ ] **Scene numbers match the structured script** — consecutive 1, 2, 3 … through to the end (never `X.Y`)
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Monkey wears the green brand suit** (the channel mascot)
 - [ ] **Monkey** used in ~80% of scenes as guide, narrator, reactor

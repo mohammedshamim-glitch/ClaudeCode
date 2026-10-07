@@ -180,7 +180,7 @@ Each narration scene gets exactly one image prompt at Stage 3. Stage 3 no longer
 
 Then automatically:
 
-1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.), and scene numbers (1.1, 1.2, etc.). Each scene = one sentence (or merged block). Blank line between each scene.
+1. **Save the structured script** to Google Drive in the run's project folder as `02-narration-script-structured.txt` — full script with a metadata header block at the top (`# Title`, `# Date`, `# Word count`, `# Scene count`), section labels ([HOOK], [THE PROBLEM], etc.) as headers, and CONSECUTIVE scene numbers (1, 2, 3 … straight through to the end — never section-based numbers like 3.12 or 4.5). Each scene = one sentence (or merged block). Blank line between each scene.
 
 2. **Save the clean narration file** to the same Google Drive folder as `03-narration-script-clean.txt` — spoken words only, no scene numbers, no headers, no section labels. One sentence (or merged block) per line with a blank line between each. This is the file used by the TTS tool, image prompt generator, and aeneas forced alignment — it must be sentence-level, never multi-sentence blocks.
 
