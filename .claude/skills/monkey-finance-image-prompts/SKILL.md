@@ -71,7 +71,7 @@ For each narration scene, identify:
 - **What emotion** this specific moment creates
 - **What visual** best represents this exact moment
 - **Whether a stat/number** appears — if so, it MUST be drawn on the canvas
-- **Whether a monkey** adds value — present / none (the monkey wears the green brand suit)
+- **Whether a monkey** adds value — present / none (write just "Monkey" — never specify a suit colour)
 
 ### Pass 2 — Write the Image Prompts File (The Artist)
 Generate one output file:
@@ -95,7 +95,7 @@ Read all prompts as a sequence. Check:
 - [ ] Visual variety across adjacent prompts
 - [ ] Emotional arc flows naturally
 - [ ] Every stat has the number explicitly written on canvas
-- [ ] Monkey wears the green brand suit (it is the channel mascot)
+- [ ] Monkey written as just "Monkey" — no suit colour specified
 - [ ] Scene numbers at start of each line, all content in one paragraph
 - [ ] Central 60% / 20% border instruction present in every image prompt
 - [ ] **Character expressions**: every named character scene has a contextually appropriate facial expression — anxious/worried for setbacks, confident/relieved for wins, surprised for reveals, thoughtful for realisations
@@ -124,7 +124,7 @@ Never write any of the following on the canvas in any prompt:
 - ❌ Any channel name, show name, or brand name
 - ❌ Any URL, handle, or social media reference
 
-The monkey in the final scene is the brand sign-off — the visual alone is the identifier. No text branding is ever needed or permitted. The monkey wears the green brand suit — the channel mascot, used across the video. If you catch yourself writing a channel name into a prompt, delete it immediately.
+The monkey in the final scene is the brand sign-off — the visual alone is the identifier. No text branding is ever needed or permitted. Write just "Monkey" — the recurring channel mascot — and never specify a suit colour; the generator keeps its appearance consistent. If you catch yourself writing a channel name into a prompt, delete it immediately.
 
 ---
 
@@ -163,7 +163,7 @@ Full action library is in `references/VISUAL-RULES.md`.
 **Monkey threshold:** Use a monkey in approximately 80% of scenes. The monkey is the consistent visual narrator throughout the video — always active, always doing something with a prop. Reserve no-monkey treatment only for scenes where a large statistic or diagram must dominate the entire frame without distraction (e.g. a full-canvas £680,000 reveal, a 40% tax threshold chart). If in doubt, include the monkey.
 
 **Never use:**
-- ❌ A non-green suit on the monkey (it always wears the green brand suit)
+- ❌ Specifying any suit colour on the monkey — write just "Monkey" and let the look stay consistent
 - ❌ "cartoon monkey" — always just "monkey"
 - ❌ A monkey in scenes where a stat must dominate the entire frame
 - ❌ Logos of any kind
@@ -243,7 +243,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **Prompt count matches narration scene count exactly** — 1 prompt per scene, no grouping
 - [ ] **Scene numbers match the structured script** — consecutive 1, 2, 3 … through to the end (never `X.Y`)
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
-- [ ] **Monkey wears the green brand suit** (the channel mascot)
+- [ ] **Monkey written as just "Monkey"** — no suit colour specified
 - [ ] **Monkey** used in ~80% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
 - [ ] **Named characters appear in scenes that reference them** — monkey never replaces a named character, only accompanies them

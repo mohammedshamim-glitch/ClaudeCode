@@ -58,14 +58,14 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 ## Character Specifications
 
 ### Green Suit Monkey (the brand mascot — recurring narrator across the video)
-- A simple monkey drawn in 2D hand-drawn style, wearing the bright green brand suit
+- A simple monkey drawn in 2D hand-drawn style — the recurring brand mascot. In prompts write just "Monkey" (capital M, no article); never specify a suit colour — the generator keeps the look consistent
 - This is the channel mascot AND the consistent on-screen guide — it may appear in as many scenes as suit the narration (a lot of them), not just the open and close
 - Expressive face — confident, welcoming, energetic, concerned, or curious depending on the moment
 - May hold or use props: a marker, a sign, a magnifying glass, a megaphone
 - Give it extra prominence on the opening hook and the sign-off (the brand bookends), but it is free to narrate throughout
 
 ### Monkey (guide, narrator, reactor — appears in many scenes)
-- The same green-suit mascot, used as the consistent guide and emotional anchor
+- The same monkey mascot, used as the consistent guide and emotional anchor
 - Aim for the monkey in a large share of scenes (roughly 60–80% is a good target) — present enough to anchor the video, while leaving pure stat/data scenes to breathe
 
 **THE GOLDEN RULE: The monkey must always be DOING something — never just standing.**
