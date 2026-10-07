@@ -136,7 +136,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | YT: `JS3hdxDhQ4g` | **STATUS: UPLOADED — scheduled Wed 24 June 2026 4pm BST. Pin comment on go-live.** |
 | 2026-06-20 — Your Cash ISA Is Being Cut — The Real Math | `120aR5J_0DrOA-FfWgFjs-YPOTMyktWln` | **STATUS: Stage 2 complete — awaiting Sham approval → Stage 3 image prompts** |
 | 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | YT: `rlgPaA-P43M` | **STATUS: UPLOADED — scheduled Wed 14 Oct 2026 4pm BST. Pin comment on go-live. Shorts skipped per Sham.** |
-| 2026-10-07 — EV vs Hybrid vs Petrol — The Real Math | `1J19Z15vpaNMKP4fqC9HmpGzqZscfl5yk` | **STATUS: Stage 2 complete (1,955 words, 117 scenes) — awaiting Sham approval → Stage 3. Chars: Tom(petrol)/Sarah(hybrid)/Aisha(electric). Source: Wealth Logic cG6GpaFDiW8 (~332k, breakout 33)** |
+| 2026-10-07 — EV vs Hybrid vs Petrol — The Real Math | `1J19Z15vpaNMKP4fqC9HmpGzqZscfl5yk` | **STATUS: Stage 3 complete (117 prompts, 60% monkey, + 00b char refs) — awaiting Sham approval → Stage 4 TTS. Chars: Tom/Sarah/Aisha. Source: Wealth Logic cG6GpaFDiW8** |
 
 ## Project Overview
 
