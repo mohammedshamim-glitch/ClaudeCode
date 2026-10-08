@@ -160,7 +160,7 @@ Parse the clean narration script into sub-scenes (~25 words each). Generate `04-
 **Approval gate:**
 > *"Stage 3 complete. [X] image prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to audio."*
 
-Wait for Sham's approval before Stage 4.
+Wait for Sham's approval before Stage 4. **Do NOT hand off image generation here** — Stage 3 only produces the prompts. The image-creation handoff happens AFTER Stage 5a, once TTS, timings and SEO are done, so those finish while Sham is generating images. See the Image Generation handoff below.
 
 ---
 
@@ -209,12 +209,17 @@ Full video is live now 👇 [video URL — add after upload]
 
 Include the community post draft in `06-seo-metadata.txt` under a `COMMUNITY POST` section. Post manually in YouTube Studio → Community tab on the day the video goes live.
 
-**Why before video assembly:** SEO, community post, and thumbnail can all be reviewed while Grok renders the thumbnail — nothing is blocked. Upload day is a single step.
+**Why TTS + timings + SEO run BEFORE image generation:** none of them need the images — they come only from the script. Running them first means they finish while Sham is generating images in Flow, so nothing idles and assembly can start the moment the images land.
 
-**Approval gate:**
-> *"Stage 5a complete. Timings, SEO package, and community post draft saved to Drive — [links]. Generate the thumbnail in Grok using 07-thumbnail-prompt.txt and save it to Drive as 'thumbnail'. Ready to move to video assembly."*
+**Approval gate + IMAGE-CREATION HANDOFF (this is the point where Sham makes the images):**
+> *"Stage 5a complete — `narration.mp3`, `audio_timings_new.csv`, the SEO package and the community post are all done and saved to Drive. Now the image step: generate the [X] scene images in Flow from `04-image-prompts.txt` (load the `00b-character-references.txt` anchors first) into an `images` subfolder, and generate the thumbnail from `07-thumbnail-prompt.txt` saved as 'thumbnail'. Send them back and I'll rename to 001_…N_ and run assembly."*
 
-Wait for Sham's approval (and thumbnail confirmation) before Stage 5b.
+Wait for Sham's images + thumbnail before Stage 5b.
+
+---
+
+### ▶ IMAGE GENERATION — Sham (Flow / Grok)
+Not a Claude stage — Sham creates the [X] scene images and the thumbnail here, AFTER TTS + timings + SEO are complete (never before). Claude's job when they come back: rename the images to `001_…N_` in scene order, place them in the `images` subfolder, confirm the count matches the CSV/script, then proceed to Stage 5b.
 
 ---
 

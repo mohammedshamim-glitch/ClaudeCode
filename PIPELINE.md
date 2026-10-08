@@ -80,7 +80,7 @@ Rules:
 
 **Output:** `04-image-prompts.txt` + `05-video-prompts.txt` saved to Drive.
 
-**Approval gate:** Review prompts before generating images.
+**Approval gate:** Review prompts. **Do NOT generate the images yet** — image creation happens AFTER TTS (Stage 4) + timings (Stage 5) + SEO (Stage 6), so those finish while Sham generates images. Stage 3 produces only the prompts.
 
 ---
 
@@ -147,6 +147,8 @@ Invoke `/monkey-finance-seo-thumbnail` — it will:
 ## Stage 7 — Video Assembly
 
 **Goal:** Assemble images + audio into the final MP4.
+
+> **Image creation happens just before this stage** — Sham generates the scene images (Flow/Grok) and thumbnail only AFTER Stage 4 (TTS) + Stage 5 (timings) + Stage 6 (SEO) are complete, never before. Claude then renames them to `001_…N_` and runs this stage.
 
 Images must be in Drive under an `Images` subfolder, numbered sequentially (1, 2, 3... matching narration scenes).
 
