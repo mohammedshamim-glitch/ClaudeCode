@@ -173,7 +173,7 @@ EFFECT_NAMES = [
 ]
 
 def get_kb_filter(idx, duration, w, h):
-    """4 Ken Burns effects cycling on 25% of scenes (every 4th, skipping scene 0)."""
+    """4 Ken Burns effects cycling on 50% of scenes (every 2nd, skipping scene 0)."""
     D  = duration
     LW = int(w * KB_SCALE)
     LH = int(h * KB_SCALE)

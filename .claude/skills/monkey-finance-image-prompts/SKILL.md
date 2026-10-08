@@ -2,11 +2,11 @@
 name: monkey-finance-image-prompts
 description: >
   State-of-the-art image prompt generator for Monkey Finance whiteboard animation videos.
-  Transforms a narration script into sub-scenes (~25 words each) and generates eye-catching, 
+  Generates one eye-catching, 
   narrative-aligned prompts ready for Grok text-to-image generation (Stage 3 of the pipeline).
   Outputs static image prompts only (04-image-prompts.txt). Each prompt ties 
   directly to the script moment, extracts statistics for on-canvas visualisation, and respects 
-  strict character and style rules (the green-suit monkey mascot appears in many scenes — target ~60–80%).
+  strict character and style rules (the monkey mascot appears in many scenes — target ~60–80%; write just "Monkey", never a suit colour).
   Use this skill whenever Sham asks to generate image prompts, create scene visuals,
   turn a script into animation prompts, run Stage 3 of the pipeline, or says anything like
   "generate the image prompts", "create the scene visuals", "what does scene X look like",
@@ -157,10 +157,10 @@ Full action library is in `references/VISUAL-RULES.md`.
 |---|---|
 | **Scene 01** | Monkey — brand intro |
 | **Final scene** | Monkey — brand sign-off |
-| **Most scenes** | Monkey — present in ~80% of all scenes as guide, narrator, reactor |
+| **Most scenes** | Monkey — present in ~60–80% of all scenes as guide, narrator, reactor |
 | **Stat-heavy / diagram scenes** | No monkey — pure data/diagram visuals only (~20% of scenes) |
 
-**Monkey threshold:** Use a monkey in approximately 80% of scenes. The monkey is the consistent visual narrator throughout the video — always active, always doing something with a prop. Reserve no-monkey treatment only for scenes where a large statistic or diagram must dominate the entire frame without distraction (e.g. a full-canvas £680,000 reveal, a 40% tax threshold chart). If in doubt, include the monkey.
+**Monkey threshold:** Use a monkey in approximately 60–80% of scenes. The monkey is the consistent visual narrator throughout the video — always active, always doing something with a prop. Reserve no-monkey treatment only for scenes where a large statistic or diagram must dominate the entire frame without distraction (e.g. a full-canvas £680,000 reveal, a 40% tax threshold chart). If in doubt, include the monkey.
 
 **Never use:**
 - ❌ Specifying any suit colour on the monkey — write just "Monkey" and let the look stay consistent
@@ -244,7 +244,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 - [ ] **Scene numbers match the structured script** — consecutive 1, 2, 3 … through to the end (never `X.Y`)
 - [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
 - [ ] **Monkey written as just "Monkey"** — no suit colour specified
-- [ ] **Monkey** used in ~80% of scenes as guide, narrator, reactor
+- [ ] **Monkey** used in ~60–80% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
 - [ ] **Named characters appear in scenes that reference them** — monkey never replaces a named character, only accompanies them
 - [ ] **Every stat scene** has the number explicitly drawn on the canvas

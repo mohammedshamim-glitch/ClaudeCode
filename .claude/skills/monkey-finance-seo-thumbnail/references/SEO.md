@@ -325,7 +325,7 @@ For a UK finance channel, this means videos can rank on Google for searches like
 
 ### How to create the SRT file
 
-The narration script (`03-narration-script-clean.txt`) is the source. Because the script is written in 25-word scenes with known word counts, approximate timestamps can be calculated at ~130 words per minute (2.17 words per second).
+The narration script (`03-narration-script-clean.txt`) is the source. Because the script is written in short visual-beat scenes with known word counts, approximate timestamps can be calculated at ~130 words per minute (2.17 words per second).
 
 **Generate an SRT file using this method:**
 

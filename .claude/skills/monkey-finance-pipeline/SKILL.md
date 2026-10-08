@@ -148,7 +148,7 @@ Wait for Sham's approval (and any edits) before Stage 3.
 ### ▶ STAGE 3 — Image Prompts
 **Skill:** `monkey-finance-image-prompts`
 
-Parse the clean narration script into sub-scenes (~25 words each). Generate `04-image-prompts.txt`. Save to Drive.
+Generate one image prompt per narration scene — 1:1, honouring the script's existing scene boundaries (no sub-scenes, no re-splitting, no merging). Save `04-image-prompts.txt` to Drive.
 
 **Image prompt rules (non-negotiable):**
 - Opening line: `2D colourful whiteboard animation style. Clean white background.`

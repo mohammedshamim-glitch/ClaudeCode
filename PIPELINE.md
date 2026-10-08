@@ -21,7 +21,7 @@ Full process from topic idea to published YouTube video + Short.
 |---|---|---|
 | 1 | Trend research | `01-trend-report.md` |
 | 2 | Script writing | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
-| 3 | Image prompts | `04-image-prompts.txt` + `05-video-prompts.txt` |
+| 3 | Image prompts | `04-image-prompts.txt` |
 | 4 | TTS audio | `narration.mp3` |
 | 5 | Timing alignment | `audio_timings_new.csv` |
 | 6 | SEO & thumbnail | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
@@ -48,13 +48,13 @@ Run Claude Code and invoke `/monkey-finance-trends` — it will:
 
 ## Stage 2 — Script Writing
 
-**Goal:** Write the full narration script (~2,000 words, 25-word scenes).
+**Goal:** Write the full narration script (1,900–2,100 words; one visual beat per scene, ~5–29 words, no fixed target).
 
 Invoke `/monkey-finance-scriptwriter` with the approved topic and content brief.
 
 The scriptwriter will:
 - Write a 1,900–2,100 word narration using the 4-pass method
-- Break it into 25-word scenes (min 20, max 35 words per scene)
+- Break it into scenes at visual-beat boundaries — one visual beat per scene, ~5–29 words, no fixed target; numbered items (One:, Two:, Three:…) always start a new scene
 - Save the structured script as `02-narration-script-structured.txt`
 - Save the clean TTS-ready script as `03-narration-script-clean.txt`
 
@@ -66,19 +66,19 @@ The scriptwriter will:
 
 ## Stage 3 — Image Prompts
 
-**Goal:** Generate one image prompt and one video prompt per narration scene.
+**Goal:** Generate one image prompt per narration scene (1:1 — no merging, no re-splitting, no sub-scenes).
 
 Invoke `/monkey-finance-image-prompts` pointing at the clean narration script.
 
 Rules:
 - One prompt per scene — no merging, no grouping
 - Every prompt: `2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition.`
-- Monkey in ~25% of scenes — always mid-action with a prop, never just standing
-- Never specify suit colour
+- Monkey in ~60–80% of scenes — always mid-action with a prop, never just standing
+- Write just "Monkey" — never a suit colour (the generator keeps the look consistent)
 - Every stat/number must be drawn on the canvas in the prompt
 - Named characters must appear in scenes that reference them
 
-**Output:** `04-image-prompts.txt` + `05-video-prompts.txt` saved to Drive.
+**Output:** `04-image-prompts.txt` saved to Drive.
 
 **Approval gate:** Review prompts. **Do NOT generate the images yet** — image creation happens AFTER TTS (Stage 4) + timings (Stage 5) + SEO (Stage 6), so those finish while Sham generates images. Stage 3 produces only the prompts.
 
@@ -156,7 +156,7 @@ Images must be in Drive under an `Images` subfolder, numbered sequentially (1, 2
 python3 /home/user/ClaudeCode/create_video_kb.py <episode_folder_id>
 ```
 
-This applies Ken Burns effects (zoom/pan) to every 4th scene (25% of scenes), with crossfade transitions between scenes.
+This applies Ken Burns effects (zoom/pan) to every 2nd scene (50% of scenes, skipping scene 0), with crossfade transitions between scenes.
 
 **Output:** `<episode-title>.mp4` uploaded to Drive.
 
