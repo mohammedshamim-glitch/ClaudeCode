@@ -136,8 +136,8 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | 2026-06-18 — What Happens When You Invest £500 Per Month (Year By Year) | `1EnDHYa0_U6NPh2vy9mai20Nj_fBh-gsM` |
 | 2026-06-20 — AI Infrastructure ETF vs VWRL — The Real Math | `1c_03Efs1F11worlSyJzsZiW0EpeXRXI4` | YT: `JS3hdxDhQ4g` | **STATUS: UPLOADED — scheduled Wed 24 June 2026 4pm BST. Pin comment on go-live.** |
 | 2026-06-20 — Your Cash ISA Is Being Cut — The Real Math | `120aR5J_0DrOA-FfWgFjs-YPOTMyktWln` | **STATUS: Stage 2 complete — awaiting Sham approval → Stage 3 image prompts** |
-| 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | YT: `rlgPaA-P43M` | **STATUS: UPLOADED — scheduled Wed 14 Oct 2026 4pm BST. Pin comment on go-live. Shorts skipped per Sham.** |
-| 2026-10-07 — EV vs Hybrid vs Petrol — The Real Math | `1J19Z15vpaNMKP4fqC9HmpGzqZscfl5yk` | YT: `SSx1azBbc0c` | **STATUS: UPLOADED — scheduled Mon 19 Oct 2026 4pm BST (moved off the 14 Oct clash with Day Trader, per Sham). Pin comment on go-live. Chars: Tom/Sarah/Aisha.** |
+| 2026-07-06 — Day Trader vs Swing Trader vs Index Investor — The Real Math | `1qwBGyobfo-Xi0327WcNmIfXI9WTzgqU9` | YT: `rlgPaA-P43M` | **STATUS: UPLOADED — scheduled Wed 14 Oct 2026 4pm BST. Folder archived to Completed. Pin comment on go-live. Shorts skipped per Sham.** |
+| 2026-10-07 — EV vs Hybrid vs Petrol — The Real Math | `1J19Z15vpaNMKP4fqC9HmpGzqZscfl5yk` | YT: `SSx1azBbc0c` | **STATUS: UPLOADED — scheduled Mon 19 Oct 2026 4pm BST (moved off the 14 Oct clash with Day Trader, per Sham). Folder archived to Completed. Pin comment on go-live. Chars: Tom/Sarah/Aisha.** |
 | 2026-10-10 — Gold vs Silver — The Real Math | `1GJN4omaw636j53tRGIfHLR9622biCIKd` | **STATUS: Stage 2 complete (1,904 words, 119 scenes) — awaiting Sham approval → Stage 3 image prompts. Chars: Aisha (silver)/James (gold coins)/Emma (gold fund in ISA). UK angle: 20% VAT on silver, CGT-free British legal-tender coins, gold ETC in a Stocks & Shares ISA.** |
 
 ## Project Overview
