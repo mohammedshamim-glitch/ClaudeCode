@@ -10,6 +10,7 @@ Every thumbnail uses the **same consistent style** as the pipeline's scene image
 - **Bold BLACK + RED text ONLY.** Black for the setup words, **RED for the danger word / scary number**. 3–4 words MAX, huge, thick, fills the width. Thumbnail text ADDS a hook — never just repeats the title.
 - **A red crashing arrow and/or a big scary number** to signal the stakes, plus ONE real object anchoring the topic (a coin, a £ note, a product).
 - High contrast, punchy, almost no empty space — elements fill every corner.
+- **UK currency by default**: any money shown must be **British pounds (£)** — £ symbols, British coins/notes — never US dollars or $ signs.
 - Landscape orientation, 1280x720
 - **No logos. No watermarks. No channel branding on the thumbnail.**
 
