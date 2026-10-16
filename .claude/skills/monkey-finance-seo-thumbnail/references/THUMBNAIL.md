@@ -79,10 +79,12 @@ Best for: Decisions, counterintuitive takes, "should I?", "why?" topics
 ```
 TOP: "[A] VS [B]" in huge bold BLACK caps, and under it "WHICH SHOULD YOU BUY?" (or a sharp question) in huge bold RED caps — fills the full width.
 CENTRE: Monkey in a green suit, upper body, hand on chin in a thinking pose, looking between the two sides.
-LEFT: a BIG RICH PILE representing option A (e.g. gold bars + coins) with a bold GREEN upward arrow / mini bar chart behind it.
-RIGHT: a BIG RICH PILE representing option B (e.g. silver bars + coins) with its arrow (green up if good, RED down if it's the loser) and any twist tag (e.g. a red "VAT 20%" tag).
-Packed frame, almost no empty space, full-bleed, no white background.
+LEFT: a BIG RICH PILE representing option A (e.g. gold bars + coins).
+RIGHT: a BIG RICH, EQUALLY APPEALING PILE representing option B (e.g. silver bars + coins).
+A big bold yellow question mark above/between the character.
+Both sides look equally tempting. Frame filled, minimal visible background.
 ```
+**NON-NEGOTIABLE — never spoil the verdict:** The thumbnail POSES the question, it does not answer it. Keep the curiosity gap — do NOT reveal which option wins. That means NO "winner" cues on a comparison thumbnail: no green-up on one side + red-down on the other, no tick vs cross, no "20% VAT / loser" tag. Both options must look equally appealing so the viewer has to click to find out. (Wealth Logic's own Gold vs Silver thumbnail gave nothing away — both sides looked good, just "WHICH SHOULD YOU BUY?") Save directional arrows/ticks/crosses for single-subject warning thumbnails, never for versus thumbnails.
 Rich real-looking piles beat flat single icons — the imagery is half the click. The thumbnail does NOT need to match the whiteboard video style; its only job is the click.
 Best for: gold vs silver, ISA vs pension, property vs stocks, any versus topic
 
