@@ -288,6 +288,8 @@ def main():
     ap.add_argument("short_title")
     ap.add_argument("--schedule", required=True, help="ISO UTC e.g. 2026-06-05T15:00:00Z")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--no-publish", action="store_true",
+                    help="Build the Short and save a preview to Drive, but do NOT publish to YouTube")
     args = ap.parse_args()
 
     tokens = load_tokens()
@@ -394,6 +396,11 @@ def main():
         file_id, link = upload_to_drive(short_path, "short_preview_v1.mp4",
                                          args.folder_id, drive_headers)
         print(f"  ✓ Drive: {link}")
+
+        if args.no_publish:
+            print("\n[NO-PUBLISH] Preview built and saved to Drive — NOT published to YouTube.")
+            print(f"  Preview: {link}")
+            return
 
         # Upload to YouTube
         yt_token = refresh_token(tokens, "youtube_refresh_token")
