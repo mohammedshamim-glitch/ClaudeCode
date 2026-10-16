@@ -74,15 +74,17 @@ Best for: Tax percentages, rate changes, savings figures, shocking numbers
 ```
 Best for: Decisions, counterintuitive takes, "should I?", "why?" topics
 
-### Layout C: Two-Option Split
-**The comparison layout** — whiteboard divided, monkey caught between two options.
+### Layout C: "X VS Y / WHICH SHOULD YOU BUY?" treasure-pile comparison (DEFAULT for every versus video)
+**The proven comparison layout** — full-bleed, packed with rich imagery, character thinking in the middle. This is the Wealth Logic comparison formula; use it for every "X vs Y" episode.
 ```
-[Bold vertical dividing line]
-LEFT HALF: [Option A header] + [Value A] + [Icon A — e.g. flat/downward arrow]
-RIGHT HALF: [Option B header] + [Value B] + [Icon B — e.g. upward arrow]
-[Monkey in green suit — centre or left, looking between both options]
+TOP: "[A] VS [B]" in huge bold BLACK caps, and under it "WHICH SHOULD YOU BUY?" (or a sharp question) in huge bold RED caps — fills the full width.
+CENTRE: Monkey in a green suit, upper body, hand on chin in a thinking pose, looking between the two sides.
+LEFT: a BIG RICH PILE representing option A (e.g. gold bars + coins) with a bold GREEN upward arrow / mini bar chart behind it.
+RIGHT: a BIG RICH PILE representing option B (e.g. silver bars + coins) with its arrow (green up if good, RED down if it's the loser) and any twist tag (e.g. a red "VAT 20%" tag).
+Packed frame, almost no empty space, full-bleed, no white background.
 ```
-Best for: ISA comparisons, fix vs tracker, pension vs ISA, any versus topic
+Rich real-looking piles beat flat single icons — the imagery is half the click. The thumbnail does NOT need to match the whiteboard video style; its only job is the click.
+Best for: gold vs silver, ISA vs pension, property vs stocks, any versus topic
 
 ---
 
