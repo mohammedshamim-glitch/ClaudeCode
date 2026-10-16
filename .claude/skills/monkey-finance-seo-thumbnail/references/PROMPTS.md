@@ -4,13 +4,12 @@
 
 Every thumbnail uses the **same consistent style** as the pipeline's scene images. This is non-negotiable — visual consistency across the channel builds brand recognition and trust.
 
-**Core style DNA:**
-- 2D colourful whiteboard animation style
-- Clean white background (always)
-- Monkey in a **green suit** — this is the fixed character design
-- Bold hand-drawn illustration aesthetic — thick marker strokes, expressive lines
-- Text on the whiteboard is always written in **thick marker style** (not digital fonts)
-- High contrast, expressive composition
+**Core style DNA (v2 — bold black & red, full-bleed. This REPLACES the old clean-white-whiteboard style, which lost in the feed):**
+- **Bold 2D cartoon illustration — FULL-BLEED. Fills the frame edge to edge. NO white background, NO border, NO frame.** A white-background thumbnail disappears against YouTube's white UI — never use one.
+- **Monkey in a green suit — the fixed mascot — drawn BIG**: upper-body close-up, roughly 40% of the frame, with a strong exaggerated expression (shock, stern warning) AND a gesture (stop hand, pointing, hands to face). This is our equivalent of Wealth Logic's suited character.
+- **Bold BLACK + RED text ONLY.** Black for the setup words, **RED for the danger word / scary number**. 3–4 words MAX, huge, thick, fills the width. Thumbnail text ADDS a hook — never just repeats the title.
+- **A red crashing arrow and/or a big scary number** to signal the stakes, plus ONE real object anchoring the topic (a coin, a £ note, a product).
+- High contrast, punchy, almost no empty space — elements fill every corner.
 - Landscape orientation, 1280x720
 - **No logos. No watermarks. No channel branding on the thumbnail.**
 
@@ -21,16 +20,16 @@ Every thumbnail uses the **same consistent style** as the pipeline's scene image
 Every prompt is built in this order:
 
 ```
-2D colourful whiteboard animation style. Clean white background. 
-[MONKEY DESCRIPTION — green suit, position, expression, action]. 
-[VISUAL CONTENT — text and elements drawn directly on the white background in hand-drawn marker style]. 
-[ADDITIONAL VISUAL ELEMENTS if needed]. 
-Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, 
-no logos, no watermarks, no text cutoff, no physical whiteboard, no board frame, no ledge.
+Bold 2D cartoon illustration, full-bleed, fills the entire frame edge to edge, no white border, no frame. 
+[MONKEY DESCRIPTION — green suit, BIG upper-body close-up ~40% of frame, strong expression + gesture]. 
+Across the top in the largest, boldest thick BLACK capital letters: "[SETUP WORDS]". 
+Directly below in huge thick RED capital letters: "[DANGER WORDS / NUMBER]". 
+[ONE real object anchoring the topic + a thick red crashing arrow]. 
+High contrast, punchy, almost no empty space, 
+landscape YouTube thumbnail 1280x720, no logos, no watermarks, no white background.
 ```
 
-**Critical rule — no physical whiteboard ever:** The style is whiteboard animation but no actual whiteboard object appears in the frame. All text and drawn elements exist directly on the clean white background. Never write "on the whiteboard" in a prompt — write "on the white background", "in the frame", or simply describe the element's position.
+**Critical rule — FULL-BLEED, never white:** The thumbnail must fill the frame edge to edge with a coloured/bold composition. NO plain white background, NO border, NO frame — those vanish in the feed. Every corner should have colour or an element.
 
 ---
 
@@ -177,8 +176,7 @@ Bold hand-drawn illustration style, high contrast, expressive composition,
 landscape orientation, YouTube thumbnail 1280x720, 
 no logos, no watermarks, no text cutoff at edges, 
 no photorealistic style, no digital-looking fonts, 
-no physical whiteboard, no board frame, no chalk ledge, 
-no gradients, no drop shadows, clean white background only
+no plain white background, no border, no frame, no empty corners
 ```
 
 ---
@@ -216,8 +214,7 @@ no gradients, no drop shadows, clean white background only
 ```
 no watermarks, no logos, no channel name, no text cutoff, 
 no photorealistic style, no digital computer fonts, 
-no gradients, no drop shadows, no cluttered background, 
-no physical whiteboard, no board frame, no chalk ledge, no eraser, 
+no cluttered background, no plain white background, no border, no frame,
 no more than 3 visual elements, no small illegible text, 
 no American references
 ```
