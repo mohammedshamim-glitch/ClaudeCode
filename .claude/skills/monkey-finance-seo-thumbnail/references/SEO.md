@@ -78,6 +78,18 @@ Use these as templates. Swap in the relevant keyword and hook.
 
 ---
 
+### Mirror Wealth Logic's proven title templates (DEFAULT for comparison/warning videos)
+
+Wealth Logic's titles are proven to win clicks. **Mirror their structure** (don't copy word-for-word), keep the **"UK"** keyword (our SEO edge — they can't rank for UK searches), and front-load the keyword in the first ~40 chars. Their three workhorses:
+
+1. **Comparison:** `[A] vs [B] UK — Which One Will Actually Make You More Money?` (or `— Only One Is Right For You`). For 3-way, name all three: `Day Trader vs Swing Trader vs Index Investor — The Real Math (UK)`.
+2. **Warning:** `Don't [do the obvious thing] Until You See This (UK)`.
+3. **Explainer:** `If You Don't Understand [X], You Don't Understand Money (UK)`.
+
+Rules: never drop "UK"; localise any US terms (401k→pension, IRA→ISA, gas→petrol); don't copy a title verbatim; the parenthetical/curiosity clause is where the click lives, so keep it. Titles may run past 60 chars **only if** the keyword is front-loaded.
+
+---
+
 ### Power Words (use 1–2 per title maximum)
 
 High-CTR power words validated for finance content:
