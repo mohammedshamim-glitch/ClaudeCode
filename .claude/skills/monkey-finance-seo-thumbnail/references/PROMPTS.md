@@ -5,7 +5,7 @@
 Every thumbnail uses the **same consistent style** as the pipeline's scene images. This is non-negotiable — visual consistency across the channel builds brand recognition and trust.
 
 **Core style DNA (v2 — bold black & red, full-bleed. This REPLACES the old clean-white-whiteboard style, which lost in the feed):**
-- **Bold 2D cartoon illustration — FULL-BLEED. Fills the frame edge to edge. NO white background, NO border, NO frame.** A white-background thumbnail disappears against YouTube's white UI — never use one.
+- **Bold 2D cartoon illustration that FILLS THE FRAME** — large imagery + huge text cover almost all of it, so very little background shows. A plain white/light background is fine **as long as it's mostly covered**. The killer is EMPTY white space (small elements stranded in exposed white), not white itself. No borders, no frames.
 - **Monkey in a green suit — the fixed mascot — drawn BIG**: upper-body close-up, roughly 40% of the frame, with a strong exaggerated expression (shock, stern warning) AND a gesture (stop hand, pointing, hands to face). This is our equivalent of Wealth Logic's suited character.
 - **Bold BLACK + RED text ONLY.** Black for the setup words, **RED for the danger word / scary number**. 3–4 words MAX, huge, thick, fills the width. Thumbnail text ADDS a hook — never just repeats the title.
 - **A red crashing arrow and/or a big scary number** to signal the stakes, plus ONE real object anchoring the topic (a coin, a £ note, a product).
@@ -25,11 +25,11 @@ Bold 2D cartoon illustration, full-bleed, fills the entire frame edge to edge, n
 Across the top in the largest, boldest thick BLACK capital letters: "[SETUP WORDS]". 
 Directly below in huge thick RED capital letters: "[DANGER WORDS / NUMBER]". 
 [ONE real object anchoring the topic + a thick red crashing arrow]. 
-High contrast, punchy, almost no empty space, 
-landscape YouTube thumbnail 1280x720, no logos, no watermarks, no white background.
+High contrast, punchy, large elements filling the frame with minimal visible background, 
+landscape YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 
-**Critical rule — FULL-BLEED, never white:** The thumbnail must fill the frame edge to edge with a coloured/bold composition. NO plain white background, NO border, NO frame — those vanish in the feed. Every corner should have colour or an element.
+**Critical rule — FILL THE FRAME:** Large imagery and huge text must cover almost all of the thumbnail so very little background shows. A white/light background is fine as long as it's mostly covered — the thing that kills CTR is EMPTY white space with small floating elements. No borders, no frames, no small elements stranded in exposed white.
 
 ---
 
@@ -176,7 +176,7 @@ Bold hand-drawn illustration style, high contrast, expressive composition,
 landscape orientation, YouTube thumbnail 1280x720, 
 no logos, no watermarks, no text cutoff at edges, 
 no photorealistic style, no digital-looking fonts, 
-no plain white background, no border, no frame, no empty corners
+no large empty white areas, no border, no frame
 ```
 
 ---
@@ -214,7 +214,7 @@ no plain white background, no border, no frame, no empty corners
 ```
 no watermarks, no logos, no channel name, no text cutoff, 
 no photorealistic style, no digital computer fonts, 
-no cluttered background, no plain white background, no border, no frame,
+no cluttered background, no large empty white areas, no border, no frame,
 no more than 3 visual elements, no small illegible text, 
 no American references
 ```

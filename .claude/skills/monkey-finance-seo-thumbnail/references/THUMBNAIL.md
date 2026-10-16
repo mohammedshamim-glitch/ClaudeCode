@@ -17,8 +17,8 @@ The thumbnail and title work as a unit. They must tell the same story, not dupli
 ## The Monkey Finance Design System
 
 ### Visual Identity — v2 (bold black & red, full-bleed)
-> **This supersedes the old clean-white whiteboard thumbnails.** White-background thumbnails vanish against YouTube's white feed UI and were killing our CTR. The new standard copies the proven finance-YouTube formula (Wealth Logic et al.): full-bleed, bold black + red, one big character, a scary number and a red crashing arrow.
-- **Style:** Bold 2D cartoon illustration, **FULL-BLEED** — fills the frame edge to edge. **NO white background, NO border, NO frame.** Every corner has colour or an element.
+> **This supersedes the old clean-white whiteboard thumbnails.** The killer was **empty white space** (small elements floating in lots of exposed white), NOT white itself — Wealth Logic's own thumbnails sit on a white/light background, but it's almost entirely COVERED by big imagery and huge text. The new standard copies that proven formula: fill the frame, bold black + red, one big character, rich imagery, a scary number and/or a red arrow.
+- **Style:** Bold 2D cartoon illustration that **FILLS THE FRAME** — large imagery + huge text cover almost all of it, so very little background shows. A plain white/light background is fine **as long as it's mostly covered**. No borders, no frames, and never small elements stranded in empty white.
 - **Character:** Monkey in a **green suit — drawn BIG** (upper-body close-up, ~40% of the frame) with an exaggerated expression (shock / stern warning) AND a gesture (stop hand, pointing). Our mascot = their suited man.
 - **Text:** **Bold BLACK + RED only.** Black = the setup, **RED = the danger word / scary number**. 3–4 words MAX, huge, thick. Text must ADD a hook, never just repeat the title.
 - **Stakes:** a **thick red crashing arrow** and/or a **big number**, plus one real object (coin, £ note, product).
