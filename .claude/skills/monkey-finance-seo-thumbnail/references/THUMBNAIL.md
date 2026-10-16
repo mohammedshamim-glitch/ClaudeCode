@@ -22,6 +22,7 @@ The thumbnail and title work as a unit. They must tell the same story, not dupli
 - **Character:** Monkey in a **green suit — drawn BIG** (upper-body close-up, ~40% of the frame) with an exaggerated expression AND a gesture. **VARY the expression/pose every thumbnail — do NOT default to the two-handed shrug every time** (they blur together). Pick the emotion that fits THIS video from the Expression & Action guide below: thoughtful chin-stroke, shocked jaw-drop + stop hand, excited fist-pump, stern finger-point, curious head-tilt, worried hands-to-face, etc. Our mascot = their suited man.
 - **Text:** **Bold BLACK + RED only.** Black = the setup, **RED = the danger word / scary number**. 3–4 words MAX, huge, thick. Text must ADD a hook, never just repeat the title.
 - **Stakes:** a **thick red crashing arrow** and/or a **big number**, plus one real object (coin, £ note, product).
+- **UK currency by default:** any money on the thumbnail must be **British pounds (£)** — £ symbols, British coins/notes — never US dollars or "$".
 - **No logos. No channel name. No watermarks.**
 
 ### Marker Colour Strategy by Emotion
