@@ -159,6 +159,8 @@ The thumbnail and title are a package. They must work together without duplicati
 | "Cash ISA vs Stocks ISA" | Use split layout A vs B |
 | "5 Pension Mistakes Costing You Thousands" | Show alarmed monkey + `PENSION TRAP` |
 
+**Shared-theme rule (non-negotiable):** Title and thumbnail must NOT say the same words, but they MUST share the same theme, hook and emotion so they feel like one story — the title *states* the promise, the thumbnail *shows* it and adds a complementary angle. Never disconnected (title about one frame, thumbnail about another) and never duplicated. Gut-check every video: "do the title and thumbnail feel like the same story?" If one is strong and the other flat, fix the weak one.
+
 **The curiosity gap rule:** The thumbnail raises a question or creates tension. The title either deepens that tension OR provides just enough context to make the click feel safe. Together they create the compulsion to click.
 
 ---
