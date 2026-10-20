@@ -23,14 +23,16 @@ Every Monkey Finance video flows through these stages in order:
 | **2** | `monkey-finance-scriptwriter` | Content brief | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | **3** | `monkey-finance-image-prompts` | Clean narration script | `04-image-prompts.txt` + `00b-character-references.txt` (if named chars) |
 | **4** | `monkey-finance-tts` | `03-narration-script-clean.txt` | `narration.mp3` |
-| **5a** | `monkey-finance-seo-thumbnail` | `narration.mp3` + script | `audio_timings_new.csv` + `06-seo-metadata.txt` (inc. community post) + `07-thumbnail-prompt.txt` |
-| **5b** | `monkey-finance-video-creator` | Images + `narration.mp3` + `audio_timings_new.csv` | `<episode-title>.mp4` |
-| **6** | *(merged into 5a)* | — | — |
+| **5** | `monkey-finance-seo-thumbnail` | `narration.mp3` + script | `audio_timings_new.csv` + `06-seo-metadata.txt` (inc. community post) + `07-thumbnail-prompt.txt` |
+| **6** | `monkey-finance-video-creator` | Images + `narration.mp3` + `audio_timings_new.csv` | `<episode-title>.mp4` |
 | **7** | `monkey-finance-youtube-upload` | MP4 + `06-seo-metadata.txt` + thumbnail | Published/scheduled YouTube video |
-| **8→9** | Shorts + Wrap Up | Main episode MP4 | `short_preview_vX.mp4` → YouTube Short → folder moved to Completed |
+| **8** | Bespoke Short | Short script + vertical images + Short TTS/timings | `short_preview_vX.mp4` → scheduled YouTube Short |
+| **9** | Wrap Up | Main + Short scheduled | Go-live comment auto-post task set up → folder moved to Completed |
 | **10** | Analytics review | YouTube Studio data | `09-analytics-review.md` |
 
-**yt-dlp is used at Stage 1** — pulling live YouTube data during trend research. Competitor tags for SEO are pulled via the YouTube Data API at Stage 5a (yt-dlp is SSL-blocked on this server).
+> **Stage 5 = timings + SEO (the old "5a"); Stage 6 = video assembly (the old "5b").** The old 5a/5b split is retired — these are now plain sequential stages, and there is no gap at 6. Everything downstream (upload/Short/wrap/analytics) keeps the numbers it already had (7/8/9/10).
+
+**yt-dlp is used at Stage 1** — pulling live YouTube data during trend research. Competitor tags for SEO are pulled via the YouTube Data API at Stage 5 (yt-dlp is SSL-blocked on this server).
 
 ---
 
@@ -160,7 +162,7 @@ Generate one image prompt per narration scene — 1:1, honouring the script's ex
 **Approval gate:**
 > *"Stage 3 complete. [X] image prompts saved to Drive — [link]. Review the prompts and confirm you're happy with the visuals before I continue to audio."*
 
-Wait for Sham's approval before Stage 4. **Do NOT hand off image generation here** — Stage 3 only produces the prompts. The image-creation handoff happens AFTER Stage 5a, once TTS, timings and SEO are done, so those finish while Sham is generating images. See the Image Generation handoff below.
+Wait for Sham's approval before Stage 4. **Do NOT hand off image generation here** — Stage 3 only produces the prompts. The image-creation handoff happens AFTER Stage 5, once TTS, timings and SEO are done, so those finish while Sham is generating images. See the Image Generation handoff below.
 
 ---
 
@@ -181,7 +183,7 @@ Wait for Sham's approval before Stage 5.
 
 ---
 
-### ▶ STAGE 5a — Timings + SEO + Community Post (run before video assembly)
+### ▶ STAGE 5 — Timings + SEO + Community Post (run before video assembly)
 
 **Step 1 — Run aeneas timings first (takes 2–3 minutes):**
 ```bash
@@ -212,21 +214,21 @@ Include the community post draft in `06-seo-metadata.txt` under a `COMMUNITY POS
 **Why TTS + timings + SEO run BEFORE image generation:** none of them need the images — they come only from the script. Running them first means they finish while Sham is generating images in Flow, so nothing idles and assembly can start the moment the images land.
 
 **Approval gate + IMAGE-CREATION HANDOFF (this is the point where Sham makes the images):**
-> *"Stage 5a complete — `narration.mp3`, `audio_timings_new.csv`, the SEO package and the community post are all done and saved to Drive. Now the image step: generate the [X] scene images in Flow from `04-image-prompts.txt` (load the `00b-character-references.txt` anchors first) into an `images` subfolder, and generate the thumbnail from `07-thumbnail-prompt.txt` saved as 'thumbnail'. Send them back and I'll rename to 001_…N_ and run assembly."*
+> *"Stage 5 complete — `narration.mp3`, `audio_timings_new.csv`, the SEO package and the community post are all done and saved to Drive. Now the image step: generate the [X] scene images in Flow from `04-image-prompts.txt` (load the `00b-character-references.txt` anchors first) into an `images` subfolder, and generate the thumbnail from `07-thumbnail-prompt.txt` saved as 'thumbnail'. Send them back and I'll rename to 001_…N_ and run assembly."*
 
-Wait for Sham's images + thumbnail before Stage 5b.
+Wait for Sham's images + thumbnail before Stage 6.
 
 ---
 
 ### ▶ IMAGE GENERATION — Sham (Flow / Grok)
-Not a Claude stage — Sham creates the [X] scene images and the thumbnail here, AFTER TTS + timings + SEO are complete (never before). Claude's job when they come back: rename the images to `001_…N_` in scene order, place them in the `images` subfolder, confirm the count matches the CSV/script, then proceed to Stage 5b.
+Not a Claude stage — Sham creates the [X] scene images and the thumbnail here, AFTER TTS + timings + SEO are complete (never before). Claude's job when they come back: rename the images to `001_…N_` in scene order, place them in the `images` subfolder, confirm the count matches the CSV/script, then proceed to Stage 6.
 
 ---
 
-### ▶ STAGE 5b — Video Assembly
+### ▶ STAGE 6 — Video Assembly
 **Skill:** `monkey-finance-video-creator`
 
-`audio_timings_new.csv` is already in Drive from Stage 5a — do NOT re-run `generate_timings.py` here. Only re-run it if `narration.mp3` was regenerated after Stage 5a.
+`audio_timings_new.csv` is already in Drive from Stage 5 — do NOT re-run `generate_timings.py` here. Only re-run it if `narration.mp3` was regenerated after Stage 5.
 
 **Step 1 — 30-second sample preview first (mandatory):**
 ```bash
@@ -247,7 +249,7 @@ This produces `<episode-title>.mp4` uploaded to Drive.
 - Cosine ease-in/ease-out on all effects
 
 **Approval gate:**
-> *"Stage 5b complete. Video assembled and uploaded to Drive — [link]. SEO and thumbnail were generated at Stage 5a — confirm thumbnail is saved to Drive as 'thumbnail' and we'll go straight to upload."*
+> *"Stage 6 complete. Video assembled and uploaded to Drive — [link]. SEO and thumbnail were generated at Stage 5 — confirm thumbnail is saved to Drive as 'thumbnail' and we'll go straight to upload."*
 
 ---
 
@@ -256,12 +258,12 @@ This produces `<episode-title>.mp4` uploaded to Drive.
 
 **Pre-upload checklist — confirm all five before running:**
 - [ ] Channel verified: `GET /youtube/v3/channels?part=snippet&mine=true` returns "Monkey See Money" — if not, re-authenticate before proceeding
-- [ ] `06-seo-metadata.txt` in Drive ✓ (Stage 5a)
-- [ ] `07-thumbnail-prompt.txt` in Drive ✓ (Stage 5a)
+- [ ] `06-seo-metadata.txt` in Drive ✓ (Stage 5)
+- [ ] `07-thumbnail-prompt.txt` in Drive ✓ (Stage 5)
 - [ ] Thumbnail generated in Grok and saved to Drive as `thumbnail` ✓
-- [ ] Video assembled and in Drive ✓ (Stage 5b)
+- [ ] Video assembled and in Drive ✓ (Stage 6)
 
-If SEO wasn't done at 5a for any reason, run `monkey-finance-seo-thumbnail` now before upload.
+If SEO wasn't done at Stage 5 for any reason, run `monkey-finance-seo-thumbnail` now before upload.
 
 ```bash
 python3 /home/user/ClaudeCode/upload_youtube.py <episode_folder_id>
@@ -314,7 +316,10 @@ Wait for Sham's go-ahead on the preview before uploading to YouTube. Once upload
 
 Once the Short is uploaded to YouTube:
 
-Move the episode Drive folder into the Completed folder:
+**Step 1 — Set up the go-live comment auto-post task (mandatory, every episode):**
+The YouTube API cannot post a comment on a private/scheduled video (403), and cannot PIN at all (Studio-only). So create a one-shot scheduled task (`create_trigger`, `create_new_session_on_fire`, `run_once_at`) that fires ~10 min AFTER the latest go-live time (i.e. after the main video's 4pm BST publish). It auto-posts: the main video's PINNED COMMENT (from `06-seo-metadata.txt`) on the long-form, and a "Full breakdown here 👉 [main video URL]" comment on the Short — via the YouTube Data API (token.json → youtube_refresh_token → commentThreads.insert, channel verified as Monkey See Money first). Sham pins manually afterwards.
+
+**Step 2 — Move the episode Drive folder into the Completed folder:**
 
 ```python
 requests.patch(
@@ -434,8 +439,8 @@ Save a brief `09-analytics-review.md` to the episode Drive folder with:
 | "I have a brief, write the script" | Stage 2 |
 | "Script's done, make the image prompts" | Stage 3 |
 | "Generate the audio" | Stage 4 |
-| "Build the video" | Stage 5 |
-| "Generate the SEO" | Stage 5a |
+| "Generate the SEO" / "timings" | Stage 5 |
+| "Build the video" / "assemble" | Stage 6 |
 | "Upload the video" | Stage 7 |
 | "Make a Short" / "Create a Short" | Stage 8 |
 | "Check the analytics" / "How did it do?" | Stage 10 (Analytics) |
