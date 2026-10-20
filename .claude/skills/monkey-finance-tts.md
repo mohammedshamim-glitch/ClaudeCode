@@ -67,6 +67,6 @@ YouTube auto-generates captions. Never run `generate_srt.py`. Set `defaultAudioL
 ## Approval gate
 
 After upload, confirm with Sham:
-> *"Stage 4 complete. `narration.mp3` uploaded to Drive. Ready to move to Stage 5a (timings + SEO)?"*
+> *"Stage 4 complete. `narration.mp3` uploaded to Drive. Ready to move to Stage 5 (timings + SEO)?"*
 
 Wait for Sham's go-ahead before proceeding.

@@ -23,11 +23,12 @@ Full process from topic idea to published YouTube video + Short.
 | 2 | Script writing | `02-narration-script-structured.txt` + `03-narration-script-clean.txt` |
 | 3 | Image prompts | `04-image-prompts.txt` |
 | 4 | TTS audio | `narration.mp3` |
-| 5 | Timing alignment | `audio_timings_new.csv` |
-| 6 | SEO & thumbnail | `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
-| 7 | Video assembly | `<episode-title>.mp4` |
-| 8 | YouTube upload | Published/scheduled video |
-| 9 | YouTube Short | `short_preview_v1.mp4` → YouTube Short |
+| 5 | Timings, SEO & thumbnail | `audio_timings_new.csv` + `06-seo-metadata.txt` + `07-thumbnail-prompt.txt` |
+| 6 | Video assembly | `<episode-title>.mp4` |
+| 7 | YouTube upload | Published/scheduled video |
+| 8 | YouTube Short | `short_preview_v1.mp4` → YouTube Short |
+| 9 | Wrap up | Go-live comment auto-post + folder moved to Completed |
+| 10 | Analytics review | `08-analytics-review.md` |
 
 ---
 
@@ -80,7 +81,7 @@ Rules:
 
 **Output:** `04-image-prompts.txt` saved to Drive.
 
-**Approval gate:** Review prompts. **Do NOT generate the images yet** — image creation happens AFTER TTS (Stage 4) + timings (Stage 5) + SEO (Stage 6), so those finish while Sham generates images. Stage 3 produces only the prompts.
+**Approval gate:** Review prompts. **Do NOT generate the images yet** — image creation happens AFTER TTS (Stage 4) + timings + SEO (Stage 5), so those finish while Sham generates images. Stage 3 produces only the prompts.
 
 ---
 
@@ -101,7 +102,9 @@ python3 /home/user/ClaudeCode/run_tts.py <narration_file_id> <episode_folder_id>
 
 ---
 
-## Stage 5 — Timing Alignment (aeneas)
+## Stage 5 — Timings, SEO & Thumbnail
+
+### Timing alignment (aeneas)
 
 **Goal:** Generate precise word-level timestamps for each narration scene.
 
@@ -122,9 +125,7 @@ pip install aeneas
 
 **Output:** `audio_timings_new.csv` uploaded to Drive.
 
----
-
-## Stage 6 — SEO & Thumbnail
+### SEO & thumbnail
 
 **Goal:** Create the complete click package: titles, description, tags, chapters, thumbnail brief.
 
@@ -144,11 +145,11 @@ Invoke `/monkey-finance-seo-thumbnail` — it will:
 
 ---
 
-## Stage 7 — Video Assembly
+## Stage 6 — Video Assembly
 
 **Goal:** Assemble images + audio into the final MP4.
 
-> **Image creation happens just before this stage** — Sham generates the scene images (Flow/Grok) and thumbnail only AFTER Stage 4 (TTS) + Stage 5 (timings) + Stage 6 (SEO) are complete, never before. Claude then renames them to `001_…N_` and runs this stage.
+> **Image creation happens just before this stage** — Sham generates the scene images (Flow/Grok) and thumbnail only AFTER Stage 4 (TTS) + Stage 5 (timings + SEO) are complete, never before. Claude then renames them to `001_…N_` and runs this stage.
 
 Images must be in Drive under an `Images` subfolder, numbered sequentially (1, 2, 3... matching narration scenes).
 
@@ -164,7 +165,7 @@ This applies Ken Burns effects (zoom/pan) to every 2nd scene (50% of scenes, ski
 
 ---
 
-## Stage 8 — YouTube Upload
+## Stage 7 — YouTube Upload
 
 **Pre-upload channel check — mandatory every time:**
 
@@ -187,7 +188,7 @@ This will:
 
 ---
 
-## Stage 9 — YouTube Short
+## Stage 8 — YouTube Short
 
 **Goal:** Create a 55–60s vertical Short from the best moments of the episode.
 
@@ -213,6 +214,20 @@ Schedule the Short for **Tuesday at 4pm** (the day before the main video).
 
 ---
 
+## Stage 9 — Wrap Up
+
+**Goal:** Land the go-live comments automatically and archive the episode.
+
+**Set up the go-live comment auto-post task.** The YouTube Data API cannot comment on scheduled/private videos and cannot pin a comment. So schedule a task to run ~10 minutes after the main video's Wednesday 4pm go-live that, once the video is public:
+- Posts the main video's pinned comment via the YouTube API
+- Posts the Short's `"Full video here 👉 https://www.youtube.com/watch?v=<VIDEO_ID>"` comment via the YouTube API
+
+Sham then pins both comments manually in Studio (the API cannot pin).
+
+**Then move the episode folder to Completed:** reparent the episode Drive folder → `1cDd34RWgXFKzpLZ--d5JfUIocu5pZJGR`.
+
+---
+
 ## Post-Publication Checklist
 
 - [ ] Pin comment on the Short (within 60 min of going live)
@@ -222,7 +237,7 @@ Schedule the Short for **Tuesday at 4pm** (the day before the main video).
 
 ---
 
-## 7-Day Analytics Review
+## Stage 10 — Analytics Review (7-Day)
 
 Run 7 days after publish (and again at 14 days).
 

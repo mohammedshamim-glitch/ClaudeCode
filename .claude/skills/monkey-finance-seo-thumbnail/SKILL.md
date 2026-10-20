@@ -55,12 +55,12 @@ Every run outputs a complete **Click Package** containing:
 
 ## When to Run This Skill — Pipeline Position
 
-**Run at Stage 5a — alongside aeneas timings, BEFORE video assembly.**
+**Run at Stage 5 — alongside aeneas timings, BEFORE video assembly.**
 
 This is the correct pipeline order:
 1. Script (Stage 2) → Image prompts (Stage 3) → TTS (Stage 4)
-2. **Stage 5a: Run aeneas timings + this SEO skill together** — use `audio_timings_new.csv` for exact chapter timestamps
-3. Stage 5b: Sham generates images in Grok → video assembly
+2. **Stage 5: Run aeneas timings + this SEO skill together** — use `audio_timings_new.csv` for exact chapter timestamps
+3. Stage 6: Sham generates images in Grok → video assembly
 4. Stage 7: Upload video + metadata + thumbnail together in one session
 
 **Why before assembly:** SEO and thumbnail can be generated and reviewed while images are being created in Grok. Nothing is blocked. Upload day is a single step with everything ready.

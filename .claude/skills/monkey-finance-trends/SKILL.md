@@ -54,7 +54,7 @@ yt-dlp --dump-json "[video URL]"
 ```
 Extract: tags array, description, exact view and like counts.
 
-Also pull the hidden tags from top 2–3 competitor videos per shortlisted topic — these feed directly into the SEO package at Stage 6.
+Also pull the hidden tags from top 2–3 competitor videos per shortlisted topic — these feed directly into the SEO package at Stage 5.
 
 ### Step 4 — Transcript Analysis (winning topic only)
 For the top-ranked topic, download and analyse transcripts from the 2 best-performing competitor videos:

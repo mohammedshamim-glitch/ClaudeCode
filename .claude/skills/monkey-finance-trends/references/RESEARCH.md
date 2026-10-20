@@ -109,7 +109,7 @@ Prioritise 🟥 and 🟧 first.
 **Biggest gap this week:** [One sentence — the clearest opportunity the competitors have left open]
 ```
 
-Also save the hidden tags from Step 1 top performers — these feed into Step 3 SEO research and Stage 6.
+Also save the hidden tags from Step 1 top performers — these feed into Step 3 SEO research and Stage 5.
 
 ---
 
