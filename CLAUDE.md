@@ -130,7 +130,7 @@ Add a bullet here after each session with any new pattern, bug, or convention di
 | Location | Folder ID |
 |---|---|
 | **Monkey See Money (default root)** | `1N0fFEokv69CVVMbSFbIi_FFDsab3kadR` |
-| **Character References (reusable on-model anchor images)** | `1ObdWnyzOsU6pOCvbd-I_bdDjShcC-yps` — `Monkey-mascot.webp` (green suit, M badge), `Tom.webp`, `Emma.webp`, `James.webp`, `Aisha.webp`. Still to add: `Sarah.webp`. |
+| **Character References (reusable on-model anchor images)** | `1ObdWnyzOsU6pOCvbd-I_bdDjShcC-yps` — `Monkey-mascot.webp` (green suit, M badge), `Tom.webp`, `Emma.webp`, `James.webp`, `Aisha.webp`, `Sarah.webp` (COMPLETE). ⚠️ CAVEAT: Sham's `Sarah.webp` and `Emma.webp` look near-identical (both coral cardigan/mustard top/teal trousers/wavy brown hair) — fine while no episode uses both together, but differentiate Sarah (CHARACTERS.md spec = auburn curly hair + purple cardigan) before any Emma+Sarah episode. |
 | Monkey Finance (old root) | `1Z-aB7dKK9T9EpndozU-6lAvbxdo6yknS` |
 | S&P 500 vs Picking Your Own Stocks (53 scenes) | `1VSu4FuGUQhDxk6yC5HAjnze6YetAEecO` |
 | S&P 500 All-Time High During War (51 scenes) | `1fFJnQTbnJ6hAKmD5sXDhVFdk77U_f52U` |
