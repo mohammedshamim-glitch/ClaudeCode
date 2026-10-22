@@ -140,6 +140,14 @@ Output the complete Click Package in clean, labelled sections. Then automaticall
 > `Subscribe: https://www.youtube.com/@MonkeySeeMoney`
 > Never copy subscribe links from competitor videos. Never include any external channel links. Only the Monkey See Money channel URL goes in the description.
 
+> **Trading 212 referral block — MANDATORY in every LONG-FORM description (standing rule, Sham 22 Oct 2026):**
+> Every long-form episode description must include this exact block, placed just before the "Not financial advice" line (and before the subscribe link):
+> ```
+> 👉 Want to start? I use Trading 212 — it offers both a Cash ISA and a Stocks & Shares ISA with no account fee, so more of your money keeps compounding. Sign up with my link and we both get a free fractional share (worth up to £100) when you deposit at least £1: https://www.trading212.com/invite/4DuUBHsi26P
+> (Referral link — if you sign up I may receive a free share, at no extra cost to you.)
+> ```
+> This is Sham's own referral link. Keep the referral-disclosure line — it's required by YouTube/ASA. Shorts do NOT get this block (long-form only). If Sham ever supplies a branded Bitly short link, swap the raw invite URL for it.
+
 1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, pinned comment, community post draft, thumbnail brief, and AI thumbnail prompt. Community post goes under a `COMMUNITY POST` section — 3–4 sentences, hook + teaser + `[video URL]` placeholder + engagement question.
 
 2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
