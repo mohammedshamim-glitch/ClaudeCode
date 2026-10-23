@@ -79,15 +79,15 @@ Generate one output file:
 
 **Note: `05-video-prompts.txt` is deprecated and no longer generated.** Image prompts only.
 
-Format image prompts: `1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
+Format image prompts: `1 2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [scene description] Bold colourful hand-drawn illustration.`
 
-The 60% border + 16:9 instruction is always the **second sentence** — immediately after "Clean white background." and before any scene description. Never at the end.
+The 60% border + 16:9 instruction is always the **second sentence** — immediately after "Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners." and before any scene description. Never at the end.
 
 Example — monkey with prop:
-`1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration.`
+`1 2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. A monkey pulling back a large curtain to reveal a bold question mark drawn on the canvas behind it, expression curious and wide-eyed. Bold colourful hand-drawn illustration.`
 
 Example — stat scene (no monkey):
-`2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
+`2 2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. Bold hand-drawn text reading '£4,500' in thick red marker, underlined once. A small hand-drawn house sketch beside it with an arrow pointing to the number. Bold colourful hand-drawn illustration.`
 
 ### Pass 3 — Quality Edit (The Director Again)
 Read all prompts as a sequence. Check:
@@ -107,7 +107,7 @@ Read all prompts as a sequence. Check:
 Every image prompt must begin with these two statements in this exact order:
 
 ```
-2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition.
+2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition.
 ```
 
 Statement 1: style + background. Statement 2: composition constraints + aspect ratio. Then the scene description. Then the closing style line. No exceptions. No variations.
@@ -221,15 +221,15 @@ If the episode has no named characters, skip this file entirely.
 
 ### Image Prompts (`04-image-prompts.txt`)
 ```
-1 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
+1 2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 
-2 2D colourful whiteboard animation style. Clean white background. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
+2 2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners. All critical elements within the central 60% of the frame — minimum 20% clear margin on all edges. 16:9 widescreen aspect ratio, landscape composition. [full scene description] Bold colourful hand-drawn illustration.
 ```
 
 **Critical formatting:**
 - Scene number at start of every line
 - Everything in one paragraph, blank line between scenes
-- **Central 60% / 20% border + 16:9 instruction is always the second statement** — immediately after "Clean white background." Never at the end, never omitted
+- **Central 60% / 20% border + 16:9 instruction is always the second statement** — immediately after "Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners." Never at the end, never omitted
 - **No section headers or dividers between prompts** — scene number and content only (the one exception is the mandatory Flow instruction header at the very top, below)
 
 **MANDATORY Flow instruction header — always the first thing in the file (Sham, 23 Oct 2026):**
@@ -254,7 +254,7 @@ Total prompt count: matches the narration scene count exactly — typically 80�
 **Image prompts:**
 - [ ] **Prompt count matches narration scene count exactly** — 1 prompt per scene, no grouping
 - [ ] **Scene numbers match the structured script** — consecutive 1, 2, 3 … through to the end (never `X.Y`)
-- [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background.`
+- [ ] **Every prompt starts** with `2D colourful whiteboard animation style. Clean white background that fills the entire frame edge to edge, with no whiteboard frame, border, edge, tray, marker rail or rounded corners.`
 - [ ] **Monkey written as just "Monkey"** — no suit colour specified
 - [ ] **Monkey** used in ~60–80% of scenes as guide, narrator, reactor
 - [ ] **Every monkey scene** has the monkey performing an active action with a prop — never just standing
