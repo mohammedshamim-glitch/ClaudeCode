@@ -14,6 +14,8 @@ SHORT=sys.argv[1]
 OUTNAME=sys.argv[2] if len(sys.argv)>2 else 'short.mp4'
 W,H=1080,1920
 WORK='/tmp/claude-0/-home-user-ClaudeCode/22c2ff02-d450-5c98-a21a-e930c516c570/short_build'
+import shutil
+shutil.rmtree(WORK,ignore_errors=True)  # clear leftovers from any prior Short build (prevents using another episode's images)
 os.makedirs(WORK,exist_ok=True); os.makedirs(WORK+'/seg',exist_ok=True)
 
 t=json.load(open('/home/user/ClaudeCode/token.json'))
@@ -43,8 +45,10 @@ csvtxt=requests.get(f"https://www.googleapis.com/drive/v3/files/{findin(SHORT,'s
 rows=[r for r in csv.reader([l for l in csvtxt.splitlines() if l.strip()])][1:]  # skip header
 # download images
 imgs=sorted([f for f in ls(imgfolder) if f['mimeType'].startswith('image/')], key=lambda f:f['name'])
+imgnames=[f['name'] for f in imgs]
 for f in imgs: dl(f['id'], WORK+'/'+f['name'])
 print(f'{len(imgs)} images, {len(rows)} timing rows')
+print('  using images:', imgnames)
 assert len(imgs)==len(rows), 'image/timing count mismatch'
 
 def trim_center(src,dst):
@@ -67,7 +71,7 @@ def trim_center(src,dst):
 seglist=open(WORK+'/segs.txt','w')
 for i,row in enumerate(rows,1):
     dur=max(float(row[7])-float(row[6]),0.8)
-    src=WORK+f'/{i:03d}_short.jpg'
+    src=WORK+'/'+imgnames[i-1]   # use the ACTUAL downloaded filename (Flow adds a timestamp suffix)
     frame=WORK+f'/f{i:03d}.png'; trim_center(src,frame)
     seg=WORK+f'/seg/s{i:03d}.mp4'
     subprocess.run(['ffmpeg','-y','-loop','1','-i',frame,'-t',f'{dur:.3f}',
