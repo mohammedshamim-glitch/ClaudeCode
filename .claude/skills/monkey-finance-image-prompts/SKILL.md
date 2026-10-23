@@ -230,7 +230,19 @@ If the episode has no named characters, skip this file entirely.
 - Scene number at start of every line
 - Everything in one paragraph, blank line between scenes
 - **Central 60% / 20% border + 16:9 instruction is always the second statement** — immediately after "Clean white background." Never at the end, never omitted
-- **No file title, no section headers, no dividers** — scene number and content only
+- **No section headers or dividers between prompts** — scene number and content only (the one exception is the mandatory Flow instruction header at the very top, below)
+
+**MANDATORY Flow instruction header — always the first thing in the file (Sham, 23 Oct 2026):**
+Every `04-image-prompts.txt` must begin with this block, followed by a divider line, then the prompts. (For the Short's `short-image-prompts.txt`, use the same block adapted to the scene count, `001_short…`, and "9:16 VERTICAL portrait".)
+```
+INSTRUCTIONS FOR FLOW (read first):
+- Create each image using the character references provided (Monkey mascot + any named characters). Keep every character on-model and consistent across all scenes.
+- Generate in BATCHES OF 10 scenes at a time.
+- After each batch, rename the generated images to match the scene number at the start of each prompt below (001, 002, 003 ...). Use a leading zero-padded number, e.g. 001_[slug], 002_[slug].
+- All money shown must be in UK pounds (£) only. Never use $ or €.
+- 16:9 landscape.
+============================================================
+```
 
 Save `04-image-prompts.txt` to Drive in the episode folder.
 Total prompt count: matches the narration scene count exactly — typically 80–120 prompts.
