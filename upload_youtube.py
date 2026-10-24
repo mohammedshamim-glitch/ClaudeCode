@@ -32,6 +32,9 @@ def get_scheduled_publish_time():
     """
     # Determine UK UTC offset for the target date (approximate: BST Apr–Oct)
     def uk_utc_offset(d):
+        # BST runs last Sun of March → last Sun of Oct. 2026: GMT from 25/26 Oct.
+        if d.month == 10 and d.day >= 26: return 0
+        if d.month == 3 and d.day < 29: return 0
         return 1 if 4 <= d.month <= 10 else 0
 
     today = datetime.now(timezone.utc).date()
