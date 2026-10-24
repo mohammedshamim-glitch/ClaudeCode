@@ -378,8 +378,12 @@ def main():
     folder_id = sys.argv[1]
 
     publish_at = get_scheduled_publish_time()
-    # UK display time
-    uk_offset  = 1 if 4 <= publish_at.month <= 10 else 0
+    # UK display time (match the scheduler's clock-change-aware offset)
+    def _disp_off(d):
+        if d.month == 10 and d.day >= 26: return 0
+        if d.month == 3 and d.day < 29: return 0
+        return 1 if 4 <= d.month <= 10 else 0
+    uk_offset  = _disp_off(publish_at)
     uk_time    = publish_at + timedelta(hours=uk_offset)
     uk_label   = "BST" if uk_offset else "GMT"
 
