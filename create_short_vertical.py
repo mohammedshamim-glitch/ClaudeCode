@@ -51,8 +51,21 @@ print(f'{len(imgs)} images, {len(rows)} timing rows')
 print('  using images:', imgnames)
 assert len(imgs)==len(rows), 'image/timing count mismatch'
 
+def whiten_bg(im, thresh=238):
+    # Flash/Pro add a faint grey/blue wash instead of pure #FFFFFF, which shows as a
+    # grey box + white border after trim+centre. Flatten every near-white pixel to pure
+    # white (with a soft ramp so anti-aliased edges don't halo). Colour/content untouched.
+    import numpy as np
+    a=np.asarray(im).astype('float32'); mn=a.min(axis=2)
+    out=a.copy(); out[mn>=thresh]=255.0
+    lo=thresh-14; band=(mn>=lo)&(mn<thresh)
+    f=((mn[band]-lo)/(thresh-lo))[:,None]
+    out[band]=a[band]*(1-f)+255.0*f
+    return Image.fromarray(np.clip(out,0,255).astype('uint8'))
+
 def trim_center(src,dst):
     im=Image.open(src).convert('RGB')
+    im=whiten_bg(im)   # kill grey/off-white background wash -> uniform pure white frame
     # bbox of non-white (threshold 244)
     from PIL import ImageChops, Image as I
     bg=I.new('RGB',im.size,(255,255,255))
