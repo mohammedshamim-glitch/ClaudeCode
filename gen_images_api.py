@@ -38,6 +38,11 @@ MONEY_LINE=("CRITICAL: show money only in UK pounds using the £ symbol. "
 TEXT_LINE=("TEXT STYLE: any text, words, numbers, labels or arrows written on the canvas must be a SINGLE solid colour — "
            "bold BLACK by default, or bold RED only for a key stat/warning. NEVER use multicoloured, rainbow, or "
            "per-letter-different-colour lettering (it looks gimmicky and childish). Keep all lettering clean, consistent and legible.")
+# Flash holds a reference image loosely, so reinforce the mascot outfit in TEXT too (where Flash listens
+# reliably) — otherwise the green suit drifts to other colours, esp. in multi-anchor / unusual-pose scenes.
+MONKEY_LINE=("MASCOT CONSISTENCY: whenever the Monkey appears, it ALWAYS wears its signature bright GREEN business suit "
+             "with a matching green tie and a gold 'M' lapel badge, exactly matching the reference image. "
+             "NEVER change the suit to grey, blue, brown or any other colour.")
 
 t=json.load(open(TOKEN))
 KEY=t.get('gemini_tts_api_key') or t.get('gemini_api_key')
@@ -84,7 +89,7 @@ def validate(im, aspect):
     return True, 'ok'
 
 def gen_one(prompt, aspect, model, anchor_parts, retries=2):
-    body_parts=[{"text": prompt+"\n\n"+WHITE_LINE+"\n"+MONEY_LINE+"\n"+TEXT_LINE}]+anchor_parts
+    body_parts=[{"text": prompt+"\n\n"+WHITE_LINE+"\n"+MONEY_LINE+"\n"+TEXT_LINE+"\n"+MONKEY_LINE}]+anchor_parts
     payload={"contents":[{"parts":body_parts}],
              "generationConfig":{"responseModalities":["IMAGE"],
                                  "imageConfig":{"aspectRatio":aspect}}}
