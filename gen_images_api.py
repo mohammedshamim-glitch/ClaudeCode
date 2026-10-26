@@ -121,6 +121,10 @@ def main():
     ap.add_argument('--suffix',default='')   # e.g. _short
     ap.add_argument('--thumbnail',action='store_true')
     ap.add_argument('--only',default='')      # comma scene numbers to (re)gen only
+    # Flash image (Nano Banana) Tier-1 limit is 500 RPM / 500K TPM / 2000 RPD — huge.
+    # Sequential gen uses <1% of that, so default to a tiny courtesy pause, not 60s.
+    ap.add_argument('--sleep',type=float,default=1.0)  # seconds between batches
+    ap.add_argument('--batch',type=int,default=25)     # pause every N images
     a=ap.parse_args()
     os.makedirs(a.out_dir,exist_ok=True)
     at=drive_token()
@@ -148,8 +152,8 @@ def main():
         flag='' if att>=0 else '  <-- VALIDATION FAILED, review'
         print(f'  {fn} {im.size}{flag}')
         if att<0: failed.append(n)
-        if i%10==0 and i<len(prompts):
-            print('  ...batch of 10 done, sleeping 60s'); time.sleep(60)
+        if a.sleep>0 and i%a.batch==0 and i<len(prompts):
+            print(f'  ...{a.batch} done, pausing {a.sleep}s'); time.sleep(a.sleep)
     print('DONE.', f'{len(failed)} need manual review: {failed}' if failed else 'all validated OK.')
 
 if __name__=='__main__':
