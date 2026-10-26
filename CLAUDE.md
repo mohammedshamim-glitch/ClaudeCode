@@ -25,6 +25,19 @@ These rules apply on every task, every session, without being asked:
 
 ---
 
+## Channel Growth Doctrine — DATA-DRIVEN, self-updated weekly (NON-NEGOTIABLE)
+
+**North star: SUBSCRIBERS.** Every rule below is backed by real channel analytics and is UPDATED EVERY WEEK by the Monday performance-review routine (trig_01M7LBCSZNm994FEigiwH3Es), which reads the YouTube Analytics API, diagnoses what is working vs failing, and edits THIS doctrine + the relevant skill so the next videos are better than the last. When doctrine conflicts with an older rule elsewhere in this file, **doctrine wins**. Every pipeline stage (trend pick, script, title, Short, upload) must obey the current doctrine. Baseline set 26 Oct 2026 from the first full analytics pull.
+
+1. **RETENTION IS KING.** Long-form under ~40% average-view-% is dead on arrival (YouTube buries it). PROVEN on our own data: character-driven "X vs Y — who actually wins" HOLDS (PCP vs Buying 63%, Gold vs Silver 56%, EV vs Petrol 52%); explainer/news FAILS (SpaceX IPO 9%, Day Trader 10%, generic Property-long 21%). RULE: every long-form is a 2-character real-math comparison with a ruthless sub-30-second hook. **No explainers, no news recaps.** Kill any slow intro.
+2. **FORMAT-SPLIT BY AUDIENCE.** 80% of views are NON-UK (US/DE/IN/CA/NL); only ~19% GB. So: **Shorts = globally relatable** (cars, salary %, investing psychology, "two investors, one crash") — these travel and are 74% of all views. **Long-form = UK-specific** (ISA/pension/£) for the Search + evergreen play, where UK viewers actually find us. NEVER put a UK-only hook on a Short aimed at the global feed.
+3. **TITLES = EXACT-MATCH SEARCH PHRASE, front-loaded in the first 40 chars.** We rank in Search for exactly ONE thing (AI ETF) because its title IS the searched term. People search "annuity vs drawdown", not "Annuity vs Drawdown UK — Which One Actually Wins?". Validate real demand (Google Trends free / vidIQ keyword tool) BEFORE committing a topic. No clever titles nobody searches.
+4. **TOPICAL AUTHORITY.** We're suggested next to random junk, never next to Wealth Logic/Toby — YouTube doesn't yet classify us as UK finance. FIX every episode: add the main to the Investments playlist (already a rule), and cross-link the back-catalogue via end screens, cards, and a pinned "related episode" link. Build the topic cluster.
+5. **SHORTS MUST CONVERT, NOT JUST REACH.** Our biggest video is a Short (2,106 views) but subs/video is +0 to +2. Reach without subscribers is worthless. Every Short: Related video set in Studio (non-negotiable — it feeds our highest-retention traffic, Suggested at 54%), a curiosity-gap CTA (never "tap to watch"), and the pinned "full breakdown 👉" link.
+
+### Weekly SEO Learnings Log — the Monday review APPENDS a dated entry here every week
+- **2026-10-26 (baseline):** Shorts = 74% of views; Browse/Home-feed ≈ 0% (packaging not earning cold pushes); audience 80% non-UK; Search footprint is AI-ETF only; Suggested traffic is random (no topical authority); best retainers are character-driven comparisons (PCP 63% / Gold 56% / EV 52%), explainers die (SpaceX 9% / Day Trader 10%). Doctrine 1–5 above set from this.
+
 ## Token Efficiency — Always Apply
 
 Be conservative with context usage on every task:
