@@ -35,6 +35,9 @@ WHITE_LINE=("Pure flat #FFFFFF white background that fills the entire frame edge
             "frame/border/edge/tray/marker rail/rounded corners.")
 MONEY_LINE=("CRITICAL: show money only in UK pounds using the £ symbol. "
             "ABSOLUTELY NO $ (dollar) or € (euro) symbols anywhere. No real company or person names on canvas.")
+TEXT_LINE=("TEXT STYLE: any text, words, numbers, labels or arrows written on the canvas must be a SINGLE solid colour — "
+           "bold BLACK by default, or bold RED only for a key stat/warning. NEVER use multicoloured, rainbow, or "
+           "per-letter-different-colour lettering (it looks gimmicky and childish). Keep all lettering clean, consistent and legible.")
 
 t=json.load(open(TOKEN))
 KEY=t.get('gemini_tts_api_key') or t.get('gemini_api_key')
@@ -81,7 +84,7 @@ def validate(im, aspect):
     return True, 'ok'
 
 def gen_one(prompt, aspect, model, anchor_parts, retries=2):
-    body_parts=[{"text": prompt+"\n\n"+WHITE_LINE+"\n"+MONEY_LINE}]+anchor_parts
+    body_parts=[{"text": prompt+"\n\n"+WHITE_LINE+"\n"+MONEY_LINE+"\n"+TEXT_LINE}]+anchor_parts
     payload={"contents":[{"parts":body_parts}],
              "generationConfig":{"responseModalities":["IMAGE"],
                                  "imageConfig":{"aspectRatio":aspect}}}

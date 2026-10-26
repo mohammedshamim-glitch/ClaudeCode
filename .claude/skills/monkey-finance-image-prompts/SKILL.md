@@ -112,6 +112,8 @@ Every image prompt must begin with these two statements in this exact order:
 
 Statement 1: style + background. Statement 2: composition constraints + aspect ratio. Then the scene description. Then the closing style line. No exceptions. No variations.
 
+**On-canvas TEXT must be a SINGLE solid colour (Sham, 26 Oct 2026):** any words, numbers, labels or arrows written on the canvas must be bold BLACK by default (or bold RED only for a key stat/warning) — NEVER multicoloured, rainbow, or per-letter different colours (it looks gimmicky and childish). When a scene has text/stats, state the colour explicitly, e.g. "the stat '£440,000' hand-written large in bold black marker".
+
 ---
 
 ## Mandatory Rule — No Channel Branding Ever
