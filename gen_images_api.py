@@ -117,7 +117,7 @@ def main():
     ap.add_argument('--slug',required=True)
     ap.add_argument('--aspect',default='16:9',choices=['16:9','9:16'])
     ap.add_argument('--model',default=FLASH)
-    ap.add_argument('--anchors',default='Monkey-mascot.webp')
+    ap.add_argument('--anchors',default='Monkey.webp')
     ap.add_argument('--suffix',default='')   # e.g. _short
     ap.add_argument('--thumbnail',action='store_true')
     ap.add_argument('--only',default='')      # comma scene numbers to (re)gen only
