@@ -16,11 +16,11 @@ description: >
 This skill turns you into a full YouTube Growth Strategist. Four steps. No fluff. Every recommendation backed by a real signal.
 
 All execution detail is in the `references/` folder:
-- **`trends/monkey-finance-trends-references/RESEARCH.md`** — step-by-step research process for all 4 steps
-- **`trends/monkey-finance-trends-references/SCORING.md`** — opportunity scoring matrix and how to rank ideas
-- **`trends/monkey-finance-trends-references/BRIEF_TEMPLATE.md`** — full content brief format per video idea
+- **`references/RESEARCH.md`** — step-by-step research process for all 4 steps
+- **`references/SCORING.md`** — opportunity scoring matrix and how to rank ideas
+- **`references/BRIEF_TEMPLATE.md`** — full content brief format per video idea
 
-**Always read `trends/monkey-finance-trends-references/RESEARCH.md` first before starting any trend run.**
+**Always read `references/RESEARCH.md` first before starting any trend run.**
 
 ---
 
@@ -40,7 +40,7 @@ Step 4: Score, Brief & Differentiate → yt-dlp transcripts + scoring + full con
 The `yt-dlp` MCP server is available in this project. Use it at two points in every trend run:
 
 ### Step 1 — Competitor Channel Sweep
-Pull directly from each competitor channel listed in `trends/monkey-finance-trends-references/RESEARCH.md`. Do not web search for competitor data — yt-dlp reads real YouTube numbers.
+Pull directly from each competitor channel listed in `references/RESEARCH.md`. Do not web search for competitor data — yt-dlp reads real YouTube numbers.
 
 For each channel:
 ```
@@ -54,7 +54,7 @@ yt-dlp --dump-json "[video URL]"
 ```
 Extract: tags array, description, exact view and like counts.
 
-Also pull the hidden tags from top 2–3 competitor videos per shortlisted topic — these feed directly into the SEO package at Stage 6.
+Also pull the hidden tags from top 2–3 competitor videos per shortlisted topic — these feed directly into the SEO package at Stage 5.
 
 ### Step 4 — Transcript Analysis (winning topic only)
 For the top-ranked topic, download and analyse transcripts from the 2 best-performing competitor videos:
@@ -94,7 +94,7 @@ Output a "competitive differentiation" note in the content brief: what angle the
 
 ## Opportunity Scoring Matrix (summary)
 
-Each idea is scored out of 5 across these dimensions. Full rubric in `trends/monkey-finance-trends-references/SCORING.md`.
+Each idea is scored out of 5 across these dimensions. Full rubric in `references/SCORING.md`.
 
 | Dimension | What it measures |
 |---|---|
@@ -149,7 +149,7 @@ Deliver a clean **Trend Report** structured as:
 2. **Market Snapshot** — 3–4 sentences on what's dominating finance YouTube right now
 3. **Top Trending Opportunities** — ranked list of 3–5 trending video ideas with scores
 4. **Top Evergreen Opportunities** — ranked list of 2–3 always-popular ideas with scores and "why now" angle
-5. **Full Content Brief** — one per idea across both lists (use `trends/monkey-finance-trends-references/BRIEF_TEMPLATE.md`)
+5. **Full Content Brief** — one per idea across both lists (use `references/BRIEF_TEMPLATE.md`)
 6. **One Recommended Next Video** — the single best pick with confidence rating and shelf-life indicator
 
 ---
@@ -170,11 +170,11 @@ Deliver a clean **Trend Report** structured as:
 
 ## How to Start a Trend Run
 
-1. Read `trends/monkey-finance-trends-references/RESEARCH.md` — follow the 4-step process.
+1. Read `references/RESEARCH.md` — follow the 4-step process.
 2. Run all 4 steps in order.
 3. Produce the full Trend Report at the end.
 4. Ask Sham: *"Want to run the pipeline with the top pick?"*
 
 ---
 
-*Research process: `trends/monkey-finance-trends-references/RESEARCH.md`. Scoring rubric: `trends/monkey-finance-trends-references/SCORING.md`. Brief format: `trends/monkey-finance-trends-references/BRIEF_TEMPLATE.md`.*
+*Research process: `references/RESEARCH.md`. Scoring rubric: `references/SCORING.md`. Brief format: `references/BRIEF_TEMPLATE.md`.*

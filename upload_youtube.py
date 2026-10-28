@@ -32,6 +32,9 @@ def get_scheduled_publish_time():
     """
     # Determine UK UTC offset for the target date (approximate: BST Apr–Oct)
     def uk_utc_offset(d):
+        # BST runs last Sun of March → last Sun of Oct. 2026: GMT from 25/26 Oct.
+        if d.month == 10 and d.day >= 26: return 0
+        if d.month == 3 and d.day < 29: return 0
         return 1 if 4 <= d.month <= 10 else 0
 
     today = datetime.now(timezone.utc).date()
@@ -143,40 +146,80 @@ def drive_download(token, file_id, local_path):
     print()
 
 # ── SEO parser ────────────────────────────────────────────────────────────────
+KNOWN_SECTIONS = {'TITLES', 'DESCRIPTION', 'TAGS', 'HASHTAGS', 'CHAPTERS', 'PINNED COMMENT', 'COMMUNITY POST', 'THUMBNAIL BRIEF', 'AI IMAGE PROMPT'}
+
 def is_separator(line):
     stripped = line.strip()
-    return len(stripped) >= 5 and all(c in '━═─' for c in stripped)
+    # Unicode box-drawing chars
+    if len(stripped) >= 5 and all(c in '━═─' for c in stripped):
+        return True
+    # Plain hyphens/dashes
+    if len(stripped) >= 3 and all(c in '-' for c in stripped):
+        return True
+    return False
+
+def is_bare_section_header(line):
+    """Detect bare uppercase section headers like TITLES, DESCRIPTION, TAGS etc."""
+    stripped = line.strip()
+    return stripped.upper() in KNOWN_SECTIONS and stripped == stripped.upper()
 
 def parse_seo_metadata(text):
-    """Parse 06-seo-metadata.txt — structure is ━━━\nSECTION\n━━━\ncontent."""
+    """Parse 06-seo-metadata.txt — handles [SECTION], ━━━ separator, and bare header formats."""
     lines = text.split('\n')
     sections = {}
     current_section = None
     content_lines = []
     i = 0
 
-    while i < len(lines):
-        line = lines[i]
-        if is_separator(line):
-            j = i + 1
-            while j < len(lines) and lines[j].strip() == '':
-                j += 1
-            if j < len(lines) and not is_separator(lines[j]):
-                name_line = lines[j].strip().upper()
-                k = j + 1
-                if k < len(lines) and is_separator(lines[k]):
-                    if current_section and content_lines:
-                        sections[current_section] = '\n'.join(content_lines).strip()
-                    current_section = name_line
-                    content_lines = []
-                    i = k + 1
-                    continue
-        if current_section is not None:
-            content_lines.append(line)
-        i += 1
+    # Detect format: [SECTION] bracket style vs ━━━ separator style vs bare header style
+    bracket_format = any(re.match(r'^\[([A-Z][A-Z\s]+)\]$', l.strip()) for l in lines)
+    bare_format = not bracket_format and any(is_bare_section_header(l) for l in lines)
 
-    if current_section and content_lines:
-        sections[current_section] = '\n'.join(content_lines).strip()
+    if bracket_format:
+        for line in lines:
+            m = re.match(r'^\[([A-Z][A-Z0-9\s]+)\]$', line.strip())
+            if m:
+                if current_section and content_lines:
+                    sections[current_section] = '\n'.join(content_lines).strip()
+                current_section = m.group(1).strip().upper()
+                content_lines = []
+            elif current_section is not None:
+                content_lines.append(line)
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
+    elif bare_format:
+        for line in lines:
+            if is_bare_section_header(line) and not is_separator(line):
+                if current_section and content_lines:
+                    sections[current_section] = '\n'.join(content_lines).strip()
+                current_section = line.strip().upper()
+                content_lines = []
+            elif current_section is not None and not is_separator(line):
+                content_lines.append(line)
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
+    else:
+        while i < len(lines):
+            line = lines[i]
+            if is_separator(line):
+                j = i + 1
+                while j < len(lines) and lines[j].strip() == '':
+                    j += 1
+                if j < len(lines) and not is_separator(lines[j]):
+                    name_line = lines[j].strip().upper()
+                    k = j + 1
+                    if k < len(lines) and is_separator(lines[k]):
+                        if current_section and content_lines:
+                            sections[current_section] = '\n'.join(content_lines).strip()
+                        current_section = name_line
+                        content_lines = []
+                        i = k + 1
+                        continue
+            if current_section is not None:
+                content_lines.append(line)
+            i += 1
+        if current_section and content_lines:
+            sections[current_section] = '\n'.join(content_lines).strip()
 
     result = {"title": "", "description": "", "tags": []}
 
@@ -184,6 +227,12 @@ def parse_seo_metadata(text):
     m = re.search(r'PRIMARY[^\n]*\n([^\n\[]+)', titles_block, re.IGNORECASE)
     if m:
         result["title"] = re.sub(r'\s*\[\d+ characters?\]', '', m.group(1)).strip()
+    if not result["title"]:
+        # Handle separate TITLE (PRIMARY) section format
+        for key in sections:
+            if 'TITLE' in key and 'PRIMARY' in key:
+                result["title"] = sections[key].strip().split('\n')[0].strip()
+                break
 
     desc_block = sections.get('DESCRIPTION', '')
     result["description"] = re.split(r'\n---\n|\n#[A-Z]', desc_block)[0].strip()
@@ -227,53 +276,98 @@ def youtube_resumable_upload(yt_token, video_path, metadata):
         },
     }
 
-    r = requests.post(
-        "https://www.googleapis.com/upload/youtube/v3/videos"
-        "?uploadType=resumable&part=snippet,status",
-        headers={
-            "Authorization":       f"Bearer {yt_token}",
-            "Content-Type":        "application/json",
-            "X-Upload-Content-Type": VIDEO_MIME,
-            "X-Upload-Content-Length": str(file_size),
-        },
-        json=body,
-    )
-    r.raise_for_status()
-    upload_url = r.headers["Location"]
-    print(f"  ✓ Upload session created")
-
-    # Step 2: Upload video in chunks
-    chunk_size = 8 * 1024 * 1024  # 8MB chunks
-    uploaded = 0
-
-    with open(video_path, "rb") as f:
-        while uploaded < file_size:
-            chunk = f.read(chunk_size)
-            end = uploaded + len(chunk) - 1
-            headers = {
-                "Authorization":  f"Bearer {yt_token}",
-                "Content-Type":   VIDEO_MIME,
-                "Content-Range":  f"bytes {uploaded}-{end}/{file_size}",
-                "Content-Length": str(len(chunk)),
-            }
-            for attempt in range(4):
-                r = requests.put(upload_url, headers=headers, data=chunk, timeout=120)
-                if r.status_code in (200, 201, 308):
-                    break
-                wait = 2 ** attempt
-                print(f"\n  Upload error {r.status_code}, retry in {wait}s...")
-                time.sleep(wait)
-
-            uploaded += len(chunk)
-            pct = uploaded / file_size * 100
-            print(f"\r  Uploading... {pct:.0f}% ({uploaded//1024//1024}MB/{file_size//1024//1024}MB)", end="", flush=True)
-
+    def create_session():
+        nonlocal yt_token
+        last = None
+        for a in range(5):
+            r = requests.post(
+                "https://www.googleapis.com/upload/youtube/v3/videos"
+                "?uploadType=resumable&part=snippet,status",
+                headers={
+                    "Authorization":       f"Bearer {yt_token}",
+                    "Content-Type":        "application/json",
+                    "X-Upload-Content-Type": VIDEO_MIME,
+                    "X-Upload-Content-Length": str(file_size),
+                },
+                json=body,
+            )
             if r.status_code in (200, 201):
-                print()
-                return r.json()
+                return r.headers["Location"]
+            last = r
+            if r.status_code in (401, 403):
+                print(f"\n  Session create {r.status_code} (transient auth) — refreshing YouTube token, try {a+1}/5...")
+                yt_token = get_youtube_token()
+            else:
+                print(f"\n  Session create {r.status_code} — retry {a+1}/5...")
+            time.sleep(2 ** a)
+        last.raise_for_status()
+        return last.headers["Location"]
 
-    print()
-    return r.json()
+    chunk_size = 8 * 1024 * 1024  # 8MB chunks
+
+    # Outer loop: a 404/410 means the resumable session was invalidated — we must
+    # create a brand-new session and restart the upload from byte 0 (you cannot
+    # resume a dead session). Retry the whole upload a few times.
+    for session_attempt in range(4):
+        upload_url = create_session()
+        print(f"  ✓ Upload session created" + (f" (attempt {session_attempt+1})" if session_attempt else ""))
+        uploaded = 0
+        session_dead = False
+
+        with open(video_path, "rb") as f:
+            while uploaded < file_size:
+                chunk = f.read(chunk_size)
+                end = uploaded + len(chunk) - 1
+                headers = {
+                    "Authorization":  f"Bearer {yt_token}",
+                    "Content-Type":   VIDEO_MIME,
+                    "Content-Range":  f"bytes {uploaded}-{end}/{file_size}",
+                    "Content-Length": str(len(chunk)),
+                }
+                r = None
+                for attempt in range(4):
+                    r = requests.put(upload_url, headers=headers, data=chunk, timeout=180)
+                    if r.status_code in (200, 201, 308):
+                        break
+                    if r.status_code in (404, 410):
+                        break  # session gone — stop retrying this chunk
+                    if r.status_code in (401, 403):
+                        yt_token = get_youtube_token()
+                        headers["Authorization"] = f"Bearer {yt_token}"
+                        print(f"\n  Chunk auth {r.status_code} — refreshed token, retrying...")
+                        time.sleep(2 ** attempt)
+                        continue
+                    wait = 2 ** attempt
+                    print(f"\n  Upload error {r.status_code}, retry in {wait}s...")
+                    time.sleep(wait)
+
+                if r.status_code in (404, 410):
+                    print(f"\n  Session expired ({r.status_code}) — recreating session and restarting...")
+                    session_dead = True
+                    break
+                if r.status_code not in (200, 201, 308):
+                    print(f"\n  Chunk failed ({r.status_code}) after retries — recreating session and restarting...")
+                    session_dead = True
+                    break
+
+                uploaded += len(chunk)
+                pct = uploaded / file_size * 100
+                print(f"\r  Uploading... {pct:.0f}% ({uploaded//1024//1024}MB/{file_size//1024//1024}MB)", end="", flush=True)
+
+                if r.status_code in (200, 201):
+                    print()
+                    try:
+                        return r.json()
+                    except Exception:
+                        print("  ⚠ Upload completed but response body was not JSON — treating as success without id")
+                        return {}
+
+        if not session_dead:
+            # Loop ended without a 200/201 but no error flagged — shouldn't happen; retry
+            print("\n  Upload ended without final response — recreating session and restarting...")
+        time.sleep(3)
+
+    raise RuntimeError("YouTube upload failed: the resumable session kept expiring after 4 full attempts")
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
@@ -284,8 +378,12 @@ def main():
     folder_id = sys.argv[1]
 
     publish_at = get_scheduled_publish_time()
-    # UK display time
-    uk_offset  = 1 if 4 <= publish_at.month <= 10 else 0
+    # UK display time (match the scheduler's clock-change-aware offset)
+    def _disp_off(d):
+        if d.month == 10 and d.day >= 26: return 0
+        if d.month == 3 and d.day < 29: return 0
+        return 1 if 4 <= d.month <= 10 else 0
+    uk_offset  = _disp_off(publish_at)
     uk_time    = publish_at + timedelta(hours=uk_offset)
     uk_label   = "BST" if uk_offset else "GMT"
 
@@ -303,7 +401,13 @@ def main():
     video_folder = next((f for f in items if f["name"].lower() == "video" and "folder" in f["mimeType"]), None)
 
     # Look for video in episode root first, then in Video subfolder
-    video_file = next((f for f in items if f["mimeType"] == "video/mp4"), None)
+    # Exclude sample renders and short previews; among remainder pick the largest (final render)
+    mp4s = [f for f in items if f["mimeType"] == "video/mp4"]
+    main_mp4s = [f for f in mp4s if not re.match(r'^(sample|short_preview)', f["name"].lower())]
+    if main_mp4s:
+        video_file = max(main_mp4s, key=lambda f: int(f.get("fileSize", 0)))
+    else:
+        video_file = max(mp4s, key=lambda f: int(f.get("fileSize", 0))) if mp4s else None
     if not video_file and video_folder:
         sub_items  = drive_list_all(drive_token, video_folder["id"])
         video_file = next((f for f in sub_items if f["mimeType"] == "video/mp4"), None)
@@ -369,11 +473,24 @@ def main():
             thumb_ext  = ".png" if "png" in thumb_file.get("mimeType", "") else ".jpg"
             thumb_path = os.path.join(tmpdir, f"thumbnail{thumb_ext}")
             drive_download(drive_token, thumb_file["id"], thumb_path)
-            thumb_mime = thumb_file.get("mimeType", "image/jpeg")
+            # Compress to JPEG under 2MB (YouTube limit)
+            try:
+                from PIL import Image
+                import io as _io
+                img = Image.open(thumb_path).convert("RGB")
+                img = img.resize((1280, 720), Image.LANCZOS)
+                buf = _io.BytesIO()
+                img.save(buf, format="JPEG", quality=85, optimize=True)
+                thumb_data = buf.getvalue()
+                thumb_mime = "image/jpeg"
+                print(f"  ✓ Compressed to {len(thumb_data)/1024:.0f}KB")
+            except Exception:
+                thumb_data = open(thumb_path, "rb").read()
+                thumb_mime = thumb_file.get("mimeType", "image/jpeg")
             r = requests.post(
                 f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}&uploadType=media",
                 headers={"Authorization": f"Bearer {yt_token}", "Content-Type": thumb_mime},
-                data=open(thumb_path, "rb").read(),
+                data=thumb_data,
             )
             if r.ok:
                 print(f"  ✓ Thumbnail uploaded")

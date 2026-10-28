@@ -57,17 +57,16 @@ Use arrows, lines, and pointing to guide the viewer's eye through the compositio
 
 ## Character Specifications
 
-### Green Suit Monkey (Scene 01 and Final Scene ONLY)
-- A simple monkey drawn in 2D hand-drawn style
-- Wearing a bright green suit — the brand mascot in full presentation mode
-- Expressive face — confident, welcoming, or energetic depending on scene context
-- May hold props: a marker, a sign, a megaphone
-- Always positioned on the right side of the frame, facing left (toward the content)
-- Slightly larger than the monkey — this is the brand moment
+### Green Suit Monkey (the brand mascot — recurring narrator across the video)
+- A simple monkey drawn in 2D hand-drawn style — the recurring brand mascot. In prompts write just "Monkey" (capital M, no article); never specify a suit colour — the generator keeps the look consistent
+- This is the channel mascot AND the consistent on-screen guide — it may appear in as many scenes as suit the narration (a lot of them), not just the open and close
+- Expressive face — confident, welcoming, energetic, concerned, or curious depending on the moment
+- May hold or use props: a marker, a sign, a magnifying glass, a megaphone
+- Give it extra prominence on the opening hook and the sign-off (the brand bookends), but it is free to narrate throughout
 
-### Monkey (~75% of scenes — guide, narrator, reactor)
-- Same monkey character, no suit — casual, unguarded, human
-- Present in approximately 75% of all scenes as a consistent guide and emotional anchor
+### Monkey (guide, narrator, reactor — appears in many scenes)
+- The same monkey mascot, used as the consistent guide and emotional anchor
+- Aim for the monkey in a large share of scenes (roughly 60–80% is a good target) — present enough to anchor the video, while leaving pure stat/data scenes to breathe
 
 **THE GOLDEN RULE: The monkey must always be DOING something — never just standing.**
 
@@ -91,7 +90,7 @@ Every monkey scene must feature an active physical action with a prop or in a si
 | Standing at a crossroads / fork | Two signposts labelled with options | Decision points, two choices |
 | Catching falling money / coins | Coins, bank notes raining down | Windfall, unexpected gain |
 | Pointing a remote / clicking | Remote control aimed at a chart | Control, activation, setting a strategy |
-| Writing on a large board | Giant marker, whiteboard with key numbers | Teaching, explaining a concept |
+| Writing / drawing numbers | Giant marker, hand-drawn text floating on white background | Teaching, explaining a concept |
 
 **Expression must match the action:**
 - Physical exertion → gritted teeth, focused brow
@@ -101,7 +100,7 @@ Every monkey scene must feature an active physical action with a prop or in a si
 - Warning → stern face, one hand raised in stop gesture
 - Curiosity → leaning in, squinting, head tilted
 
-### No Monkey (~25% of scenes — pure stat/data scenes only)
+### No Monkey (~20% of scenes — pure stat/data scenes only)
 - Reserved for scenes where a statistic, equation, or diagram must own the entire frame
 - The number or chart IS the visual — a character would dilute its impact
 - Content is centred, given full canvas space, and composed cleanly
@@ -109,15 +108,29 @@ Every monkey scene must feature an active physical action with a prop or in a si
 
 ---
 
+### Named Characters (Emma, Tom, Sarah, James, Aisha)
+
+When an episode uses named characters, they appear in their designated scenes as 2D whiteboard figures — same style as the monkey, hand-drawn, bold outlines, flat colour.
+
+**Rules:**
+- If a scene's narration names a character, that character MUST appear in the image prompt
+- The monkey may appear alongside a named character as a narrator/guide — but never INSTEAD of them
+- Never describe clothing or physical appearance in scene prompts — use the character name only. Visual identity is established by the one-liner prompt in `00b-character-references.txt`
+- Always give named characters a contextually appropriate facial expression matching the narration moment
+- Characters face toward the content (stat, chart, diagram) — never away from it
+
+**Before writing image prompts for an episode with named characters:** read `00b-character-references.txt` in the episode Drive folder to understand which characters are used and which scenes they appear in.
+
+---
+
 ## What Never Appears in Any Scene
 
 - ❌ Logos of any kind (channel, brand, company)
-- ❌ A physical whiteboard object (frame, tray, eraser, chalk ledge)
+- ❌ A physical whiteboard object (frame, tray, eraser, chalk ledge) — the style is whiteboard animation but NO actual whiteboard appears. All text and elements float directly on the clean white background.
 - ❌ Jungle environments, vines, tropical colours as primary setting
 - ❌ 3D rendering or photorealistic elements
 - ❌ Cinematic lighting effects
 - ❌ Text that says "Monkey Finance" or any channel name
-- ❌ Green suit monkey in any scene except Scene 01 and the final scene
 - ❌ More than 3 colours in a single scene
 - ❌ Cluttered compositions with more than 4 visual elements
 

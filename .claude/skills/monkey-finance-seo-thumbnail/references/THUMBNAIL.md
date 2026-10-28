@@ -16,13 +16,14 @@ The thumbnail and title work as a unit. They must tell the same story, not dupli
 
 ## The Monkey Finance Design System
 
-### Visual Identity
-- **Style:** 2D colourful whiteboard animation — same aesthetic as the pipeline's video scenes
-- **Background:** Always clean white. No exceptions.
-- **Character:** Monkey in a **green suit** — fixed design, used in every thumbnail
-- **Text:** Written on the whiteboard in bold thick marker style — hand-drawn, not digital fonts
-- **Graphics:** All visual elements are hand-drawn on the whiteboard (arrows, icons, graphs, bursts)
-- **No logos. No channel name. No watermarks.** The consistent style IS the brand.
+### Visual Identity — v2 (bold black & red, full-bleed)
+> **This supersedes the old clean-white whiteboard thumbnails.** The killer was **empty white space** (small elements floating in lots of exposed white), NOT white itself — Wealth Logic's own thumbnails sit on a white/light background, but it's almost entirely COVERED by big imagery and huge text. The new standard copies that proven formula: fill the frame, bold black + red, one big character, rich imagery, a scary number and/or a red arrow.
+- **Style:** Bold 2D cartoon illustration that **FILLS THE FRAME** — large imagery + huge text cover almost all of it, so very little background shows. A plain white/light background is fine **as long as it's mostly covered**. No borders, no frames, and never small elements stranded in empty white.
+- **Character:** Monkey in a **green suit — drawn BIG** (upper-body close-up, ~40% of the frame) with an exaggerated expression AND a gesture. **VARY the expression/pose every thumbnail — do NOT default to the two-handed shrug every time** (they blur together). Pick the emotion that fits THIS video from the Expression & Action guide below: thoughtful chin-stroke, shocked jaw-drop + stop hand, excited fist-pump, stern finger-point, curious head-tilt, worried hands-to-face, etc. Our mascot = their suited man.
+- **Text:** **Bold BLACK + RED only.** Black = the setup, **RED = the danger word / scary number**. 3–4 words MAX, huge, thick. Text must ADD a hook, never just repeat the title.
+- **Stakes:** a **thick red crashing arrow** and/or a **big number**, plus one real object (coin, £ note, product).
+- **UK currency by default:** any money on the thumbnail must be **British pounds (£)** — £ symbols, British coins/notes — never US dollars or "$".
+- **No logos. No channel name. No watermarks.**
 
 ### Marker Colour Strategy by Emotion
 
@@ -74,15 +75,19 @@ Best for: Tax percentages, rate changes, savings figures, shocking numbers
 ```
 Best for: Decisions, counterintuitive takes, "should I?", "why?" topics
 
-### Layout C: Two-Option Split
-**The comparison layout** — whiteboard divided, monkey caught between two options.
+### Layout C: "X VS Y / WHICH SHOULD YOU BUY?" treasure-pile comparison (DEFAULT for every versus video)
+**The proven comparison layout** — full-bleed, packed with rich imagery, character thinking in the middle. This is the Wealth Logic comparison formula; use it for every "X vs Y" episode.
 ```
-[Bold vertical dividing line]
-LEFT HALF: [Option A header] + [Value A] + [Icon A — e.g. flat/downward arrow]
-RIGHT HALF: [Option B header] + [Value B] + [Icon B — e.g. upward arrow]
-[Monkey in green suit — centre or left, looking between both options]
+TOP: "[A] VS [B]" in huge bold BLACK caps, and under it "WHICH SHOULD YOU BUY?" (or a sharp question) in huge bold RED caps — fills the full width.
+CENTRE: Monkey in a green suit, upper body, hand on chin in a thinking pose, looking between the two sides.
+LEFT: a BIG RICH PILE representing option A (e.g. gold bars + coins).
+RIGHT: a BIG RICH, EQUALLY APPEALING PILE representing option B (e.g. silver bars + coins).
+A big bold yellow question mark above/between the character.
+Both sides look equally tempting. Frame filled, minimal visible background.
 ```
-Best for: ISA comparisons, fix vs tracker, pension vs ISA, any versus topic
+**NON-NEGOTIABLE — never spoil the verdict:** The thumbnail POSES the question, it does not answer it. Keep the curiosity gap — do NOT reveal which option wins. That means NO "winner" cues on a comparison thumbnail: no green-up on one side + red-down on the other, no tick vs cross, no "20% VAT / loser" tag. Both options must look equally appealing so the viewer has to click to find out. (Wealth Logic's own Gold vs Silver thumbnail gave nothing away — both sides looked good, just "WHICH SHOULD YOU BUY?") Save directional arrows/ticks/crosses for single-subject warning thumbnails, never for versus thumbnails.
+Rich real-looking piles beat flat single icons — the imagery is half the click. The thumbnail does NOT need to match the whiteboard video style; its only job is the click.
+Best for: gold vs silver, ISA vs pension, property vs stocks, any versus topic
 
 ---
 
@@ -154,6 +159,8 @@ The thumbnail and title are a package. They must work together without duplicati
 | "Should You Fix Your Mortgage Now?" | Show monkey at a crossroads visual + `FIX OR WAIT?` |
 | "Cash ISA vs Stocks ISA" | Use split layout A vs B |
 | "5 Pension Mistakes Costing You Thousands" | Show alarmed monkey + `PENSION TRAP` |
+
+**Shared-theme rule (non-negotiable):** Title and thumbnail must NOT say the same words, but they MUST share the same theme, hook and emotion so they feel like one story — the title *states* the promise, the thumbnail *shows* it and adds a complementary angle. Never disconnected (title about one frame, thumbnail about another) and never duplicated. Gut-check every video: "do the title and thumbnail feel like the same story?" If one is strong and the other flat, fix the weak one.
 
 **The curiosity gap rule:** The thumbnail raises a question or creates tension. The title either deepens that tension OR provides just enough context to make the click feel safe. Together they create the compulsion to click.
 

@@ -4,13 +4,14 @@
 
 Every thumbnail uses the **same consistent style** as the pipeline's scene images. This is non-negotiable — visual consistency across the channel builds brand recognition and trust.
 
-**Core style DNA:**
-- 2D colourful whiteboard animation style
-- Clean white background (always)
-- Monkey in a **green suit** — this is the fixed character design
-- Bold hand-drawn illustration aesthetic — thick marker strokes, expressive lines
-- Text on the whiteboard is always written in **thick marker style** (not digital fonts)
-- High contrast, expressive composition
+**Core style DNA (v2 — bold black & red, full-bleed. This REPLACES the old clean-white-whiteboard style, which lost in the feed):**
+- **Bold 2D cartoon illustration that FILLS THE FRAME** — large imagery + huge text cover almost all of it. **Background must be PLAIN SOLID WHITE (Sham, 23 Oct 2026) — NEVER yellow, coloured, gradient, radial or sunburst, and no rays.** Flow will add a yellow sunburst unless explicitly told "plain solid white background, no coloured or sunburst background". Fill the frame with elements so little white shows, but the background behind them stays flat white. The killer is EMPTY white space (small elements stranded in exposed white), not white itself. No borders, no frames.
+- **Monkey in a green suit — the fixed mascot — drawn BIG**: upper-body close-up, roughly 40% of the frame, with a strong exaggerated expression (shock, stern warning) AND a gesture (stop hand, pointing, hands to face). This is our equivalent of Wealth Logic's suited character.
+- **Text is CLEAN BOLD TYPOGRAPHIC, never hand-drawn marker (NEW STANDARD — Sham, 23 Oct 2026, matching Wealth Logic / proven finance-YT thumbnails).** All thumbnail text must be "CLEAN BOLD HEAVY SANS-SERIF BLOCK CAPITALS (thick condensed poster font like Impact or Anton), crisp and typographic, NEVER hand-drawn marker, sketchy, outlined or scribbled". The ILLUSTRATION stays hand-drawn cartoon — only the TEXT is typographic.
+- **Black setup + red punch.** Setup words in SOLID BLACK caps. The punch word/number is EITHER solid bright red caps OR (preferred, higher contrast) WHITE caps sitting inside a SOLID BRIGHT RED highlight rectangle. 3–4 words MAX per line, huge, fills the width, dominates the upper half. Text ADDS a hook — never just repeats the title. Use ONE setup line + ONE punch line — never competing lines fighting each other. No coloured outline, no glow on the black text.
+- **A red crashing arrow and/or a big scary number** to signal the stakes, plus ONE real object anchoring the topic (a coin, a £ note, a product).
+- High contrast, punchy, almost no empty space — elements fill every corner.
+- **UK currency by default**: any money shown must be **British pounds (£)** — £ symbols, British coins/notes — never US dollars or $ signs.
 - Landscape orientation, 1280x720
 - **No logos. No watermarks. No channel branding on the thumbnail.**
 
@@ -21,28 +22,30 @@ Every thumbnail uses the **same consistent style** as the pipeline's scene image
 Every prompt is built in this order:
 
 ```
-2D colourful whiteboard animation style. Clean white background. 
-[MONKEY DESCRIPTION — green suit, position, expression, action]. 
-On the whiteboard, [WHITEBOARD CONTENT — what's drawn/written and how]. 
-[ADDITIONAL VISUAL ELEMENTS if needed]. 
-Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, 
-no logos, no watermarks, no text cutoff.
+Bold 2D cartoon illustration, full-bleed, fills the entire frame edge to edge, no white border, no frame. 
+[MONKEY DESCRIPTION — green suit, BIG upper-body close-up ~40% of frame, strong expression + gesture]. 
+Across the top in the largest, boldest thick BLACK capital letters: "[SETUP WORDS]". 
+Directly below in huge thick RED capital letters: "[DANGER WORDS / NUMBER]". 
+[ONE real object anchoring the topic + a thick red crashing arrow]. 
+High contrast, punchy, large elements filling the frame with minimal visible background, 
+landscape YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
+
+**Critical rule — FILL THE FRAME:** Large imagery and huge text must cover almost all of the thumbnail so very little background shows. A white/light background is fine as long as it's mostly covered — the thing that kills CTR is EMPTY white space with small floating elements. No borders, no frames, no small elements stranded in exposed white.
 
 ---
 
-## The Whiteboard Content System
+## The Visual Content System
 
-The whiteboard is the main communication surface. Everything the viewer reads happens on it.
+The white background is the canvas. All text and graphics are drawn directly on it in hand-drawn marker style.
 
-### Text on the whiteboard — always specify:
-- **Position** (top, centre, left side, right side)
+### Text — always specify:
+- **Position** (top, centre, left side, right side of the frame)
 - **Size** (largest/boldest, slightly smaller, small)
 - **Marker colour** (thick black marker, thick red marker, thick green marker, thick blue marker, thick yellow marker)
-- **Style** (written in thick marker, drawn in bold hand-drawn style, underlined in red)
+- **Style** (hand-drawn in thick marker, bold hand-drawn style, underlined in red)
 
-### Graphic elements on the whiteboard — always hand-drawn, never digital icons:
+### Graphic elements — always hand-drawn, never digital icons:
 
 | Element | Description for prompt |
 |---|---|
@@ -56,7 +59,7 @@ The whiteboard is the main communication surface. Everything the viewer reads ha
 | Warning sign | "hand-drawn red triangle warning icon" |
 | Upward graph | "bold hand-drawn line graph shooting upward in green" |
 | Downward graph | "bold hand-drawn line graph plunging downward in red" |
-| Versus divider | "bold vertical line dividing whiteboard into two halves" |
+| Versus divider | "bold vertical line dividing the frame into two halves" |
 | Highlight circle | "rough hand-drawn circle in red around the key word" |
 | Clock/timer | "hand-drawn clock face with urgent red hands" |
 
@@ -70,7 +73,7 @@ Always specify the monkey in a **green suit**. Always give both a precise **expr
 |---|---|---|
 | 😨 Fear / Warning | Wide eyes, open mouth, jaw dropped | Both hands raised to face in shock, or pointing frantically at the board |
 | 😮 Shock / Surprise | Eyes wide, brows at top of head, mouth open in O | One hand on head, one pointing at the stat |
-| 🧐 Curiosity | Head tilted, one eyebrow raised | Chin resting on hand, or tapping whiteboard thoughtfully |
+| 🧐 Curiosity | Head tilted, one eyebrow raised | Chin resting on hand, or tapping chin thoughtfully |
 | 🤑 Aspiration | Big smile, eyes lit up | Arms spread wide, or one fist pumped in the air |
 | 😅 Relief | Relaxed expression, slight smile | Shoulders down, hands open, calm posture |
 | 😤 Concern / Serious | Furrowed brow, tight mouth, intense eyes | Arms crossed, or one finger pointing firmly at text |
@@ -86,7 +89,7 @@ Always specify the monkey in a **green suit**. Always give both a precise **expr
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], positioned on the right side of the frame, 
-[ACTION]. On the whiteboard, a single massive "[STAT]" written in the largest boldest 
+[ACTION]. On the white background, a single massive "[STAT]" written in the largest boldest 
 thick [COLOUR] marker, dominating the left two-thirds of the frame. Below it in slightly 
 smaller thick [COLOUR] marker: "[2-3 WORD LABEL]". [Optional hand-drawn graphic element 
 next to the stat]. At the top of the whiteboard in thick black marker with [COLOUR] underline: 
@@ -98,7 +101,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 jaw dropped in shock, eyes wide open, one hand on head and the other pointing frantically 
-at the whiteboard, positioned on the right side of the frame. On the whiteboard, a single 
+at the text, positioned on the right side of the frame. On the white background, a single 
 massive "40%" written in the largest boldest thick red marker, dominating the left 
 two-thirds of the frame. Below it in slightly smaller thick red marker: "DEATH TAX". 
 To the left, a bold hand-drawn red explosion starburst icon. At the top of the whiteboard 
@@ -115,7 +118,7 @@ YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], [ACTION]. 
-On the whiteboard, at the top in the largest boldest thick black marker 
+On the white background, at the top in the largest boldest thick black marker 
 with [COLOUR] underline: "[QUESTION]". Below that in slightly smaller thick 
 [COLOUR] marker: "[SUBTEXT]". [Optional visual element — graph, icon, symbol]. 
 A large hand-drawn question mark in thick yellow marker [position]. 
@@ -127,7 +130,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 head tilted to the side, one eyebrow raised in deep thought, one hand on chin and the other 
-gesturing at the whiteboard, positioned centre-left. On the whiteboard, at the top in the 
+gesturing at the text, positioned centre-left. On the white background, at the top in the 
 largest boldest thick black marker with red underline: FIX NOW OR WAIT? Below that in 
 slightly smaller thick blue marker: MORTGAGE RATES 2026. To the right, a large bold yellow 
 question mark drawn in thick marker. Below the question mark, a hand-drawn line graph 
@@ -144,7 +147,7 @@ YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. 
 Monkey in a green suit, [EXPRESSION DETAIL], positioned [centre / left], [ACTION]. 
-On the whiteboard, a bold vertical line dividing it into two halves. 
+On the white background, a bold vertical line dividing it into two halves. 
 On the left side: "[OPTION A]" in thick [COLOUR] marker at top, "[VALUE A]" below 
 in [COLOUR] marker, and a hand-drawn [ICON A] beneath. 
 On the right side: "[OPTION B]" in thick [COLOUR] marker at top, "[VALUE B]" below 
@@ -157,7 +160,7 @@ landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
 ```
 2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
 eyes darting between both sides in wide-eyed disbelief, both hands raised in a 
-"what do I choose?" shrug gesture, positioned centre-bottom. On the whiteboard, a bold 
+"what do I choose?" shrug gesture, positioned centre-bottom. On the white background, a bold 
 vertical line dividing it into two halves. On the left: "CASH ISA" in thick black marker 
 at top, "4.5%" below in thick blue marker, a flat horizontal arrow in blue marker beneath. 
 On the right: "STOCKS ISA" in thick black marker at top, "12%?" below in thick green marker, 
@@ -174,8 +177,8 @@ style, high contrast, expressive composition, landscape orientation, YouTube thu
 Bold hand-drawn illustration style, high contrast, expressive composition, 
 landscape orientation, YouTube thumbnail 1280x720, 
 no logos, no watermarks, no text cutoff at edges, 
-no photorealistic style, no digital-looking fonts on the whiteboard, 
-no gradients, no drop shadows, clean white background
+no photorealistic style, no digital-looking fonts, 
+no large empty white areas, no border, no frame
 ```
 
 ---
@@ -213,7 +216,7 @@ no gradients, no drop shadows, clean white background
 ```
 no watermarks, no logos, no channel name, no text cutoff, 
 no photorealistic style, no digital computer fonts, 
-no gradients, no drop shadows, no cluttered background, 
-no more than 3 whiteboard elements, no small illegible text, 
+no cluttered background, no large empty white areas, no border, no frame,
+no more than 3 visual elements, no small illegible text, 
 no American references
 ```

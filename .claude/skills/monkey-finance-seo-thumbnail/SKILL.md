@@ -36,6 +36,7 @@ Every run outputs a complete **Click Package** containing:
 | **Chapters** | Timestamped sections for watch time and search visibility |
 | **Upload timing** | Best day and time to publish for maximum launch-window impact |
 | **Pinned comment** | Ready-to-post comment — paste within 60 minutes of going live |
+| **Community post** | 3–4 sentence YouTube Community post — hook + teaser + video link placeholder + question. Post in Studio → Community on publish day. |
 | **Caption note** | YouTube auto-generates captions — no SRT needed. Language set to en-GB on upload. |
 | **Thumbnail Brief** | Visual concept, emotional trigger, layout direction |
 | **AI Image Prompt** | Ready-to-paste Grok/Midjourney prompt for the thumbnail |
@@ -46,20 +47,23 @@ Every run outputs a complete **Click Package** containing:
 
 | File | What it covers |
 |---|---|
-| `monkey-finance-seo-thumbnail-references/SEO.md` | Title engineering, description architecture, tags, hashtags, chapters |
-| `monkey-finance-seo-thumbnail-references/THUMBNAIL.md` | CTR psychology, visual hierarchy, Monkey Finance design system, brief format |
-| `monkey-finance-seo-thumbnail-references/PROMPTS.md` | AI image generation prompt templates and formulas for Grok |
+| `references/SEO.md` | Title engineering, description architecture, tags, hashtags, chapters |
+| `references/THUMBNAIL.md` | CTR psychology, visual hierarchy, Monkey Finance design system, brief format |
+| `references/PROMPTS.md` | AI image generation prompt templates and formulas for Grok |
 
 ---
 
 ## When to Run This Skill — Pipeline Position
 
-**Run AFTER video assembly and Whisper timing generation, not before.**
+**Run at Stage 5 — alongside aeneas timings, BEFORE video assembly.**
 
 This is the correct pipeline order:
-1. Script → TTS → Images → Video assembly → Whisper timings
-2. **Then run this skill** — using the Whisper CSV for exact chapter timestamps
-3. Upload video + metadata + thumbnail together in one session
+1. Script (Stage 2) → Image prompts (Stage 3) → TTS (Stage 4)
+2. **Stage 5: Run aeneas timings + this SEO skill together** — use `audio_timings_new.csv` for exact chapter timestamps
+3. Stage 6: Sham generates images in Grok → video assembly
+4. Stage 7: Upload video + metadata + thumbnail together in one session
+
+**Why before assembly:** SEO and thumbnail can be generated and reviewed while images are being created in Grok. Nothing is blocked. Upload day is a single step with everything ready.
 
 **Why this order matters:**
 - Chapter timestamps must come from `audio_timings_new.csv` — not estimated from word counts
@@ -102,13 +106,20 @@ Choose the dominant emotion for this video's packaging:
 
 **Step 5 — Write the description** (see `SEO.md`)
 
-**Step 6 — Pull competitor tags with yt-dlp, then generate tags, hashtags, chapters**
+**Step 6 — Pull competitor tags via YouTube Data API, then generate tags, hashtags, chapters**
 
-Before writing the tag list, use yt-dlp to extract the exact hidden tags from the top 3–5 competitor videos on the same topic:
+Before writing the tag list, use the YouTube Data API to extract hidden tags from the top 3–5 competitor videos on the same topic. yt-dlp is SSL-blocked on this server — always use the API instead:
 
 ```
-For each competitor video URL:
-→ Extract: tags array, description, view count
+GET https://www.googleapis.com/youtube/v3/videos?part=snippet&id=VIDEO_ID
+Authorization: Bearer {youtube_access_token}
+→ Extract: tags array, description, view count from snippet
+```
+
+Use a YouTube Data API search first to find the video IDs:
+```
+GET https://www.googleapis.com/youtube/v3/search?part=snippet&q=QUERY&type=video
+Authorization: Bearer {youtube_access_token}
 ```
 
 Use the competitor tags to:
@@ -124,7 +135,20 @@ Then generate tags, hashtags, and chapters per `SEO.md`. Tag list should blend c
 
 Output the complete Click Package in clean, labelled sections. Then automatically:
 
-1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, thumbnail brief, and AI thumbnail prompt.
+> **Description link rule — non-negotiable:**
+> Every description must end with the Monkey See Money subscribe link:
+> `Subscribe: https://www.youtube.com/@MonkeySeeMoney`
+> Never copy subscribe links from competitor videos. Never include any external channel links. Only the Monkey See Money channel URL goes in the description.
+
+> **Trading 212 referral block — MANDATORY in every LONG-FORM description (standing rule, Sham 22 Oct 2026):**
+> Every long-form episode description must include this exact block, placed just before the "Not financial advice" line (and before the subscribe link):
+> ```
+> 👉 Want to start? I use Trading 212 — it offers both a Cash ISA and a Stocks & Shares ISA with no account fee, so more of your money keeps compounding. Sign up with my link and we both get a free fractional share (worth up to £100) when you deposit at least £1: https://www.trading212.com/invite/4DuUBHsi26P
+> (Referral link — if you sign up I may receive a free share, at no extra cost to you.)
+> ```
+> This is Sham's own referral link. Keep the referral-disclosure line — it's required by YouTube/ASA. Shorts do NOT get this block (long-form only). If Sham ever supplies a branded Bitly short link, swap the raw invite URL for it.
+
+1. **Save the SEO package** to Google Drive in the run's project folder as `06-seo-metadata.txt` — title variants, description, tags, hashtags, chapters, pinned comment, community post draft, thumbnail brief, and AI thumbnail prompt. Community post goes under a `COMMUNITY POST` section — 3–4 sentences, hook + teaser + `[video URL]` placeholder + engagement question.
 
 2. **Save the thumbnail prompt alone** as `07-thumbnail-prompt.txt` — the AI image generation prompt only, nothing else. No labels, no headers, no brief. Just the raw prompt text ready to paste directly into Grok.
 
@@ -145,10 +169,15 @@ Before delivering, verify:
 - [ ] Description first 2 lines work as a standalone hook (no "Show More" required)
 - [ ] Description naturally uses primary + secondary keywords without stuffing
 - [ ] Tags move from broad → specific → long-tail
+- [ ] **Thumbnail style is v2 — bold black & red, FULL-BLEED** (see `references/THUMBNAIL.md`). large imagery + bold text must FILL the frame so very little background shows (a white/light background is fine as long as it's mostly covered — the killer is EMPTY white space with small floating elements), no borders or frames. Text is bold BLACK (setup) + RED (danger word/number), 3–4 words max, and ADDS a hook rather than repeating the title. There must be a red crashing arrow and/or a big scary number. The green-suit monkey must appear BIG (upper-body close-up, ~40% of frame) with an exaggerated expression + a gesture — our mascot is the channel brand and appears in every thumbnail without exception. If the AI prompt still says "clean white background" or a small/centred monkey, rewrite it before saving.
+- [ ] Monkey has a specific expression AND a specific body action (never just standing) — both must be stated explicitly in the prompt
+- [ ] Monkey is reacting TO the content (pointing at a stat, jaw dropped at a number, looking between two options) — not posing beside it
 - [ ] Thumbnail brief and AI prompt are specific enough to produce a distinctive, clickable image
 - [ ] All 3 title variants use different emotional hooks — not just word swaps
 - [ ] Everything is UK-first — no American products, platforms, or terminology
+- [ ] **Description contains `https://www.youtube.com/@MonkeySeeMoney`** — the channel subscribe link must be present in every description, no exceptions
+- [ ] **No competitor channel links** — never copy subscribe links or URLs from reference videos into the description. Strip them out before saving.
 
 ---
 
-*SEO architecture: `monkey-finance-seo-thumbnail-references/SEO.md` · Thumbnail design: `monkey-finance-seo-thumbnail-references/THUMBNAIL.md` · AI prompt formulas: `monkey-finance-seo-thumbnail-references/PROMPTS.md`*
+*SEO architecture: `references/SEO.md` · Thumbnail design: `references/THUMBNAIL.md` · AI prompt formulas: `references/PROMPTS.md`*

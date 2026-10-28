@@ -6,6 +6,7 @@ Each scene gets a different effect, cycling through 6 styles.
 """
 
 import csv, io, json, os, re, sys, subprocess, tempfile, shutil, requests
+from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ def drive_list_files(token, folder_id, mime_filter=None):
     files, page_token = [], None
     while True:
         params = {
-            "q": f"'{folder_id}' in parents" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
+            "q": f"'{folder_id}' in parents and trashed=false" + (f" and mimeType contains '{mime_filter}'" if mime_filter else ""),
             "fields": "nextPageToken,files(id,name,mimeType,modifiedTime)",
             "pageSize": 100,
         }
@@ -152,7 +153,17 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE = 1.2   # zoom factor — keep low (1.15–1.25) to avoid cropping text
+KB_SCALE        = 1.2   # 20% travel — smooth at 30fps (~2px/frame)
+KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
+
+# ── Karaoke subtitle config ───────────────────────────────────────────────────
+SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+SUB_FONT_SIZE  = 36
+SUB_MARGIN_V   = 30          # pixels from bottom to glyph baseline
+SUB_PHRASE_LEN = 5           # words per phrase group
+BOX_PAD_H      = 14          # horizontal padding inside green box
+BOX_PAD_V      = 7           # vertical padding inside green box
+BOX_RADIUS     = 6           # rounded corner radius
 
 EFFECT_NAMES = [
     "pan left → right",
@@ -162,49 +173,35 @@ EFFECT_NAMES = [
 ]
 
 def get_kb_filter(idx, duration, w, h):
-    """
-    Returns a smooth Ken Burns vf filter string using scale+crop+t.
-    Image is pre-scaled to KB_SCALE× output, then a time-varying crop
-    window pans across it, then rescaled to w×h.
-    't' is ffmpeg's built-in time variable (seconds, continuous).
-    idx selects one of 4 effects.
-    """
-    D   = duration
-    LW  = int(w * KB_SCALE)
-    LH  = int(h * KB_SCALE)
-    px  = LW - w
-    py  = LH - h
-    cx  = px // 2
-    cy  = py // 2
-
-    P = f"min(t/{D:.6f},1)"
+    """4 Ken Burns effects cycling on 50% of scenes (every 2nd, skipping scene 0)."""
+    D  = duration
+    LW = int(w * KB_SCALE)
+    LH = int(h * KB_SCALE)
+    px = LW - w
+    py = LH - h
+    cx = px // 2
+    cy = py // 2
+    P  = f"(1-cos(3.14159265*min(t/{D:.6f},1)))/2"
 
     effects = [
         # 0. Pan left → right
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*{P}':y={cy},"
          f"scale={w}:{h},setsar=1"),
-
         # 1. Pan right → left
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x='{px}*(1-{P})':y={cy},"
          f"scale={w}:{h},setsar=1"),
-
         # 2. Pan top → bottom
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*{P}',"
          f"scale={w}:{h},setsar=1"),
-
         # 3. Pan bottom → top
-        (f"scale={LW}:{LH}:force_original_aspect_ratio=decrease,"
-         f"pad={LW}:{LH}:(ow-iw)/2:(oh-ih)/2:color=white,"
+        (f"scale={LW}:{LH},"
          f"crop=w={w}:h={h}:x={cx}:y='{py}*(1-{P})',"
          f"scale={w}:{h},setsar=1"),
     ]
-    return effects[idx % len(effects)]
+    return effects[idx % 4]
 
 
 def movement_to_effect_idx(text):
@@ -246,6 +243,125 @@ def load_kb_movements(local_path):
         text = parts[1].strip() if len(parts) > 1 else ""
         movements.append((scene_id, text))
     return movements
+
+# ── Karaoke subtitle generation (PIL) ────────────────────────────────────────
+def render_subtitle_frame(phrase_words, active_idx, font, w=RESOLUTION_W, h=RESOLUTION_H):
+    """1920×1080 RGBA frame: phrase words in white, solid green box behind active word."""
+    img  = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    word_bboxes = [font.getbbox(word) for word in phrase_words]
+    word_widths = [bb[2] - bb[0] for bb in word_bboxes]
+    space_w     = font.getbbox(" ")[2]
+    total_w     = sum(word_widths) + space_w * (len(phrase_words) - 1)
+
+    # Anchor so glyph bottom sits SUB_MARGIN_V from frame bottom
+    max_bb3 = max(bb[3] for bb in word_bboxes)
+    y_text  = h - SUB_MARGIN_V - max_bb3
+    x_start = (w - total_w) // 2
+
+    word_xs = []
+    x = x_start
+    for ww in word_widths:
+        word_xs.append(x)
+        x += ww + space_w
+
+    # Green box tightly around active word's actual glyph
+    abb = word_bboxes[active_idx]
+    ax  = word_xs[active_idx]
+    draw.rounded_rectangle(
+        [ax + abb[0] - BOX_PAD_H, y_text + abb[1] - BOX_PAD_V,
+         ax + abb[2] + BOX_PAD_H, y_text + abb[3] + BOX_PAD_V],
+        radius=BOX_RADIUS, fill=(0, 200, 0, 255),
+    )
+
+    for word, wx in zip(phrase_words, word_xs):
+        draw.text((wx, y_text), word, font=font,
+                  fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0, 255))
+    return img
+
+def build_subtitle_events(timing_rows):
+    """Returns (events, font). Events: list of (t_start, t_end, phrase_words, active_idx)."""
+    font   = ImageFont.truetype(SUB_FONT_PATH, SUB_FONT_SIZE)
+    events = []
+    for row in timing_rows:
+        text = row.get("narration_excerpt", "").strip()
+        if not text:
+            continue
+        try:
+            start_s = float(row["start_seconds"])
+            end_s   = float(row["end_seconds"])
+        except (KeyError, ValueError):
+            continue
+        dur = end_s - start_s
+        if dur <= 0:
+            continue
+        words    = text.upper().split()
+        n        = len(words)
+        word_dur = dur / n
+        for phrase_start in range(0, n, SUB_PHRASE_LEN):
+            phrase_words = words[phrase_start:min(phrase_start + SUB_PHRASE_LEN, n)]
+            for local_i in range(len(phrase_words)):
+                global_i = phrase_start + local_i
+                t_start  = start_s + global_i * word_dur
+                t_end    = (end_s if global_i == n - 1
+                            else start_s + (global_i + 1) * word_dur)
+                events.append((t_start, t_end, phrase_words, local_i))
+    return events, font
+
+def build_subtitle_overlay(events, font, tmpdir, total_duration):
+    """Renders subtitle PNGs and returns path to a transparent RGBA MOV overlay."""
+    blank = os.path.join(tmpdir, "sub_blank.png")
+    Image.new("RGBA", (RESOLUTION_W, RESOLUTION_H), (0, 0, 0, 0)).save(blank)
+
+    cache = {}
+    def get_frame(phrase_words, active_idx):
+        key = (tuple(phrase_words), active_idx)
+        if key not in cache:
+            path = os.path.join(tmpdir, f"subf_{len(cache):05d}.png")
+            render_subtitle_frame(phrase_words, active_idx, font).save(path)
+            cache[key] = path
+        return cache[key]
+
+    concat_entries = []
+    cursor = 0.0
+    for t_start, t_end, phrase_words, active_idx in events:
+        if t_start > cursor + 0.001:
+            concat_entries.append((blank, t_start - cursor))
+        concat_entries.append((get_frame(phrase_words, active_idx), t_end - t_start))
+        cursor = t_end
+    if cursor < total_duration - 0.001:
+        concat_entries.append((blank, total_duration - cursor))
+
+    concat_path = os.path.join(tmpdir, "sub_concat.txt")
+    with open(concat_path, "w") as f:
+        for path, dur in concat_entries:
+            f.write(f"file '{path}'\nduration {dur:.6f}\n")
+        if concat_entries:
+            f.write(f"file '{concat_entries[-1][0]}'\n")
+
+    overlay = os.path.join(tmpdir, "subtitle_overlay.mov")
+    result  = subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_path,
+        "-vf", f"fps={FPS}", "-c:v", "png", "-pix_fmt", "rgba", overlay,
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Subtitle overlay error:\n{result.stderr[-1500:]}")
+        sys.exit(1)
+    print(f"  ✓ Subtitle overlay: {len(cache)} unique frames, {len(concat_entries)} events")
+    return overlay
+
+def composite_subtitles(video_path, overlay_path, output_path):
+    """Overlay transparent subtitle MOV on top of main video."""
+    result = subprocess.run([
+        "ffmpeg", "-y", "-i", video_path, "-i", overlay_path,
+        "-filter_complex", "[0:v][1:v]overlay=0:0:shortest=1",
+        "-c:v", "libx264", "-preset", "fast", "-crf", str(VIDEO_CRF),
+        "-c:a", "copy", output_path,
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  Composite error:\n{result.stderr[-2000:]}")
+        sys.exit(1)
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 def get_audio_duration(audio_path):
@@ -305,12 +421,12 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        if use_kb and i > 0 and i % 4 == 1:
+        if use_kb and i > 0 and i % 2 == 1:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
                 if effect_idx is None:
-                    # Old-format description — cycle through the 4 effects
+                    # Old-format description — cycle through all 6 effects
                     effect_idx = kb_cycle_idx % 4
                     kb_cycle_idx += 1
                 label = f"{EFFECT_NAMES[effect_idx]} [{scene_id}]"
@@ -318,6 +434,10 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
                 effect_idx = kb_cycle_idx % 4
                 label = f"{EFFECT_NAMES[effect_idx]} [cycle]"
                 kb_cycle_idx += 1
+            # Zoom-in on long scenes looks like a slow drift — swap to pan bottom→top
+            if effect_idx == 1 and dur > KB_ZOOM_MAX_DUR:
+                effect_idx = 3
+                label = label.replace("zoom in", f"pan bottom → top [zoom skipped >{KB_ZOOM_MAX_DUR:.0f}s]")
             vf = get_kb_filter(effect_idx, dur, w, h)
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label}")
         else:
@@ -355,12 +475,14 @@ def main():
     flags = [a for a in sys.argv[1:] if a.startswith("--")]
 
     if not args:
-        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename] [--no-kb]")
+        print("Usage: python3 create_video_kb.py <episode_folder_id> [output_filename] [--no-kb] [--subs]")
         print("  --no-kb   Render all scenes as static (no Ken Burns effects)")
+        print("  --subs    Burn karaoke-style word-highlight subtitles into the video")
         sys.exit(1)
 
     folder_id  = args[0]
     use_kb     = "--no-kb" not in flags
+    use_subs   = "--subs" in flags
 
     print("Authenticating with Google Drive...")
     token = get_access_token()
@@ -383,18 +505,29 @@ def main():
         sys.exit(1)
     print(f"  ✓ Found: {images_folder['id']}")
 
-    # List and sort images by leading number in filename (e.g. "3_03-..." → 3)
+    # List and sort images: extract scene number after underscore (e.g. "image_3.jpg" → 3),
+    # or before underscore (e.g. "3_scene.jpg" → 3), fall back to modifiedTime.
     print("Listing images...")
     image_files = drive_list_files(token, images_folder["id"], mime_filter="image/")
     image_files = [f for f in image_files if f["mimeType"].startswith("image/")]
-    def leading_num(f):
-        m = re.match(r'^(\d+)_', f["name"])
-        return int(m.group(1)) if m else 9999
-    image_files.sort(key=leading_num)
+    def sort_key(f):
+        name = f["name"]
+        # Leading number before underscore or hyphen — always try first (e.g. "001_scene.jpg" → 1)
+        m = re.match(r'^(\d+)[_-]', name)
+        if m:
+            return (0, int(m.group(1)), "")
+        # Trailing number fallback for legacy filenames (e.g. "grok_scene_7.png" → 7)
+        m = re.search(r'_(\d+)\.[^.]+$', name)
+        if m:
+            return (0, int(m.group(1)), "")
+        return (1, 0, f.get("modifiedTime", ""))
+    image_files.sort(key=sort_key)
     if not image_files:
         print("ERROR: No images found.")
         sys.exit(1)
-    print(f"  ✓ {len(image_files)} images (sorted by leading filename number)")
+    has_leading = any(re.search(r'_\d+\.[^.]+$', f["name"]) or re.match(r'^(\d+)[_-]', f["name"]) for f in image_files)
+    sort_method = "scene number in filename" if has_leading else "modifiedTime (creation order)"
+    print(f"  ✓ {len(image_files)} images (sorted by {sort_method})")
 
     # Find narration.mp3, optional auto_timings.csv, optional 05-kb-movements.txt
     print("Finding narration.mp3...")
@@ -413,7 +546,7 @@ def main():
         print(f"  ✓ Found {timings_file['name']} — will use per-scene durations")
     else:
         print(f"  ⚠ No timings CSV found — falling back to equal splits")
-        print(f"    Run generate_timings_whisper.py first for accurate scene durations")
+        print(f"    Run generate_timings.py first for accurate scene durations")
     if kb_file:
         print(f"  ✓ Found 05-kb-movements.txt — KB effects will follow the file")
     else:
@@ -436,16 +569,40 @@ def main():
             print(f"  ✓ scene_{i+1:03d}{ext}")
 
         # Load per-scene durations from CSV if available
-        durations = None
+        # ── Sequencing validation (mandatory before assembly) ─────────────────
+        print("\nSequencing validation...")
+        durations   = None
+        timing_rows = []
         if timings_file:
-            rows = drive_load_csv(token, timings_file["id"])
-            rows.sort(key=lambda r: int(r["scene"]))
-            if len(rows) == len(image_paths):
-                durations = [float(r["duration_seconds"]) for r in rows]
-                durations[-1] += LAST_SCENE_BONUS_SECONDS
-                print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
-            else:
-                print(f"  ⚠ CSV has {len(rows)} rows but {len(image_paths)} images — using equal splits")
+            timing_rows = drive_load_csv(token, timings_file["id"])
+            timing_rows.sort(key=lambda r: int(r["scene"]))
+            n_imgs = len(image_paths)
+            n_rows = len(timing_rows)
+            print(f"  Images in Drive  : {n_imgs}")
+            print(f"  CSV rows         : {n_rows}")
+            print(f"  Sort method      : {sort_method}")
+            print(f"  First 5 images   : {[f['name'] for f in image_files[:5]]}")
+            if n_rows != n_imgs:
+                print(f"\n  ✗ MISMATCH — {n_rows} CSV rows vs {n_imgs} images.")
+                print(f"    Fix the mismatch before running video assembly.")
+                print(f"    Likely causes: trashed image not excluded, extra image uploaded,")
+                print(f"    or a scene was added/removed after timings were generated.")
+                print(f"    Run: generate_timings.py <folder_id>  to regenerate the CSV.")
+                sys.exit(1)
+            # Verify first image sorts as scene 001 — catches filename sort bugs
+            import re as _re
+            first_name = image_files[0]["name"]
+            m = _re.match(r'^0*1[_-]', first_name)
+            if not m:
+                print(f"\n  ✗ SORT ERROR — first image is '{first_name}' (expected 001_...)")
+                print(f"    The image for scene 1 is not sorted first. Check filenames.")
+                sys.exit(1)
+            print(f"  ✓ Counts match — {n_imgs} images : {n_rows} CSV rows. Sequencing OK.")
+            durations = [float(r["duration_seconds"]) for r in timing_rows]
+            durations[-1] += LAST_SCENE_BONUS_SECONDS
+            print(f"  ✓ Last scene extended by {LAST_SCENE_BONUS_SECONDS}s (lingers after narration ends)")
+        else:
+            print(f"  ⚠ No timings CSV — cannot validate sequencing. Run generate_timings.py first.")
 
         # Load KB movements from file if available
         kb_movements = None
@@ -462,6 +619,23 @@ def main():
         create_video_kb(image_paths, audio_path, OUTPUT_VIDEO, durations, use_kb, kb_movements)
         size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
         print(f"  ✓ Video created ({size_mb:.1f} MB)")
+
+        # Burn karaoke subtitles if requested
+        if use_subs:
+            if timing_rows and "start_seconds" in timing_rows[0]:
+                audio_dur = get_audio_duration(audio_path)
+                print("\nGenerating karaoke subtitles (PIL)...")
+                events, font = build_subtitle_events(timing_rows)
+                overlay = build_subtitle_overlay(events, font, tmpdir, audio_dur + LAST_SCENE_BONUS_SECONDS)
+                sub_video = os.path.join(tmpdir, "video_with_subs.mp4")
+                print("  Compositing subtitles onto video...")
+                composite_subtitles(OUTPUT_VIDEO, overlay, sub_video)
+                os.replace(sub_video, OUTPUT_VIDEO)
+                size_mb = os.path.getsize(OUTPUT_VIDEO) / 1024 / 1024
+                print(f"  ✓ Subtitles composited ({size_mb:.1f} MB)")
+            else:
+                print("\n  ⚠ --subs requested but timings CSV missing start_seconds column")
+                print("    Re-run generate_timings.py to regenerate the CSV")
 
         print(f"\nUploading {out_name} to Drive...")
         token = get_access_token()

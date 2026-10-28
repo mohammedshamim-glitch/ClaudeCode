@@ -16,7 +16,12 @@ import requests
 TOKEN_FILE      = "/home/user/ClaudeCode/token.json"
 TTS_MODEL       = "gemini-2.5-flash-preview-tts"
 VOICE           = "Orus"
-CHUNK_WORDS     = 150
+CHUNK_WORDS     = 150    # small balanced chunks hold Flash's natural ~165 wpm pace
+# Only Pro follows a prepended pace instruction without speaking it aloud.
+# Flash voices the line and rushes anyway, so the prefix is Pro-only (see tts_chunk).
+PACE_INSTRUCTION = ("Narrate the following in a calm, measured, unhurried pace, like a "
+                    "professional documentary voiceover. Take a natural pause at every full "
+                    "stop and between paragraphs. Do not rush.\n\n")
 SAMPLE_RATE     = 24000
 OUTPUT_WAV      = "/home/user/ClaudeCode/narration.wav"
 OUTPUT_MP3      = "/home/user/ClaudeCode/narration.mp3"
@@ -35,9 +40,10 @@ def save_tokens(tokens):
         json.dump(tokens, f, indent=2)
 
 def get_gemini_api_key():
-    key = load_tokens().get("gemini_api_key", "")
+    tokens = load_tokens()
+    key = tokens.get("gemini_tts_api_key") or tokens.get("gemini_api_key", "")
     if not key:
-        print("ERROR: gemini_api_key is not set in token.json")
+        print("ERROR: gemini_tts_api_key / gemini_api_key is not set in token.json")
         sys.exit(1)
     return key
 
@@ -67,12 +73,72 @@ def get_access_token():
 
 # ── Google Drive helpers ──────────────────────────────────────────────────────
 def drive_download_text(token, file_id):
-    r = requests.get(
-        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+    # Check mimeType — Google Docs need the export endpoint
+    meta = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?fields=mimeType",
         headers={"Authorization": f"Bearer {token}"}
     )
+    meta.raise_for_status()
+    mime = meta.json().get("mimeType", "")
+    if mime == "application/vnd.google-apps.document":
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType=text/plain",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    else:
+        r = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+            headers={"Authorization": f"Bearer {token}"}
+        )
     r.raise_for_status()
     return r.content.decode("utf-8")
+
+def drive_get_or_create_subfolder(token, parent_id, name):
+    """Return the Drive folder ID for name inside parent, creating it if needed."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            "q": f"'{parent_id}' in parents and name='{name}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+            "fields": "files(id)",
+        },
+    )
+    r.raise_for_status()
+    files = r.json().get("files", [])
+    if files:
+        return files[0]["id"]
+    meta = {"name": name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
+    r = requests.post(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        data=json.dumps(meta),
+    )
+    r.raise_for_status()
+    return r.json()["id"]
+
+def drive_list_chunks(token, subfolder_id, run_id):
+    """Return {filename: file_id} for all chunks matching run_id in subfolder."""
+    r = requests.get(
+        "https://www.googleapis.com/drive/v3/files",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            "q": f"'{subfolder_id}' in parents and name contains '{run_id}' and trashed=false",
+            "fields": "files(id,name)",
+            "pageSize": 50,
+        },
+    )
+    r.raise_for_status()
+    return {f["name"]: f["id"] for f in r.json().get("files", [])}
+
+def drive_download_binary(token, file_id, local_path):
+    """Download a binary file from Drive to local_path."""
+    r = requests.get(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r.raise_for_status()
+    with open(local_path, "wb") as f:
+        f.write(r.content)
 
 def drive_delete_existing(token, filename, folder_id):
     r = requests.get(
@@ -120,16 +186,26 @@ def drive_upload(token, local_path, filename, folder_id, mime="audio/wav"):
 
 # ── Text chunking ─────────────────────────────────────────────────────────────
 def chunk_text(text, max_words=CHUNK_WORDS):
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    """Split into BALANCED chunks of near-equal word count.
+
+    Equal-length chunks synthesise at near-identical pace (pace scales with
+    input length), so balancing avoids a short, slow final chunk. Any residual
+    drift is removed afterwards by the pace-normalisation pass.
+    """
+    import math
+    sentences = [s for s in re.split(r'(?<=[.!?])\s+', text.strip()) if s.strip()]
+    total_words = sum(len(s.split()) for s in sentences)
+    n_chunks = max(1, math.ceil(total_words / max_words))
+    target = total_words / n_chunks  # balanced words-per-chunk
     chunks, current, count = [], [], 0
     for s in sentences:
-        w = len(s.split())
-        if count + w > max_words and count > 0:
+        current.append(s)
+        count += len(s.split())
+        # close the chunk once it reaches the balanced target, leaving room
+        # for the remaining chunks
+        if count >= target and len(chunks) < n_chunks - 1:
             chunks.append(" ".join(current))
-            current, count = [s], w
-        else:
-            current.append(s)
-            count += w
+            current, count = [], 0
     if current:
         chunks.append(" ".join(current))
     return chunks
@@ -137,8 +213,9 @@ def chunk_text(text, max_words=CHUNK_WORDS):
 # ── Gemini TTS ────────────────────────────────────────────────────────────────
 def tts_chunk(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{TTS_MODEL}:generateContent?key={get_gemini_api_key()}"
+    prefix = PACE_INSTRUCTION if "pro" in TTS_MODEL else ""
     body = {
-        "contents": [{"parts": [{"text": text}]}],
+        "contents": [{"parts": [{"text": prefix + text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -146,11 +223,12 @@ def tts_chunk(text):
             }
         }
     }
-    r = requests.post(url, json=body)
+    r = requests.post(url, json=body, timeout=600)
     r.raise_for_status()
     part = r.json()["candidates"][0]["content"]["parts"][0]
     audio_b64 = part["inlineData"]["data"]
     mime      = part["inlineData"]["mimeType"]
+    print(f"    MIME: {mime}")
     return base64.b64decode(audio_b64), mime
 
 # ── Audio helpers ─────────────────────────────────────────────────────────────
@@ -163,23 +241,98 @@ def pcm_to_wav(pcm_bytes, sample_rate=SAMPLE_RATE, channels=1, sampwidth=2):
         wf.writeframes(pcm_bytes)
     return buf.getvalue()
 
+def pace_lock(chunk_paths, word_counts):
+    """Slow fast chunks down to the median wpm — never speed slow ones up.
+
+    Measures each chunk's wpm. Chunks faster than the median are slowed via
+    ffmpeg atempo (pitch-preserving). Chunks at or below the median are left
+    completely untouched — natural measured delivery is preserved as-is.
+    """
+    import subprocess, shutil
+    if not shutil.which("ffmpeg") or len(chunk_paths) < 2:
+        return chunk_paths
+    wpms = []
+    for path, words in zip(chunk_paths, word_counts):
+        with wave.open(path, "rb") as wf:
+            dur = wf.getnframes() / wf.getframerate()
+        wpms.append(words / (dur / 60.0) if dur else 0)
+    target = sorted(wpms)[len(wpms) // 2]  # median — ceiling, not floor
+    print(f"  Pace per chunk (wpm): {[round(w) for w in wpms]}")
+    print(f"  Ceiling: {round(target)} wpm — fast chunks slowed, slow chunks untouched...")
+    out_paths = []
+    for path, wpm in zip(chunk_paths, wpms):
+        raw_factor = (target / wpm) if wpm else 1.0
+        if raw_factor >= 1.0:
+            # Chunk is at or below target — keep natural pace
+            print(f"  chunk {path.split('/')[-1]}: {round(wpm)} wpm — natural pace kept")
+            out_paths.append(path)
+            continue
+        factor = max(0.75, raw_factor)
+        if abs(raw_factor - factor) > 0.001:
+            print(f"  ⚠️  WARNING: chunk {path.split('/')[-1]} at {round(wpm)} wpm needs {raw_factor:.2f}x — clamped to {factor:.2f}x.")
+        out = path.replace(".wav", "_locked.wav")
+        subprocess.run(
+            ["ffmpeg", "-i", path, "-filter:a", f"atempo={factor:.4f}",
+             "-ar", str(SAMPLE_RATE), "-ac", "1", out, "-y"],
+            check=True, capture_output=True
+        )
+        print(f"  chunk {path.split('/')[-1]}: {round(wpm)} wpm → slowed to {round(target)} wpm ({factor:.3f}x)")
+        out_paths.append(out)
+    return out_paths
+
 def merge_wavs_from_files(chunk_paths, output_path):
-    frames, params = b"", None
+    import subprocess, tempfile, shutil
+    # Log each chunk's actual sample rate before merging
     for path in chunk_paths:
         with wave.open(path, "rb") as wf:
-            if params is None:
-                params = wf.getparams()
-            frames += wf.readframes(wf.getnframes())
-    with wave.open(output_path, "wb") as out:
-        out.setparams(params)
-        out.writeframes(frames)
+            print(f"    {os.path.basename(path)}: {wf.getframerate()}Hz, {wf.getnchannels()}ch, {wf.getnframes()} frames")
+    if shutil.which("ffmpeg"):
+        # Write concat list for ffmpeg — handles any rate/channel mismatches
+        with tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False) as f:
+            for path in chunk_paths:
+                f.write(f"file '{path}'\n")
+            list_path = f.name
+        subprocess.run(
+            ["ffmpeg", "-f", "concat", "-safe", "0", "-i", list_path,
+             "-ar", str(SAMPLE_RATE), "-ac", "1", output_path, "-y"],
+            check=True, capture_output=True
+        )
+        os.unlink(list_path)
+    else:
+        # Fallback: manual merge (assumes identical params)
+        frames, params = b"", None
+        for path in chunk_paths:
+            with wave.open(path, "rb") as wf:
+                if params is None:
+                    params = wf.getparams()
+                frames += wf.readframes(wf.getnframes())
+        with wave.open(output_path, "wb") as out:
+            out.setparams(params)
+            out.writeframes(frames)
 
 def wav_to_mp3(wav_path, mp3_path, bitrate="128k"):
-    import subprocess
-    subprocess.run(
-        ["ffmpeg", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", bitrate, mp3_path, "-y"],
-        check=True, capture_output=True
-    )
+    import subprocess, shutil
+    if shutil.which("ffmpeg"):
+        subprocess.run(
+            ["ffmpeg", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", bitrate, mp3_path, "-y"],
+            check=True, capture_output=True
+        )
+    else:
+        # ffmpeg not available — fall back to pymp3
+        import wave, mp3 as pymp3
+        with wave.open(wav_path, 'rb') as wf:
+            n_ch, rate, frames = wf.getnchannels(), wf.getframerate(), wf.getnframes()
+            raw = wf.readframes(frames)
+        mode = pymp3.MODE_SINGLE_CHANNEL if n_ch == 1 else pymp3.MODE_JOINT_STEREO
+        enc = pymp3.Encoder(open(mp3_path, 'wb'))
+        enc.set_channels(n_ch)
+        enc.set_sample_rate(rate)
+        enc.set_quality(2)
+        enc.set_mode(mode)
+        chunk = 4096 * n_ch * 2
+        for i in range(0, len(raw), chunk):
+            enc.write(raw[i:i+chunk])
+        enc.flush()
 
 # ── Chunk file helpers ────────────────────────────────────────────────────────
 def chunk_path(run_id, i, total):
@@ -208,19 +361,40 @@ def main():
     token = get_access_token()
     print("  ✓ Authenticated")
 
-    print(f"Downloading narration from Drive (file: {file_id})...")
-    text = drive_download_text(token, file_id)
-    print(f"  ✓ {len(text.split())} words downloaded")
+    if file_id.startswith("/"):
+        print(f"Reading narration from local file: {file_id}...")
+        with open(file_id, encoding="utf-8") as f:
+            text = f.read()
+        print(f"  ✓ {len(text.split())} words read")
+    else:
+        print(f"Downloading narration from Drive (file: {file_id})...")
+        text = drive_download_text(token, file_id)
+        print(f"  ✓ {len(text.split())} words downloaded")
 
     chunks = chunk_text(text)
     total  = len(chunks)
     print(f"  ✓ Split into {total} chunk(s) of ~{CHUNK_WORDS} words")
 
-    # Check which chunks already exist on disk
+    # Get or create tts_chunks/ subfolder in the episode Drive folder
+    chunks_folder_id = drive_get_or_create_subfolder(token, folder_id, "tts_chunks")
+
+    # Download any chunks that exist in Drive but are missing locally
+    drive_chunks = drive_list_chunks(token, chunks_folder_id, run_id)
+    n_downloaded = 0
+    for i in range(1, total + 1):
+        path = chunk_path(run_id, i, total)
+        fname = os.path.basename(path)
+        if not chunk_exists(path) and fname in drive_chunks:
+            print(f"  Downloading chunk {i}/{total} from Drive...")
+            drive_download_binary(token, drive_chunks[fname], path)
+            n_downloaded += 1
+    if n_downloaded:
+        print(f"  ✓ Downloaded {n_downloaded} chunk(s) from Drive")
+
     existing = [chunk_exists(chunk_path(run_id, i, total)) for i in range(1, total + 1)]
     n_existing = sum(existing)
     if n_existing:
-        print(f"  ✓ Resuming — {n_existing}/{total} chunks already on disk, generating remaining {total - n_existing}")
+        print(f"  ✓ Resuming — {n_existing}/{total} chunks ready, generating remaining {total - n_existing}")
 
     first_new = True
     for i, chunk in enumerate(chunks, 1):
@@ -230,7 +404,7 @@ def main():
             continue
 
         if not first_new:
-            time.sleep(8)  # inter-chunk delay to stay within rate limits
+            time.sleep(2)  # paid key — minimal delay between chunks
         first_new = False
 
         print(f"\nGenerating audio chunk {i}/{total} ({len(chunk.split())} words)...")
@@ -245,6 +419,11 @@ def main():
                 with open(path, "wb") as f:
                     f.write(wav_bytes)
                 print(f"  ✓ {len(pcm):,} bytes PCM at {rate}Hz → saved to disk")
+                # Upload chunk to Drive immediately so it survives session restarts
+                fname = os.path.basename(path)
+                if fname not in drive_chunks:
+                    drive_upload(token, path, fname, chunks_folder_id, mime="audio/wav")
+                    print(f"  ✓ Chunk {i} backed up to Drive")
                 break
             except Exception as e:
                 if attempt < 5:
@@ -256,10 +435,13 @@ def main():
                     print(f"  Chunks 1–{i-1} are saved. Re-run to resume from chunk {i}.")
                     sys.exit(1)
 
-    # All chunks on disk — merge
+    # All chunks on disk — pace-lock then merge
     chunk_paths = [chunk_path(run_id, i, total) for i in range(1, total + 1)]
+    word_counts = [len(c.split()) for c in chunks]
+    print(f"\nPace-locking {total} chunks...")
+    merge_paths = pace_lock(chunk_paths, word_counts)
     print(f"\nMerging {total} chunks into WAV...")
-    merge_wavs_from_files(chunk_paths, OUTPUT_WAV)
+    merge_wavs_from_files(merge_paths, OUTPUT_WAV)
     print(f"  ✓ WAV: {os.path.getsize(OUTPUT_WAV):,} bytes")
 
     print("Converting to MP3...")
@@ -276,10 +458,7 @@ def main():
     print(f"  ✓ Uploaded: {result['name']}")
     print(f"  ✓ View: {result.get('webViewLink', 'n/a')}")
 
-    # Clean up chunk files after successful upload
-    for path in chunk_paths:
-        os.remove(path)
-    print(f"  ✓ Chunk files cleaned up")
+    print(f"  ✓ Chunk WAVs preserved in Drive (tts_chunks/ subfolder) for session resume")
 
 if __name__ == "__main__":
     main()

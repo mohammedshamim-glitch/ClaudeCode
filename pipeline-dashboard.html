@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monkey See Money — Pipeline</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+  --border: #30363d; --border-active: #388bfd;
+  --text: #e6edf3; --muted: #7d8590; --link: #58a6ff;
+  --green: #3fb950; --orange: #d29922; --red: #f85149;
+  --purple: #bc8cff; --blue: #58a6ff;
+  --done-bg: #0f2a18; --done-border: #238636;
+  --active-bg: #0d1f33; --active-border: #1f6feb;
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Top bar ── */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-logo { font-size: 1.5rem; }
+.topbar-title { font-weight: 700; font-size: 1rem; color: var(--text); }
+.topbar-sub { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+.progress-wrap { display: flex; align-items: center; gap: 10px; }
+.progress-bar-outer { width: 160px; height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.progress-bar-inner { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.4s ease; }
+.progress-label { font-size: 0.75rem; color: var(--muted); min-width: 48px; }
+.btn-reset { background: none; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+.btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Episode card ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+.episode-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 28px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.episode-card h2 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; grid-column: 1/-1; }
+.ep-field label { font-size: 0.72rem; color: var(--muted); display: block; margin-bottom: 4px; }
+.ep-field input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.82rem; font-family: 'SF Mono', monospace; outline: none; transition: border-color 0.15s; }
+.ep-field input:focus { border-color: var(--border-active); }
+.ep-field input::placeholder { color: var(--muted); opacity: 0.6; }
+
+/* ── Stage grid ── */
+.stages { display: flex; flex-direction: column; gap: 10px; }
+.section-header { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 12px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+
+/* ── Stage card ── */
+.stage { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+.stage.done { border-color: var(--done-border); background: var(--done-bg); }
+.stage.active { border-color: var(--active-border); background: var(--active-bg); }
+
+.stage-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; }
+.stage-header:hover { background: rgba(255,255,255,0.03); }
+
+.stage-check { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 0.7rem; color: transparent; }
+.stage.done .stage-check { background: var(--green); border-color: var(--green); color: #fff; }
+.stage.active .stage-check { border-color: var(--blue); }
+
+.stage-num { font-size: 0.72rem; font-weight: 700; color: var(--muted); min-width: 24px; }
+.stage-name { font-weight: 600; font-size: 0.95rem; flex: 1; }
+.stage.done .stage-name { color: var(--muted); }
+
+.badge { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+.badge-auto   { background: #0f2a18; color: var(--green); border: 1px solid #238636; }
+.badge-manual { background: #2b1d0e; color: var(--orange); border: 1px solid #9e6a03; }
+.badge-grok   { background: #1e1033; color: var(--purple); border: 1px solid #6e40c9; }
+.badge-review { background: #0d1f33; color: var(--blue); border: 1px solid #1f6feb; }
+
+.stage-toggle { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.stage.open .stage-toggle { transform: rotate(180deg); }
+
+/* ── Stage body ── */
+.stage-body { display: none; padding: 0 20px 18px 20px; border-top: 1px solid var(--border); }
+.stage.open .stage-body { display: block; padding-top: 16px; }
+
+.stage-desc { font-size: 0.83rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+
+.steps { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.steps li { font-size: 0.82rem; color: #c9d1d9; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.steps li::before { content: '→'; color: var(--blue); flex-shrink: 0; }
+
+/* ── Command block ── */
+.cmd-block { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; margin: 10px 0; position: relative; }
+.cmd-block pre { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.76rem; color: #79c0ff; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+.cmd-block .cmd-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.copy-btn { position: absolute; top: 8px; right: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 9px; border-radius: 5px; font-size: 0.68rem; cursor: pointer; transition: all 0.15s; }
+.copy-btn:hover { border-color: var(--blue); color: var(--blue); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+/* ── Output pills ── */
+.output-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pill { font-size: 0.69rem; padding: 3px 9px; border-radius: 20px; background: var(--surface2); color: var(--blue); border: 1px solid #1f3a6e; }
+
+/* ── Warning ── */
+.warn { background: #2b1d0e; border: 1px solid #9e6a03; border-radius: 7px; padding: 10px 13px; margin-top: 10px; font-size: 0.79rem; color: #d29922; line-height: 1.6; }
+.warn strong { color: #e3b341; }
+
+/* ── Mark done btn ── */
+.mark-btn { margin-top: 14px; padding: 7px 18px; border-radius: 7px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid; }
+.mark-btn-done { background: #0f2a18; border-color: #238636; color: var(--green); }
+.mark-btn-done:hover { background: #238636; color: #fff; }
+.mark-btn-undone { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+.mark-btn-undone:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Rules panel ── */
+.rules-panel { margin-top: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+.rules-panel h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; }
+.rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.rule-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 13px 15px; }
+.rule-card h3 { font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; }
+.rule-card p { font-size: 0.77rem; color: var(--muted); line-height: 1.6; }
+.rule-card p code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 0.74rem; color: #79c0ff; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">🐒</div>
+    <div>
+      <div class="topbar-title">Monkey See Money</div>
+      <div class="topbar-sub">Production Pipeline</div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 12</div>
+    <button class="btn-reset" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- EPISODE TRACKER -->
+  <div class="episode-card">
+    <h2>📁 Current Episode</h2>
+    <div class="ep-field">
+      <label>Episode Title</label>
+      <input type="text" id="ep_title" placeholder="e.g. Boomers, Gen X, Millennials — Same Financial Trap?" oninput="saveEpisode()">
+    </div>
+    <div class="ep-field">
+      <label>Drive Folder ID</label>
+      <input type="text" id="ep_folder" placeholder="1JemV1boJxO_IIDDw5cGfcj5txp8jICzI" oninput="saveEpisode(); refreshCommands()">
+    </div>
+    <div class="ep-field">
+      <label>YouTube Video ID</label>
+      <input type="text" id="ep_ytid" placeholder="bS65mJgZ_mk" oninput="saveEpisode(); refreshCommands()">
+    </div>
+  </div>
+
+  <!-- PRE-PRODUCTION -->
+  <div class="stages">
+    <div class="section-header">Pre-Production</div>
+
+    <div class="stage" id="stage-1">
+      <div class="stage-header" onclick="toggleStage(1)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">01</div>
+        <div class="stage-name">Trend Research</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Find the best topic using live YouTube competitor data and keyword scoring. Outputs a scored opportunity list and a full content brief.</p>
+        <ul class="steps">
+          <li>Run <code>/monkey-finance-trends</code> skill in Claude</li>
+          <li>yt-dlp pulls live data from competitor channels</li>
+          <li>Topics scored 1–25 across Search Volume, Competition, Trend Velocity, Monetisation, Channel Fit</li>
+          <li>Review opportunities and approve one topic before continuing</li>
+          <li>Episode Drive folder created automatically after approval</li>
+        </ul>
+        <div class="output-pills">
+          <span class="pill">01-trend-report.md</span>
+          <span class="pill">Content brief</span>
+          <span class="pill">Drive folder created</span>
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(1)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-2">
+      <div class="stage-header" onclick="toggleStage(2)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">02</div>
+        <div class="stage-name">Script Writing</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">1,900–2,100 word narration script broken into 25-word scenes. 4-pass method: Artist → Architect → Writer → Wizard.</p>
+        <ul class="steps">
+          <li>Run <code>/monkey-finance-scriptwriter</code> skill in Claude</li>
+          <li>UK-first, no jargon, retention-engineered with dopamine loops</li>
+          <li>Named characters for comparison episodes (never reuse names)</li>
+          <li>Create <code>00b-character-references.txt</code> if named characters used</li>
+          <li>Review and approve before Stage 3</li>
+        </ul>
+        <div class="output-pills">
+          <span class="pill">02-narration-script-structured.txt</span>
+          <span class="pill">03-narration-script-clean.txt</span>
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(2)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-3">
+      <div class="stage-header" onclick="toggleStage(3)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">03</div>
+        <div class="stage-name">Image Prompts</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">One image prompt per narration scene (strict 1:1 mapping). Ready to paste into Grok for image generation.</p>
+        <ul class="steps">
+          <li>Run <code>/monkey-finance-image-prompts</code> skill in Claude</li>
+          <li>Monkey appears in ~25% of scenes — always mid-action with a prop</li>
+          <li>Every stat must be written on canvas in the prompt</li>
+          <li>Named characters must appear in scenes that reference them</li>
+          <li>Never specify monkey suit colour</li>
+        </ul>
+        <div class="output-pills">
+          <span class="pill">04-image-prompts.txt</span>
+          <span class="pill">05-video-prompts.txt</span>
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(3)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-4">
+      <div class="stage-header" onclick="toggleStage(4)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">04</div>
+        <div class="stage-name">Generate Images (Grok)</div>
+        <span class="badge badge-grok">Grok</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Generate all scene images using Grok text-to-image, then upload to Drive.</p>
+        <ul class="steps">
+          <li>Paste each prompt from <code>04-image-prompts.txt</code> into Grok</li>
+          <li>Name each file sequentially: <code>1-description.jpg</code>, <code>2-description.jpg</code>…</li>
+          <li>Upload all images to an <code>Images/</code> subfolder inside the episode folder</li>
+          <li>Generate thumbnail using <code>07-thumbnail-prompt.txt</code>, save as <code>thumbnail</code></li>
+        </ul>
+        <div class="warn">
+          <strong>⚠ Critical:</strong> Use flat sequential numbers only (1, 2, 3… 94). Never section-based like <code>21</code> for scene 2.1 — they break image order in the video.
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(4)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="section-header">Production</div>
+
+    <div class="stage" id="stage-5">
+      <div class="stage-header" onclick="toggleStage(5)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">05</div>
+        <div class="stage-name">Audio Generation (TTS)</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Convert clean narration script to MP3 via Gemini TTS. Saves chunks locally so it can resume if the daily quota is hit.</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Terminal</div>
+          <pre id="cmd-tts">python3 run_tts.py &lt;narration_file_id&gt; &lt;folder_id&gt; narration.mp3</pre>
+          <button class="copy-btn" onclick="copyCmd('cmd-tts', this)">Copy</button>
+        </div>
+        <ul class="steps">
+          <li>Uses <code>gemini_tts_api_key</code> (TTS only — separate paid key)</li>
+          <li>Daily quota ~2,000 words — resets 8am UK time</li>
+          <li>Chunks saved to <code>tts_chunks/</code> — re-run to resume after quota reset</li>
+        </ul>
+        <div class="output-pills"><span class="pill">narration.mp3</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(5)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-6">
+      <div class="stage-header" onclick="toggleStage(6)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">06</div>
+        <div class="stage-name">Forced Alignment (aeneas)</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Map each narration scene to its exact timestamp in the audio. Required for chapters and video assembly. No fallbacks permitted.</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Terminal</div>
+          <pre id="cmd-timings">python3 generate_timings.py &lt;folder_id&gt;</pre>
+          <button class="copy-btn" onclick="copyCmd('cmd-timings', this)">Copy</button>
+        </div>
+        <ul class="steps">
+          <li>Uses aeneas forced alignment — mandatory, proportional/Whisper fallbacks banned</li>
+          <li>Requires: <code>libespeak-dev</code>, patched <code>wavfile.py</code> (frombuffer fix)</li>
+          <li>Output CSV feeds both chapter timestamps (SEO) and video assembly</li>
+        </ul>
+        <div class="output-pills"><span class="pill">audio_timings_new.csv</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(6)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-7">
+      <div class="stage-header" onclick="toggleStage(7)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">07</div>
+        <div class="stage-name">SEO & Thumbnail</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Full click-optimisation package — 3 title variants, description, tags, chapters (from aeneas CSV), and Grok thumbnail prompt.</p>
+        <ul class="steps">
+          <li>Run <code>/monkey-finance-seo-thumbnail</code> skill in Claude</li>
+          <li>Chapters use exact aeneas timestamps — run Stage 6 first</li>
+          <li>yt-dlp validates tags against top competitor videos</li>
+          <li>Generate thumbnail image in Grok, save to Drive as <code>thumbnail</code></li>
+        </ul>
+        <div class="warn">
+          <strong>⚠ File format:</strong> Section header must be <code>[TITLES]</code> with <code>Primary:</code> on its own line. Wrong format = upload failure.
+        </div>
+        <div class="output-pills">
+          <span class="pill">06-seo-metadata.txt</span>
+          <span class="pill">07-thumbnail-prompt.txt</span>
+          <span class="pill">thumbnail (in Drive)</span>
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(7)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-8">
+      <div class="stage-header" onclick="toggleStage(8)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">08</div>
+        <div class="stage-name">Video Assembly</div>
+        <span class="badge badge-review">Review needed</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Renders Ken Burns video with karaoke subtitles. Review on Drive before uploading to YouTube.</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Terminal</div>
+          <pre id="cmd-video">python3 create_video_kb.py &lt;folder_id&gt; --subs</pre>
+          <button class="copy-btn" onclick="copyCmd('cmd-video', this)">Copy</button>
+        </div>
+        <ul class="steps">
+          <li>Images sorted by leading number in filename (1, 2, 3… N)</li>
+          <li>Ken Burns effect on every 4th scene (25%)</li>
+          <li>Karaoke subtitles: green active-word box, 5 words/phrase, ALL CAPS</li>
+          <li>Review the Drive MP4 — check images match narration before uploading</li>
+        </ul>
+        <div class="output-pills"><span class="pill">episode-title.mp4 (Drive)</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(8)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="section-header">Post-Production</div>
+
+    <div class="stage" id="stage-9">
+      <div class="stage-header" onclick="toggleStage(9)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">09</div>
+        <div class="stage-name">YouTube Upload</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Upload video, thumbnail, and full SEO metadata to YouTube. Auto-schedules for next Wednesday at 4pm BST.</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Terminal</div>
+          <pre id="cmd-upload">python3 upload_youtube.py &lt;folder_id&gt;</pre>
+          <button class="copy-btn" onclick="copyCmd('cmd-upload', this)">Copy</button>
+        </div>
+        <ul class="steps">
+          <li>Confirms "Monkey See Money" channel before uploading — never skip this</li>
+          <li>Auto-schedules next Wednesday 4pm BST (min 2 days after upload)</li>
+          <li>Sets en-GB language (YouTube auto-generates captions)</li>
+          <li>Uploads thumbnail automatically if named <code>thumbnail</code> in Drive</li>
+          <li>Save the YouTube Video ID for Stage 10</li>
+        </ul>
+        <div class="output-pills"><span class="pill">YouTube Video ID</span><span class="pill">Scheduled Wednesday 4pm BST</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(9)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-10">
+      <div class="stage-header" onclick="toggleStage(10)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">10</div>
+        <div class="stage-name">YouTube Short</div>
+        <span class="badge badge-auto">Automated</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">~50s vertical Short built from hook + reveal + closure. Scheduled for Tuesday (day before main video).</p>
+        <div class="cmd-block">
+          <div class="cmd-label">Terminal</div>
+          <pre id="cmd-short">python3 create_short.py &lt;folder_id&gt; &lt;yt_video_id&gt; "&lt;episode title&gt;" "&lt;short title&gt;" --schedule YYYY-MM-DDTHH:MM:SSZ</pre>
+          <button class="copy-btn" onclick="copyCmd('cmd-short', this)">Copy</button>
+        </div>
+        <ul class="steps">
+          <li>Segments auto-selected from <code>audio_timings_new.csv</code></li>
+          <li>Blur background treatment (16:9 → 9:16 vertical)</li>
+          <li>Review the Drive MP4 before it goes to YouTube</li>
+          <li>Schedule = Tuesday 3pm UTC (4pm BST) — day before main video</li>
+        </ul>
+        <div class="output-pills"><span class="pill">short_preview_v1.mp4 (Drive)</span><span class="pill">Short YouTube ID</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(10)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-11">
+      <div class="stage-header" onclick="toggleStage(11)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">11</div>
+        <div class="stage-name">Post-Live Actions</div>
+        <span class="badge badge-manual">Manual</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Do these within 60 minutes of the Short going live. Scheduled videos can't receive pinned comments via API until published.</p>
+        <ul class="steps">
+          <li>Post pinned comment on Short: <em>"Full video here 👉 https://youtube.com/watch?v=<span class="ytid-fill">[YT_ID]</span>"</em></li>
+          <li>Pin it: 3 dots → Pin</li>
+          <li>Set Related Video: YouTube Studio → Edit Short → Customisation → Related video → link to main video</li>
+          <li>Check A/B title test is running in YouTube Studio</li>
+        </ul>
+        <div id="pinned-comment-box" style="display:none">
+          <div class="cmd-block" style="margin-top:12px">
+            <div class="cmd-label">Pinned comment to copy</div>
+            <pre id="pinned-text">Full video here 👉 https://www.youtube.com/watch?v=</pre>
+            <button class="copy-btn" onclick="copyCmd('pinned-text', this)">Copy</button>
+          </div>
+        </div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(11)">Mark complete</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage-12">
+      <div class="stage-header" onclick="toggleStage(12)">
+        <div class="stage-check">✓</div>
+        <div class="stage-num">12</div>
+        <div class="stage-name">Archive & Analytics</div>
+        <span class="badge badge-review">Review</span>
+        <span class="stage-toggle">▼</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-desc">Move episode to Completed in Drive, then review performance at 7 and 14 days post-publish.</p>
+        <ul class="steps">
+          <li>Move episode Drive folder to Completed folder</li>
+          <li>At 7 days: check CTR, avg view duration, traffic source, A/B winner</li>
+          <li>At 14 days: full analytics review via pipeline skill</li>
+          <li>Feed learnings into next trend report (topic selection, hook style, packaging)</li>
+        </ul>
+        <div class="output-pills"><span class="pill">08-analytics-review.md</span><span class="pill">Completed folder (Drive)</span></div>
+        <button class="mark-btn mark-btn-done" onclick="toggleDone(12)">Mark complete</button>
+      </div>
+    </div>
+
+  </div><!-- /stages -->
+
+  <!-- RULES -->
+  <div class="rules-panel">
+    <h2>⚠️ Critical Rules</h2>
+    <div class="rules-grid">
+      <div class="rule-card"><h3>🖼️ Image Naming</h3><p>Files must be named <code>N-description.jpg</code> where N is the flat scene number (1, 2, 3…). Never section-based like <code>21</code> for scene 2.1 — breaks sort order.</p></div>
+      <div class="rule-card"><h3>⏱️ aeneas Only</h3><p>Forced alignment is mandatory. Proportional and Whisper fallbacks are banned — they can drift up to 6 seconds. If aeneas fails, fix the environment. Never downgrade.</p></div>
+      <div class="rule-card"><h3>📺 Channel Check</h3><p>Before every upload, verify the channel returns "Monkey See Money". If it shows Digital Fusion or personal account, re-run <code>setup_youtube_auth.py</code>.</p></div>
+      <div class="rule-card"><h3>🔑 TTS Key</h3><p>The <code>gemini_tts_api_key</code> is for TTS only. Other Gemini calls use <code>gemini_api_key</code>. Never mix them.</p></div>
+      <div class="rule-card"><h3>🐒 Monkey Rules</h3><p>Monkey in ~25% of scenes. Always mid-action with a prop. Never just standing. Never specify suit colour. Never replaces a named character — accompanies only.</p></div>
+      <div class="rule-card"><h3>📌 Pin Timing</h3><p>Pinned comment must be posted manually in Studio within 60 minutes of going live. Scheduled videos can't receive API comments until published.</p></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const STORAGE_KEY = 'msm_pipeline_v2';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+function getState() { return loadState(); }
+
+// ── Episode fields ──
+function saveEpisode() {
+  const s = loadState();
+  s.episode = {
+    title:  document.getElementById('ep_title').value,
+    folder: document.getElementById('ep_folder').value,
+    ytid:   document.getElementById('ep_ytid').value,
+  };
+  saveState(s);
+}
+
+function refreshCommands() {
+  const folder = document.getElementById('ep_folder').value.trim() || '<folder_id>';
+  const ytid   = document.getElementById('ep_ytid').value.trim()   || '<yt_video_id>';
+  const title  = document.getElementById('ep_title').value.trim()  || '<episode title>';
+
+  document.getElementById('cmd-tts').textContent      = `python3 run_tts.py <narration_file_id> ${folder} narration.mp3`;
+  document.getElementById('cmd-timings').textContent  = `python3 generate_timings.py ${folder}`;
+  document.getElementById('cmd-video').textContent    = `python3 create_video_kb.py ${folder} --subs`;
+  document.getElementById('cmd-upload').textContent   = `python3 upload_youtube.py ${folder}`;
+  document.getElementById('cmd-short').textContent    = `python3 create_short.py ${folder} ${ytid} "${title}" "Short title here #Shorts" --schedule YYYY-MM-DDTHH:MM:SSZ`;
+
+  // Pinned comment
+  const pinnedEl = document.getElementById('pinned-text');
+  const boxEl    = document.getElementById('pinned-comment-box');
+  if (ytid && ytid !== '<yt_video_id>') {
+    pinnedEl.textContent = `Full video here 👉 https://www.youtube.com/watch?v=${ytid}`;
+    boxEl.style.display = 'block';
+    document.querySelectorAll('.ytid-fill').forEach(el => el.textContent = ytid);
+  } else {
+    boxEl.style.display = 'none';
+    document.querySelectorAll('.ytid-fill').forEach(el => el.textContent = '[YT_ID]');
+  }
+}
+
+// ── Stage expand/collapse ──
+function toggleStage(n) {
+  const el = document.getElementById(`stage-${n}`);
+  el.classList.toggle('open');
+}
+
+// ── Mark done ──
+function toggleDone(n) {
+  const el  = document.getElementById(`stage-${n}`);
+  const s   = loadState();
+  s.done    = s.done || {};
+  if (s.done[n]) {
+    delete s.done[n];
+    el.classList.remove('done');
+    el.querySelector('.mark-btn').textContent = 'Mark complete';
+    el.querySelector('.mark-btn').className = 'mark-btn mark-btn-done';
+  } else {
+    s.done[n] = true;
+    el.classList.add('done');
+    el.classList.remove('open');
+    el.querySelector('.mark-btn').textContent = 'Mark incomplete';
+    el.querySelector('.mark-btn').className = 'mark-btn mark-btn-undone';
+  }
+  saveState(s);
+  updateProgress();
+}
+
+function updateProgress() {
+  const s    = loadState();
+  const done = Object.keys(s.done || {}).length;
+  const pct  = Math.round(done / 12 * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / 12`;
+}
+
+function resetAll() {
+  if (!confirm('Reset all stage progress for this episode?')) return;
+  const s = loadState();
+  s.done = {};
+  saveState(s);
+  for (let i = 1; i <= 12; i++) {
+    const el = document.getElementById(`stage-${i}`);
+    el.classList.remove('done', 'open');
+    el.querySelector('.mark-btn').textContent = 'Mark complete';
+    el.querySelector('.mark-btn').className = 'mark-btn mark-btn-done';
+  }
+  updateProgress();
+}
+
+// ── Copy button ──
+function copyCmd(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ── Init ──
+function init() {
+  const s = loadState();
+
+  // Restore episode fields
+  if (s.episode) {
+    document.getElementById('ep_title').value  = s.episode.title  || '';
+    document.getElementById('ep_folder').value = s.episode.folder || '';
+    document.getElementById('ep_ytid').value   = s.episode.ytid   || '';
+  }
+
+  // Restore done states
+  for (const [n, done] of Object.entries(s.done || {})) {
+    if (done) {
+      const el = document.getElementById(`stage-${n}`);
+      if (el) {
+        el.classList.add('done');
+        el.querySelector('.mark-btn').textContent = 'Mark incomplete';
+        el.querySelector('.mark-btn').className = 'mark-btn mark-btn-undone';
+      }
+    }
+  }
+
+  refreshCommands();
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>
