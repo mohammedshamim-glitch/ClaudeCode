@@ -31,8 +31,10 @@ CHAR_REF_FOLDER='1ObdWnyzOsU6pOCvbd-I_bdDjShcC-yps'  # Character References
 FLASH='gemini-2.5-flash-image'
 PRO='gemini-3-pro-image'
 WHITE_LINE=("Pure flat #FFFFFF white background that fills the entire frame edge to edge, "
-            "with absolutely no tint, gradient, vignette, grey wash, drop shadow or whiteboard "
-            "frame/border/edge/tray/marker rail/rounded corners.")
+            "with absolutely no tint, gradient, vignette, grey wash or drop shadow. "
+            "CRITICAL: do NOT draw an actual whiteboard object or any kind of frame around the scene — "
+            "no rectangular whiteboard panel, no grey or coloured border, no outline box, no tray, "
+            "no marker rail and no rounded corners. The illustration bleeds straight to all four edges on plain white.")
 MONEY_LINE=("CRITICAL: show money only in UK pounds using the £ symbol. "
             "ABSOLUTELY NO $ (dollar) or € (euro) symbols anywhere. No real company or person names on canvas.")
 TEXT_LINE=("TEXT STYLE: any text, words, numbers, labels or arrows written on the canvas must be a SINGLE solid colour — "
