@@ -1,222 +1,100 @@
-# PROMPTS.md — AI Image Generation Prompt System for Thumbnails
+# PROMPTS.md — AI Thumbnail Prompt System (LOCKED TEMPLATE)
 
-## The Monkey Finance Visual Identity
+## The one template — use it verbatim (Sham-approved, 30 Oct 2026)
 
-Every thumbnail uses the **same consistent style** as the pipeline's scene images. This is non-negotiable — visual consistency across the channel builds brand recognition and trust.
+Every thumbnail prompt is written from the **single locked template** below. It replicates the proven Wealth Logic layout with our monkey mascot as the host. **Do not invent new layouts, do not use the old "clean white background / hand-drawn marker" style, do not clutter the background.** Readability beats busyness — if a viewer can't read it in half a second in the feed, it loses.
 
-**Core style DNA (v2 — bold black & red, full-bleed. This REPLACES the old clean-white-whiteboard style, which lost in the feed):**
-- **Bold 2D cartoon illustration that FILLS THE FRAME** — large imagery + huge text cover almost all of it. **Background must be PLAIN SOLID WHITE (Sham, 23 Oct 2026) — NEVER yellow, coloured, gradient, radial or sunburst, and no rays.** Flow will add a yellow sunburst unless explicitly told "plain solid white background, no coloured or sunburst background". Fill the frame with elements so little white shows, but the background behind them stays flat white. The killer is EMPTY white space (small elements stranded in exposed white), not white itself. No borders, no frames.
-- **Monkey in a green suit — the fixed mascot — drawn BIG**: upper-body close-up, roughly 40% of the frame, with a strong exaggerated expression (shock, stern warning) AND a gesture (stop hand, pointing, hands to face). This is our equivalent of Wealth Logic's suited character.
-- **Text is CLEAN BOLD TYPOGRAPHIC, never hand-drawn marker (NEW STANDARD — Sham, 23 Oct 2026, matching Wealth Logic / proven finance-YT thumbnails).** All thumbnail text must be "CLEAN BOLD HEAVY SANS-SERIF BLOCK CAPITALS (thick condensed poster font like Impact or Anton), crisp and typographic, NEVER hand-drawn marker, sketchy, outlined or scribbled". The ILLUSTRATION stays hand-drawn cartoon — only the TEXT is typographic.
-- **Black setup + red punch.** Setup words in SOLID BLACK caps. The punch word/number is EITHER solid bright red caps OR (preferred, higher contrast) WHITE caps sitting inside a SOLID BRIGHT RED highlight rectangle. 3–4 words MAX per line, huge, fills the width, dominates the upper half. Text ADDS a hook — never just repeats the title. Use ONE setup line + ONE punch line — never competing lines fighting each other. No coloured outline, no glow on the black text.
-- **A red crashing arrow and/or a big scary number** to signal the stakes, plus ONE real object anchoring the topic (a coin, a £ note, a product).
-- High contrast, punchy, almost no empty space — elements fill every corner.
-- **UK currency by default**: any money shown must be **British pounds (£)** — £ symbols, British coins/notes — never US dollars or $ signs.
-- Landscape orientation, 1280x720
-- **No logos. No watermarks. No channel branding on the thumbnail.**
+The locked composition (what made the approved samples work):
+- **Character on the LEFT** (~35–40% of frame): the Monkey mascot, big, upper-body, green suit + green tie + gold 'M' badge, ONE strong exaggerated expression matching the topic.
+- **Two text lines, upper half, dominating:** setup line in solid **BLACK** heavy condensed block-caps, then the punch line in **WHITE** caps inside a **solid bright RED rectangle**. Typographic poster font (Impact/Anton), never hand-drawn/marker/outlined. Only these two text elements.
+- **ONE simple clear visual** bottom-right: a single metaphor (two options / one object), **one bold £ number**, and **one thick RED arrow**. Nothing else.
+- **Clean, simple background** — plain light colour or flat panel. **NO charts, graphs, grids, confetti or scattered currency symbols in the background.**
+- £ only, never $/€. No company/person names. Never spoil which option wins (both look equally appealing).
+
+### The template (fill the four `[CAPS]` slots):
+
+```
+Professional high-CTR YouTube thumbnail, clean bold 2D cartoon vector illustration, 16:9 landscape, extreme contrast and punchy, easy to read at a glance. NO border, NO frame, NO whiteboard panel, NO rounded corners. Clean simple background — a plain solid light colour; do NOT fill the background with charts, graphs, grids or scattered currency symbols. CHARACTER (left third): the Monkey mascot drawn LARGE as an upper-body figure, wearing its signature bright GREEN business suit, green tie and gold 'M' lapel badge exactly matching the reference image, with a strong exaggerated [EXPRESSION], clearly reacting to the scene. TEXT: clean BOLD HEAVY CONDENSED SANS-SERIF BLOCK CAPITALS (Impact / Anton poster font), crisp and typographic, NEVER hand-drawn, marker, sketchy or outlined. Setup line reads '[SETUP LINE]' in solid BLACK caps. Punch line reads '[PUNCH LINE]' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar. Only these two text elements, large and dominating the upper half. No other words anywhere. IMAGERY (right side): ONE single simple clear visual — [ONE VISUAL METAPHOR] — drawn large and bold, with one thick RED arrow and one big bold black £ number. Nothing else cluttering it. Money shown ONLY in UK pounds with the £ symbol — never $ or €. Do NOT reveal which option wins; keep both options looking equally appealing. Clean, bold, readable, scroll-stopping finance thumbnail.
+```
+
+**The four slots:**
+- `[EXPRESSION]` — see the Expression Guide below; match the topic's emotion.
+- `[SETUP LINE]` — 3–4 words max, the hook setup (ADDS to the title, never repeats it).
+- `[PUNCH LINE]` — 2–3 words max, the curiosity punch (a question or payoff).
+- `[ONE VISUAL METAPHOR]` — a single clean metaphor with one £ number + one red arrow.
 
 ---
 
-## The Master Prompt Formula
+## Filled examples (all in the locked style)
 
-Every prompt is built in this order:
-
+### Comparison / versus (the default for "A vs B — Real Math" episodes)
 ```
-Bold 2D cartoon illustration, full-bleed, fills the entire frame edge to edge, no white border, no frame. 
-[MONKEY DESCRIPTION — green suit, BIG upper-body close-up ~40% of frame, strong expression + gesture]. 
-Across the top in the largest, boldest thick BLACK capital letters: "[SETUP WORDS]". 
-Directly below in huge thick RED capital letters: "[DANGER WORDS / NUMBER]". 
-[ONE real object anchoring the topic + a thick red crashing arrow]. 
-High contrast, punchy, large elements filling the frame with minimal visible background, 
-landscape YouTube thumbnail 1280x720, no logos, no watermarks.
+...with a strong exaggerated thoughtful look — one hand stroking the chin, eyebrow raised, glancing between the two choices... Setup line reads 'PAY OFF THE MORTGAGE' in solid BLACK caps. Punch line reads 'OR INVEST?' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar... IMAGERY (right side): ONE single simple clear visual — on one side a hand-drawn house, on the other a rising green stock-market chart arrow, with a large bold black '£250,000' between them — drawn large and bold, with one thick RED arrow...
 ```
 
-**Critical rule — FILL THE FRAME:** Large imagery and huge text must cover almost all of the thumbnail so very little background shows. A white/light background is fine as long as it's mostly covered — the thing that kills CTR is EMPTY white space with small floating elements. No borders, no frames, no small elements stranded in exposed white.
+### Question / hook
+```
+...with a strong exaggerated worried, uncertain expression, looking back and forth between the two choices... Setup line reads 'RENT OR BUY' in solid BLACK caps. Punch line reads 'A HOUSE?' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar... IMAGERY (right side): ONE single simple clear visual — a small rented flat with a 'TO LET' sign on one side and a house with a 'SOLD' sign on the other, with a large bold black '£100,000' between them — drawn large and bold, with one thick RED arrow...
+```
+
+### Single big stat / warning
+```
+...with a strong exaggerated shocked expression, jaw dropped, one hand raised to the side of the face... Setup line reads 'YOUR PENSION' in solid BLACK caps. Punch line reads 'DEATH TAX?' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar... IMAGERY (right side): ONE single simple clear visual — a single large bold black '£40,000' with a red downward arrow beside a simple hand-drawn pension pot — drawn large and bold...
+```
 
 ---
 
-## The Visual Content System
+## Monkey Expression Guide — pick one, state it precisely
 
-The white background is the canvas. All text and graphics are drawn directly on it in hand-drawn marker style.
+Always one clear expression, matched to the topic's emotion. Never neutral.
 
-### Text — always specify:
-- **Position** (top, centre, left side, right side of the frame)
-- **Size** (largest/boldest, slightly smaller, small)
-- **Marker colour** (thick black marker, thick red marker, thick green marker, thick blue marker, thick yellow marker)
-- **Style** (hand-drawn in thick marker, bold hand-drawn style, underlined in red)
-
-### Graphic elements — always hand-drawn, never digital icons:
-
-| Element | Description for prompt |
+| Emotion | Expression to write |
 |---|---|
-| Arrow up | "bold green arrow shooting sharply upward, hand-drawn style" |
-| Arrow down | "bold red arrow plunging downward, hand-drawn style" |
-| Explosion/burst | "red hand-drawn explosion starburst icon" |
-| Question mark | "large yellow question mark drawn in thick marker" |
-| Pound sign | "large bold £ symbol in green marker" |
-| Percentage | "oversized % symbol in red marker, hand-drawn" |
-| Calendar | "hand-drawn calendar page with a date circled in red" |
-| Warning sign | "hand-drawn red triangle warning icon" |
-| Upward graph | "bold hand-drawn line graph shooting upward in green" |
-| Downward graph | "bold hand-drawn line graph plunging downward in red" |
-| Versus divider | "bold vertical line dividing the frame into two halves" |
-| Highlight circle | "rough hand-drawn circle in red around the key word" |
-| Clock/timer | "hand-drawn clock face with urgent red hands" |
+| 🧐 Curiosity / weighing it up | thoughtful look, one hand stroking the chin, eyebrow raised, glancing between the choices |
+| 😨 Fear / warning | shocked, jaw dropped, eyes wide, one hand raised to the side of the face |
+| 😮 Shock / surprise | eyes wide, brows high, mouth open in an O, one hand on head |
+| 🤑 Aspiration / excited | big smile, eyes lit up, one finger pointing upward |
+| 😤 Serious / stern | furrowed brow, tight mouth, intense eyes, arms crossed or one finger pointing firmly |
+| 😕 Uncertain / torn | worried, puzzled, looking back and forth between two choices |
 
 ---
 
-## Monkey Expression & Action Guide
+## Flow / generation requirements — non-negotiable
 
-Always specify the monkey in a **green suit**. Always give both a precise **expression** AND a **body action**. Never leave either vague.
-
-| Trigger | Expression | Body action |
-|---|---|---|
-| 😨 Fear / Warning | Wide eyes, open mouth, jaw dropped | Both hands raised to face in shock, or pointing frantically at the board |
-| 😮 Shock / Surprise | Eyes wide, brows at top of head, mouth open in O | One hand on head, one pointing at the stat |
-| 🧐 Curiosity | Head tilted, one eyebrow raised | Chin resting on hand, or tapping chin thoughtfully |
-| 🤑 Aspiration | Big smile, eyes lit up | Arms spread wide, or one fist pumped in the air |
-| 😅 Relief | Relaxed expression, slight smile | Shoulders down, hands open, calm posture |
-| 😤 Concern / Serious | Furrowed brow, tight mouth, intense eyes | Arms crossed, or one finger pointing firmly at text |
-| 🎉 Excited | Huge grin, bright eyes | Both arms raised in celebration |
+Whether generated in Flow (default) or via the API:
+1. **Attach `Monkey.webp`** (Character References folder `1ObdWnyzOsU6pOCvbd-I_bdDjShcC-yps`) as the reference image so the mascot stays on-model (green suit, M badge).
+2. **Set aspect ratio to 16:9.** Via the API this means `generationConfig.imageConfig.aspectRatio="16:9"` — never rely on prompt text alone.
+3. Output size target **1280×720** (resize on save if the model returns 1344/1376-wide).
+4. Thumbnails may use the **Pro** model (`gemini-3-pro-image`) when generating via API — worth the fidelity for the one image.
 
 ---
 
-## Layout Templates
+## 07-thumbnail-prompt.txt output format
 
-### Layout A: Big Stat / Number
-*Use when the headline is a shocking number, percentage, or figure.*
-
-```
-2D colourful whiteboard animation style. Clean white background. 
-Monkey in a green suit, [EXPRESSION DETAIL], positioned on the right side of the frame, 
-[ACTION]. On the white background, a single massive "[STAT]" written in the largest boldest 
-thick [COLOUR] marker, dominating the left two-thirds of the frame. Below it in slightly 
-smaller thick [COLOUR] marker: "[2-3 WORD LABEL]". [Optional hand-drawn graphic element 
-next to the stat]. At the top of the whiteboard in thick black marker with [COLOUR] underline: 
-"[HEADLINE]". Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
-```
-
-**Example — Pension Tax:**
-```
-2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
-jaw dropped in shock, eyes wide open, one hand on head and the other pointing frantically 
-at the text, positioned on the right side of the frame. On the white background, a single 
-massive "40%" written in the largest boldest thick red marker, dominating the left 
-two-thirds of the frame. Below it in slightly smaller thick red marker: "DEATH TAX". 
-To the left, a bold hand-drawn red explosion starburst icon. At the top of the whiteboard 
-in the largest boldest thick black marker with red underline: YOUR PENSION. Bold hand-drawn 
-illustration style, high contrast, expressive composition, landscape orientation, 
-YouTube thumbnail 1280x720, no logos, no watermarks.
-```
-
----
-
-### Layout B: Question / Hook
-*Use for "should I?", "why?", or counterintuitive curiosity topics.*
-
-```
-2D colourful whiteboard animation style. Clean white background. 
-Monkey in a green suit, [EXPRESSION DETAIL], [ACTION]. 
-On the white background, at the top in the largest boldest thick black marker 
-with [COLOUR] underline: "[QUESTION]". Below that in slightly smaller thick 
-[COLOUR] marker: "[SUBTEXT]". [Optional visual element — graph, icon, symbol]. 
-A large hand-drawn question mark in thick yellow marker [position]. 
-Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
-```
-
-**Example — Mortgage:**
-```
-2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
-head tilted to the side, one eyebrow raised in deep thought, one hand on chin and the other 
-gesturing at the text, positioned centre-left. On the white background, at the top in the 
-largest boldest thick black marker with red underline: FIX NOW OR WAIT? Below that in 
-slightly smaller thick blue marker: MORTGAGE RATES 2026. To the right, a large bold yellow 
-question mark drawn in thick marker. Below the question mark, a hand-drawn line graph 
-showing rates rising then beginning to fall, drawn in blue marker. Bold hand-drawn 
-illustration style, high contrast, expressive composition, landscape orientation, 
-YouTube thumbnail 1280x720, no logos, no watermarks.
-```
-
----
-
-### Layout C: Two-Option Comparison
-*Use for versus topics — ISA vs ISA, cash vs stocks, fix vs tracker.*
-
-```
-2D colourful whiteboard animation style. Clean white background. 
-Monkey in a green suit, [EXPRESSION DETAIL], positioned [centre / left], [ACTION]. 
-On the white background, a bold vertical line dividing it into two halves. 
-On the left side: "[OPTION A]" in thick [COLOUR] marker at top, "[VALUE A]" below 
-in [COLOUR] marker, and a hand-drawn [ICON A] beneath. 
-On the right side: "[OPTION B]" in thick [COLOUR] marker at top, "[VALUE B]" below 
-in [COLOUR] marker, and a hand-drawn [ICON B] beneath. 
-Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, no logos, no watermarks.
-```
-
-**Example — ISA comparison:**
-```
-2D colourful whiteboard animation style. Clean white background. Monkey in a green suit, 
-eyes darting between both sides in wide-eyed disbelief, both hands raised in a 
-"what do I choose?" shrug gesture, positioned centre-bottom. On the white background, a bold 
-vertical line dividing it into two halves. On the left: "CASH ISA" in thick black marker 
-at top, "4.5%" below in thick blue marker, a flat horizontal arrow in blue marker beneath. 
-On the right: "STOCKS ISA" in thick black marker at top, "12%?" below in thick green marker, 
-a bold arrow shooting sharply upward in green marker beneath. Bold hand-drawn illustration 
-style, high contrast, expressive composition, landscape orientation, YouTube thumbnail 
-1280x720, no logos, no watermarks.
-```
-
----
-
-## Style Modifiers — Always Append
-
-```
-Bold hand-drawn illustration style, high contrast, expressive composition, 
-landscape orientation, YouTube thumbnail 1280x720, 
-no logos, no watermarks, no text cutoff at edges, 
-no photorealistic style, no digital-looking fonts, 
-no large empty white areas, no border, no frame
-```
+`07-thumbnail-prompt.txt` contains **only the raw filled prompt** — the locked template with the four slots filled for this episode. No headers, no labels, no brief, nothing else. Ready to paste straight into Flow.
 
 ---
 
 ## Prompt Quality Checklist
 
-- [ ] Opens with `"2D colourful whiteboard animation style. Clean white background."`
-- [ ] Monkey described in **green suit** with specific **expression detail** AND **body action**
-- [ ] Whiteboard text has **exact words**, **marker colour**, and **relative size**
-- [ ] All graphic elements described as **hand-drawn** not digital
-- [ ] Layout type is clear (A, B, or C)
-- [ ] Style modifiers appended
-- [ ] `1280x720` specified
-- [ ] `no logos, no watermarks` included
-- [ ] No channel name or branding referenced
+- [ ] Built from the locked template verbatim (no new layout invented)
+- [ ] Monkey on the LEFT, green suit + M badge, ONE precise expression stated
+- [ ] Setup line solid BLACK caps; punch line WHITE caps in a solid RED box
+- [ ] Typographic poster font specified — NOT hand-drawn/marker/outlined
+- [ ] Exactly ONE visual metaphor + ONE £ number + ONE red arrow
+- [ ] Clean simple background — NO background charts/graphs/grids/scattered symbols
+- [ ] £ only, no $/€; no company/person names; winner NOT spoiled
+- [ ] Flow reminder present (attach Monkey.webp, 16:9) where relevant
+- [ ] No channel name or branding on the thumbnail
 
 ---
 
-## Iteration Tips
-
-**Expression not reading clearly:** `"mouth open in a perfect O shape, both eyebrows raised to the top of the forehead, whites of eyes visible all around the iris"`
-
-**Text looks digital:** Add `"all whiteboard text must look hand-written in thick marker, slightly imperfect lettering, not a computer font"`
-
-**Too cluttered:** Add `"maximum 3 elements on the whiteboard, generous white space, nothing overlapping"`
-
-**Monkey doesn't feel like a character:** Add `"the monkey should look like a recurring cartoon character with consistent design, full of personality"`
-
-**Whiteboard feels flat:** Add `"slight texture on whiteboard surface, bold expressive line weight, dynamic energetic composition"`
-
----
-
-## Negative Prompts
+## Negative prompts (append if the model drifts)
 
 ```
-no watermarks, no logos, no channel name, no text cutoff, 
-no photorealistic style, no digital computer fonts, 
-no cluttered background, no large empty white areas, no border, no frame,
-no more than 3 visual elements, no small illegible text, 
-no American references
+no border, no frame, no whiteboard panel, no rounded corners,
+no background charts, no graphs, no grids, no scattered currency symbols,
+no hand-drawn or marker text, no outlined or glowing text, no rainbow text,
+no $ or € symbols, no company or brand names, no photorealistic style,
+no cluttered background, no small illegible text, no American references
 ```
