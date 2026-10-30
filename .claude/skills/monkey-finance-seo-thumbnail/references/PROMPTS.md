@@ -5,7 +5,7 @@
 Every thumbnail prompt is written from the **single locked template** below. It replicates the proven Wealth Logic layout with our monkey mascot as the host. **Do not invent new layouts, do not use the old "clean white background / hand-drawn marker" style, do not clutter the background.** Readability beats busyness — if a viewer can't read it in half a second in the feed, it loses.
 
 The locked composition (what made the approved samples work):
-- **Character on the LEFT** (~35–40% of frame): the Monkey mascot, big, upper-body, green suit + green tie + gold 'M' badge, ONE strong exaggerated expression matching the topic.
+- **Character on the LEFT** (~35–40% of frame): the Monkey mascot, big, upper-body, green suit + green tie + gold 'M' badge, ONE strong exaggerated expression matching the topic. **His ENTIRE head and face must be fully inside the frame with clear space above the head — never crop the top of the head, ears or chin.**
 - **Two text lines, upper half, dominating:** setup line in solid **BLACK** heavy condensed block-caps, then the punch line in **WHITE** caps inside a **solid bright RED rectangle**. Typographic poster font (Impact/Anton), never hand-drawn/marker/outlined. Only these two text elements.
 - **ONE simple clear visual** bottom-right: a single metaphor (two options / one object), **one bold £ number**, and **one thick RED arrow**. Nothing else.
 - **Clean, simple background** — plain light colour or flat panel. **NO charts, graphs, grids, confetti or scattered currency symbols in the background.**
@@ -14,7 +14,7 @@ The locked composition (what made the approved samples work):
 ### The template (fill the four `[CAPS]` slots):
 
 ```
-Professional high-CTR YouTube thumbnail, clean bold 2D cartoon vector illustration, 16:9 landscape, extreme contrast and punchy, easy to read at a glance. NO border, NO frame, NO whiteboard panel, NO rounded corners. Clean simple background — a plain solid light colour; do NOT fill the background with charts, graphs, grids or scattered currency symbols. CHARACTER (left third): the Monkey mascot drawn LARGE as an upper-body figure, wearing its signature bright GREEN business suit, green tie and gold 'M' lapel badge exactly matching the reference image, with a strong exaggerated [EXPRESSION], clearly reacting to the scene. TEXT: clean BOLD HEAVY CONDENSED SANS-SERIF BLOCK CAPITALS (Impact / Anton poster font), crisp and typographic, NEVER hand-drawn, marker, sketchy or outlined. Setup line reads '[SETUP LINE]' in solid BLACK caps. Punch line reads '[PUNCH LINE]' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar. Only these two text elements, large and dominating the upper half. No other words anywhere. IMAGERY (right side): ONE single simple clear visual — [ONE VISUAL METAPHOR] — drawn large and bold, with one thick RED arrow and one big bold black £ number. Nothing else cluttering it. Money shown ONLY in UK pounds with the £ symbol — never $ or €. Do NOT reveal which option wins; keep both options looking equally appealing. Clean, bold, readable, scroll-stopping finance thumbnail.
+Professional high-CTR YouTube thumbnail, clean bold 2D cartoon vector illustration, 16:9 landscape, extreme contrast and punchy, easy to read at a glance. NO border, NO frame, NO whiteboard panel, NO rounded corners. BACKGROUND: a plain solid flat light colour — NO gradient, NO sunburst, NO rays, NO radial burst, NO comic-book background, and do NOT fill it with charts, graphs, grids or scattered currency symbols. CHARACTER (left third): the Monkey mascot drawn LARGE as an upper-body figure, wearing its signature bright GREEN business suit, green tie and gold 'M' lapel badge exactly matching the reference image, with a strong exaggerated [EXPRESSION], clearly reacting to the scene. CRITICAL FRAMING: the Monkey's ENTIRE head and face must be fully visible inside the frame with clear space above the head — never crop or cut off the top of the head, the ears or the chin. TEXT: clean BOLD HEAVY CONDENSED SANS-SERIF BLOCK CAPITALS (Impact / Anton poster font), crisp and typographic, NEVER hand-drawn, marker, sketchy or outlined. Setup line reads '[SETUP LINE]' in solid BLACK caps. Punch line reads '[PUNCH LINE]' in solid WHITE caps sitting inside a solid bright RED rectangle highlight bar. Only these two text elements, large and dominating the upper half. No other words anywhere. IMAGERY (right side): ONE single simple clear visual — [ONE VISUAL METAPHOR] — drawn large and bold, with one thick RED arrow and one big bold black £ number. Nothing else cluttering it. Money shown ONLY in UK pounds with the £ symbol — never $ or €. Do NOT reveal which option wins; keep both options looking equally appealing. Clean, bold, readable, scroll-stopping finance thumbnail.
 ```
 
 **The four slots:**
@@ -93,6 +93,8 @@ Whether generated in Flow (default) or via the API:
 
 ```
 no border, no frame, no whiteboard panel, no rounded corners,
+no gradient background, no sunburst, no rays, no radial burst, no comic-book background,
+no cropped head, no cut-off ears, no head touching the top edge,
 no background charts, no graphs, no grids, no scattered currency symbols,
 no hand-drawn or marker text, no outlined or glowing text, no rainbow text,
 no $ or € symbols, no company or brand names, no photorealistic style,
