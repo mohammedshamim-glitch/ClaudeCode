@@ -59,13 +59,17 @@ Always one clear expression, matched to the topic's emotion. Never neutral.
 
 ---
 
-## Flow / generation requirements — non-negotiable
+## Who makes the thumbnail — Sham, in Flow (standard)
 
-Whether generated in Flow (default) or via the API:
+**The thumbnail is created by Sham in Flow.** Claude's only job is to write the prompt (`07-thumbnail-prompt.txt`) using the locked template above and hand it over. Do NOT generate the thumbnail via the API by default — same rule as scene images: API only if Sham explicitly asks in that message.
+
+When Sham makes it in Flow:
 1. **Attach `Monkey.webp`** (Character References folder `1ObdWnyzOsU6pOCvbd-I_bdDjShcC-yps`) as the reference image so the mascot stays on-model (green suit, M badge).
-2. **Set aspect ratio to 16:9.** Via the API this means `generationConfig.imageConfig.aspectRatio="16:9"` — never rely on prompt text alone.
-3. Output size target **1280×720** (resize on save if the model returns 1344/1376-wide).
-4. Thumbnails may use the **Pro** model (`gemini-3-pro-image`) when generating via API — worth the fidelity for the one image.
+2. **Set aspect ratio to 16:9.**
+3. If a sunburst/gradient sneaks in, add `no sunburst, no rays, no gradient, no comic-book background` to Flow's avoid/negative box. (The locked template's "plain solid white" opener is what reliably prevents it.)
+4. Save the finished thumbnail to the episode Drive folder named **`thumbnail`** so `upload_youtube.py` picks it up.
+
+(Fallback only, and only when Sham explicitly asks: generate via the API with the **Pro** model `gemini-3-pro-image`, `generationConfig.imageConfig.aspectRatio="16:9"`, target 1280×720.)
 
 ---
 
