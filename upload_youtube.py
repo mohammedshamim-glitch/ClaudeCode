@@ -235,7 +235,9 @@ def parse_seo_metadata(text):
                 break
 
     desc_block = sections.get('DESCRIPTION', '')
-    result["description"] = re.split(r'\n---\n|\n#[A-Z]', desc_block)[0].strip()
+    # Split only on an explicit --- divider. (Do NOT split on '\n#Word' — that was
+    # silently truncating descriptions and stripping hashtags.)
+    result["description"] = re.split(r'\n---\n', desc_block)[0].strip()
 
     for key in sections:
         if 'TAG' in key and 'HASHTAG' not in key:
@@ -247,6 +249,23 @@ def parse_seo_metadata(text):
         if 'CHAPTER' in key:
             if result["description"]:
                 result["description"] += "\n\n" + sections[key]
+            break
+
+    # Append up to 3 hashtags from the HASHTAGS section. The first 3 render as
+    # clickable links above the title. Cap at 3 (YouTube ignores all if >15).
+    for key in sections:
+        if 'HASHTAG' in key:
+            hs = []
+            for h in re.split(r'[\n,\s]+', sections[key]):
+                h = h.strip()
+                if not h:
+                    continue
+                h = '#' + h.lstrip('#')
+                if len(h) > 1:
+                    hs.append(h)
+            hs = hs[:3]
+            if hs and result["description"]:
+                result["description"] += "\n\n" + " ".join(hs)
             break
 
     return result
