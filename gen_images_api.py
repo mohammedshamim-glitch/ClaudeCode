@@ -22,7 +22,7 @@ Prompts file = the 04-image-prompts.txt / short-image-prompts.txt format:
 an optional header, a '===' divider, then one blank-line-separated prompt per scene,
 each starting with its scene number.
 """
-import json, requests, os, sys, time, re, argparse, base64, io
+import json, requests, os, sys, time, re, argparse, base64, io, shutil
 from PIL import Image
 import numpy as np
 
@@ -136,6 +136,12 @@ def main():
     ap.add_argument('--sleep',type=float,default=1.0)  # seconds between batches
     ap.add_argument('--batch',type=int,default=25)     # pause every N images
     a=ap.parse_args()
+    # Start clean: wipe the output dir so stale images from a PREVIOUS episode
+    # cannot be swept up by a downstream glob/upload (this reused scratchpad dir
+    # once mixed last episode's _mortgage frames into a new run). Skip the wipe
+    # when regenerating specific scenes (--only), which writes into an existing set.
+    if not a.only and os.path.isdir(a.out_dir):
+        shutil.rmtree(a.out_dir)
     os.makedirs(a.out_dir,exist_ok=True)
     at=drive_token()
     anchors=[]
