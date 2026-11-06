@@ -72,12 +72,20 @@ def trim_center(src,dst):
     diff=ImageChops.difference(im,bg).convert('L')
     bbox=diff.point(lambda p:255 if p>12 else 0).getbbox()
     if bbox: im=im.crop(bbox)
-    # scale to fit within margins
-    maxw,maxh=int(W*0.92),int(H*0.82)
+    # YouTube Shorts SAFE ZONE: the Shorts player crops ~9% off the TOP on tall phones
+    # and YouTube's own UI (title, channel, buttons, captions) covers the BOTTOM ~20%.
+    # So fit content into the central safe band (~71% of height) and centre it within
+    # that band — never into the top crop or the bottom UI. This is why heads were
+    # getting clipped on the live Short even though the raw file had a small margin.
+    TOP_SAFE=int(H*0.09); BOT_SAFE=int(H*0.20)
+    band_h=H-TOP_SAFE-BOT_SAFE
+    maxw,maxh=int(W*0.90), band_h
     r=min(maxw/im.width, maxh/im.height)
     im=im.resize((max(1,int(im.width*r)),max(1,int(im.height*r))), I.LANCZOS)
     canvas=I.new('RGB',(W,H),(255,255,255))
-    canvas.paste(im,((W-im.width)//2,(H-im.height)//2))
+    x=(W-im.width)//2
+    y=TOP_SAFE+(band_h-im.height)//2
+    canvas.paste(im,(x,y))
     canvas.save(dst)
 
 # build segments
