@@ -153,8 +153,29 @@ def drive_upload(token, local_path, filename, folder_id, mime="video/mp4"):
     return r.json()
 
 # ── Ken Burns effects ─────────────────────────────────────────────────────────
-KB_SCALE        = 1.2   # 20% travel — smooth at 30fps (~2px/frame)
+# KB_SCALE 1.08 = 8% travel (was 1.2/20%, which cropped edge text/characters). Gentler
+# + the white-inset safe margin below means the pan can never reach real content.
+KB_SCALE        = 1.08  # 8% travel
 KB_ZOOM_MAX_DUR = 8.0   # zoom-in only on scenes ≤ this duration; longer scenes get pan bottom→top
+# Inset every image onto a white canvas so its content sits in the central SAFE_FRAC.
+# Our images are white-background, so this margin is invisible — but it guarantees the
+# Ken Burns crop (central ~85% always-visible at KB_SCALE 1.08) never slices content/text
+# that the AI placed hard against an edge. This is the deterministic fix for edge-cropping.
+SAFE_FRAC       = 0.82
+
+def pad_white_safe(src, dst, w, h):
+    """Inset the image onto a white w×h canvas at SAFE_FRAC (content centred, correct
+    aspect). Returns dst. White margin is invisible on our white-background art."""
+    from PIL import Image as _Img
+    im = _Img.open(src).convert('RGB')
+    cw, ch = int(w * SAFE_FRAC), int(h * SAFE_FRAC)
+    r = min(cw / im.width, ch / im.height)
+    nw, nh = max(1, int(im.width * r)), max(1, int(im.height * r))
+    im = im.resize((nw, nh), _Img.LANCZOS)
+    canvas = _Img.new('RGB', (w, h), (255, 255, 255))
+    canvas.paste(im, ((w - nw) // 2, (h - nh) // 2))
+    canvas.save(dst, quality=94)
+    return dst
 
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
 SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
@@ -414,13 +435,16 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
 
     static_vf = (
         f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
-        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
+        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=white,setsar=1"
     )
     kb_cycle_idx = 0
 
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
+        # Inset onto a white safe-margin canvas so the Ken Burns pan can never crop
+        # content the AI placed against an edge (white margin is invisible on our art).
+        img = pad_white_safe(img, os.path.join(tmpdir, f"pad_{i:03d}.jpg"), w, h)
         if use_kb and i > 0 and i % 2 == 1:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
