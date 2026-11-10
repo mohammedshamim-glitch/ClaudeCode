@@ -177,27 +177,6 @@ def pad_white_safe(src, dst, w, h):
     canvas.save(dst, quality=94)
     return dst
 
-# Only apply Ken Burns to an image that has enough white space around its content for the
-# pan/zoom to move without touching it (Sham, 10 Nov 2026). Measure the non-white content
-# bounding box on the ORIGINAL image; if the smallest side-margin is below KB_MARGIN_MIN the
-# scene is rendered STATIC (a static frame can never crop). KB travel at KB_SCALE 1.08 is ~8%,
-# so require a little more than that as headroom.
-KB_MARGIN_MIN = 0.10   # content must sit within the central 80% to earn a Ken Burns move
-
-def content_margin(src, thresh=12):
-    """Return the smallest white-border fraction around the image's content (0 = content
-    touches an edge, 1 = blank image). Used to decide whether a scene is safe for Ken Burns."""
-    from PIL import Image as _Img, ImageChops as _Chops
-    im = _Img.open(src).convert('RGB')
-    w, h = im.size
-    bg = _Img.new('RGB', im.size, (255, 255, 255))
-    diff = _Chops.difference(im, bg).convert('L')
-    bbox = diff.point(lambda p: 255 if p > thresh else 0).getbbox()
-    if not bbox:
-        return 1.0  # effectively blank — nothing to crop
-    l, t, r, b = bbox
-    return min(l / w, t / h, (w - r) / w, (h - b) / h)
-
 # ── Karaoke subtitle config ───────────────────────────────────────────────────
 SUB_FONT_PATH  = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 SUB_FONT_SIZE  = 36
@@ -463,14 +442,12 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
     for i, img in enumerate(image_paths):
         seg = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
         dur = durations[i]
-        # Only Ken Burns a scene if the ORIGINAL image has enough white space around its
-        # content for the pan/zoom to move without clipping it — otherwise hold it static.
-        margin = content_margin(img)
-        kb_whitespace_ok = margin >= KB_MARGIN_MIN
-        # Inset onto a white safe-margin canvas so the Ken Burns pan can never crop
-        # content the AI placed against an edge (white margin is invisible on our art).
+        # Inset onto a white safe-margin canvas (content centred at SAFE_FRAC) so the Ken
+        # Burns pan/zoom can NEVER crop content the AI placed against an edge — the 9% white
+        # border this adds is wider than the 8% KB travel, so no gate is needed (the earlier
+        # whitespace gate was redundant and suppressed nearly all motion — removed 10 Nov).
         img = pad_white_safe(img, os.path.join(tmpdir, f"pad_{i:03d}.jpg"), w, h)
-        if use_kb and i > 0 and i % 2 == 1 and kb_whitespace_ok:
+        if use_kb and i > 0 and i % 2 == 1:
             if kb_movements and i < len(kb_movements):
                 scene_id, movement_text = kb_movements[i]
                 effect_idx = movement_to_effect_idx(movement_text)
@@ -491,8 +468,6 @@ def create_video_kb(image_paths, audio_path, output_path, durations=None, use_kb
             print(f"  Scene {i+1}/{n}: {dur:.2f}s  {label}")
         else:
             vf = static_vf
-            if use_kb and i > 0 and i % 2 == 1 and not kb_whitespace_ok:
-                print(f"  Scene {i+1}/{n}: {dur:.2f}s  static (tight margin {margin:.0%} < {KB_MARGIN_MIN:.0%} — KB skipped)")
         create_segment(img, seg, dur, vf, w, h)
         segments.append(seg)
 
