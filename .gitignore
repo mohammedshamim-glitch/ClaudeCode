@@ -7,3 +7,7 @@ service_account.json
 concat.txt
 *_concat.txt
 __pycache__/
+
+# transient render artifacts from create_video_kb.py
+pad_*.jpg
+video_kb.mp4
